@@ -1,0 +1,20 @@
+ACCOUNT_NAME_REGEXP: ^[a-zA-Z]([-_.]([a-zA-Z0-9])|[a-zA-Z0-9])+$
+ACCOUNT_NAME_MIN_LEN: 3
+ACCOUNT_NAME_MAX_LEN: 40
+ACCOUNT_DESC_MAX_LEN: 255
+ACCOUNT_FULLNAME_MIN_LEN: 3
+ACCOUNT_FULLNAME_MAX_LEN: 20
+ACCOUNT_COMPANY_MIN_LEN: 2
+ACCOUNT_COMPANY_MAX_LEN: 100
+
+CODE_REGEXP: ^[0-9]{6}$
+PASSWORD_REGEXP: ^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@%^\-_=+[{}\]:,./?])[\w!@%^\-_=+[{}\]:,./?]{8,20}$
+PASSWORD_REPEAT_REGEXP: ^(?!.*((.)\2{2})).+$
+
+EMAIL_REGEXP: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+EMAIL_MAX_LEN: 254
+
+PHONE_REGEXP: ^(\+[0-9]{7,15}|[0-9]{6,11})$
+PHONE_MAX_LEN: 16
+NICKNAME_REGEXP: ^[a-zA-Z\u4e00-\u9fa5][0-9a-zA-Z_\-\u4e00-\u9fa5]{1,18}[0-9a-zA-Z\u4e00-\u9fa5]$
+COMPANY_REGEXP: ^[0-9a-zA-Z\u4e00-\u9fa5][0-9a-zA-Z,\.&\(\)（）\s\u4e00-\u9fa5]{0,98}[0-9a-zA-Z\.\u4e00-\u9fa5]$

@@ -1,0 +1,17 @@
+{
+  "name": "website",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint --ext \".ts,.js,.vue\" --ignore-path ../../.eslintignore .",
+    "lint:fix": "eslint --fix --ext \".ts,.js,.vue\" --ignore-path ../../.eslintignore ."
+  },
+  "dependencies": {
+    "shared": "workspace:^",
+    "tokens": "workspace:^"
+  }
+}

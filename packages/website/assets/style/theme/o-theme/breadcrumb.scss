@@ -1,0 +1,11 @@
+:root {
+  .o-breadcrumb {
+    --breadcrumb-color: var(--o-color-info3);
+    --breadcrumb-color-selected: var(--o-color-ubmc);
+    --breadcrumb-color-hover: var(--o-color-ubmc);
+    --breadcrumb-color-active: var(--o-color-ubmc-focus);
+    .o-breadcrumb-item-separator {
+      color: var(--o-color-info3);
+    }
+  }
+}

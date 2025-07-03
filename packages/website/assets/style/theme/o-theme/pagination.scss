@@ -1,0 +1,11 @@
+.o-pagination {
+  .o-pagination-item {
+    &.active {
+      color: #fff;
+      background-color: var(--o-color-primary1);
+    }
+  }
+  input {
+    text-align: center;
+  }
+}

@@ -1,0 +1,10 @@
+@use '../../mixin/screen' as *;
+.o-row {
+  --row-gap-x: var(--o-gap-5);
+  --row-gap-y: var(--o-gap-5);
+  @include respond-to('<=pad') {
+    --row-gap-x: var(--o-gap-4);
+    --row-gap-y: var(--o-gap-4);
+    margin-bottom: 0 !important;
+  }
+}

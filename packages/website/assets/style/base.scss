@@ -1,0 +1,124 @@
+/*
+ * base
+ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-text-size-adjust: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica', 'Arial', sans-serif;
+  width: 100%;
+  height: 100%;
+  @include text1;
+  @include scrollbar;
+}
+html {
+  overflow: auto;
+  @include respond-to('phone') {
+    background-color: var(--o-color-ubmc-bg);
+  }
+}
+
+*,
+:after,
+:before {
+  box-sizing: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  vertical-align: top;
+}
+
+[tabindex] {
+  outline: none;
+}
+
+a {
+  cursor: pointer;
+  color: var(--o-color-link1);
+  text-decoration: none;
+  &:hover {
+    @include respond-to('>phone') {
+      color: var(--o-color-ubmc-hover);
+    }
+  }
+  &:active {
+    @include respond-to('>phone') {
+      color: var(--o-color-ubmc-hover);
+    }
+  }
+}
+
+blockquote,
+figure,
+form,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+dd,
+dl,
+li,
+ol,
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+ol,
+ul {
+  list-style: none outside none;
+}
+
+button,
+input,
+optgroup,
+section,
+textarea {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.highlight {
+  color: var(--o-color-ubmc);
+}
+
+svg {
+  &:not(.initial-fill) {
+    &:not(.o-svg-icon) {
+      path {
+        fill: currentColor;
+      }
+    }
+  }
+  &.o-svg-icon {
+    fill: currentColor;
+  }
+}
+@keyframes o-rotating {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.o-rotating {
+  animation: o-rotating var(--o-rotate-duration, 1s) var(--o-easing-linear) infinite;
+}

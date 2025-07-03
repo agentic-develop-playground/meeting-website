@@ -1,0 +1,45 @@
+@use "../../mixin/screen" as *;
+:root {
+  .o-btn {
+  --btn-radius: var(--o-control_size-l);
+  &.o-btn-text {
+    --btn-color-disabled: var(--o-color-info4);
+    &:hover {
+      background-color: transparent;
+      color: var(--o-color-ubmc-hover)
+    }
+    &:focus {
+      background-color: transparent;
+      color: var(--o-color-ubmc-focus);
+    }
+  }
+  &.o-btn-primary.o-btn-solid {
+    &.o-btn-disabled {
+      border-color: transparent;
+    }
+  }
+  &.o-btn-outline {
+    &:not(.ghost-btn) {
+      &:not(.o-btn-disabled) {
+        &:hover {
+          color: #fff;
+          background-color: var(--o-color-ubmc-hover);
+        }
+        &:focus {
+          color: #fff;
+          background-color: var(--o-color-ubmc-focus);
+        }
+      }
+    }
+  }
+  @include respond-to('phone') {
+    border-radius: 14px !important;
+    font-size: 14px !important;
+    padding: 0 15px !important;
+    height: 28px !important;
+    .o-icon {
+      font-size: 16px !important;
+    }
+  }
+}
+}

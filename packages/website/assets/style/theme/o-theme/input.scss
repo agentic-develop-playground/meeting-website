@@ -1,0 +1,50 @@
+:root {
+  .o-textarea {
+    textarea {
+      &::placeholder {
+        color: var(--o-color-info4);
+      }
+    }
+
+    .o_textarea-count {
+      color: var(--o-color-info4);
+    }
+  }
+
+  .o-input-wrap {
+    transition: none !important;
+  }
+
+  .o_input-invalid .o_input-input {
+    text-decoration: inherit !important;
+  }
+
+  .o-input {
+    .o_input-limit {
+      display: none;
+    }
+
+    .o_box-main {
+      &.has-append {
+        border-right: 0;
+      }
+      &.o_box-disabled {
+        border-color: var(--_box-bd-color-disabled) !important;
+      }
+    }
+
+    &:hover {
+      .o_box-main:not(.o_box-focused), .o_box-append {
+        border-color: var(--_box-bd-color-hover);
+      }
+    }
+    .o_box-main.o_box-focused + .o_box-append {
+      border-color: var(--_box-bd-color-focus);
+    }
+    .o_box-main.o_box-disabled + .o_box-append {
+      cursor: not-allowed;
+      background-color: var(--_box-bg-color-disabled);
+      border-color: var(--_box-bd-color-disabled) !important;
+    }
+  }
+}

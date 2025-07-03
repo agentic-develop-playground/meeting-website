@@ -1,0 +1,7 @@
+:root .o-dropdown-list {
+  --dropdown-list-radius: var(--o-radius-m);
+  .o-dropdown-item {
+    --dropdown-item-radius: var(--o-radius_control-xs);
+    --dropdown-item-padding: 7px 12px;
+  }
+}

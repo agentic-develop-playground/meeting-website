@@ -1,0 +1,330 @@
+@use './mixin/screen.scss' as *;
+@use './mixin/font.scss' as *;
+@use './mixin/common.scss' as *;
+
+.markdown {
+  color: var(--o-color-info1);
+
+  & > *:first-child {
+    margin-top: 0 !important;
+  }
+  ol,
+  ul {
+    list-style: inherit;
+  }
+
+  a {
+    word-break: break-all;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--o-color-info1);
+    font-weight: normal;
+  }
+
+  hr {
+    margin: 24px 0;
+    border: none;
+    height: 1px;
+    background-color: rgb(var(--o-gray-5));
+    @include respond-to('phone') {
+      margin: 24px 0;
+    }
+  }
+
+  h1 {
+    margin: 48px 0 16px;
+    @include h2;
+    @include respond-to('phone') {
+      margin: 24px 0 8px;
+    }
+  }
+
+  h2 {
+    margin: 48px 0 16px;
+    @include h2;
+    @include respond-to('phone') {
+      margin: 24px 0 8px;
+    }
+  }
+
+  h3 {
+    margin: 48px 0 16px;
+    @include h3;
+
+    @include respond-to('phone') {
+      margin: 24px 0 8px;
+    }
+  }
+
+  h4 {
+    margin: 32px 0 16px;
+    @include h4;
+    @media screen and (max-width: 768px) {
+      margin: 24px 0 8px;
+    }
+    @include respond-to('phone') {
+      margin: 24px 0 8px;
+    }
+  }
+
+  h5 {
+    margin-top: 24px;
+    @include text1;
+  }
+  p + p {
+    margin-top: 12px;
+  }
+  p,
+  ul,
+  ol,
+  li,
+  div {
+    font-weight: normal;
+    word-break: break-word;
+    color: var(--o-color-info2);
+    @include text1;
+  }
+
+  ul,
+  ol {
+    padding-left: 1em;
+
+    li {
+      margin: 12px 0;
+      &::marker {
+        color: var(--o-color-info1);
+      }
+      @include respond-to('<=pad_v') {
+        margin: 8px 0;
+      }
+    }
+  }
+  ul + p {
+    margin-bottom: 12px;
+  }
+  .o-table-mkit {
+    overflow: hidden;
+    border: 1px solid var(--o-color-control1-light);
+    border-radius: var(--o-radius_control-l);
+    margin: 16px 0;
+
+    table {
+      border-spacing: 0;
+      border: 0 none;
+      margin: 0;
+      tr {
+        border-bottom: 0 none;
+        &:last-child {
+          td {
+            border-bottom: 0;
+          }
+        }
+        th,
+        td {
+          border-width: 0 1px 1px 0;
+          &:last-child {
+            border-right: 0;
+          }
+        }
+      }
+    }
+  }
+  table {
+    width: 100%;
+    table-layout: fixed;
+    word-break: break-word;
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin: 16px 0;
+    border: 1px solid var(--o-color-control1-light);
+    border-radius: var(--o-radius-m);
+    tr {
+      height: 54px;
+      color: var(--o-color-info2);
+      border-bottom: 1px solid var(--o-color-control1-light);
+      th,
+      td {
+        padding: 12px 16px;
+        word-break: break-word;
+        @include tip1;
+
+        @include respond-to('<=laptop') {
+          padding: 8px 16px;
+        }
+        @include respond-to('<=pad_v') {
+          padding: 8px 12px;
+        }
+      }
+      th {
+        text-align: left;
+        font-weight: 500;
+        color: var(--o-color-info1);
+        background-color: var(--o-color-fill1);
+      }
+      td {
+        code {
+          white-space: normal;
+        }
+      }
+      a {
+        @include tip1;
+      }
+    }
+  }
+
+  strong {
+    font-weight: bold;
+  }
+
+  img {
+    max-width: 100%;
+  }
+  blockquote {
+    margin: 24px 0;
+    padding-left: 12px;
+    border-left: 4px solid var(--o-color-control1);
+
+    p {
+      color: var(--o-color-info3);
+    }
+  }
+  a {
+    --link-color: var(--o-color-ubmc);
+    color: var(--link-color);
+    --link-underline-x: 100%;
+    background: linear-gradient(0deg, var(--link-color), var(--link-color))
+    no-repeat var(--link-underline-x) bottom;
+    background-size: 0 1px;
+     transition: background-size var(--o-easing-standard) var(--o-duration-m2);
+    &:hover {
+      background-size: var(--link-underline-x) 1px;
+      background-position-x: left;
+    }
+    &:focus, &:active {
+      --link-color: var(--o-color-ubmc-focus);
+    }
+  }
+  video {
+    width: 100%;
+  }
+  div[class*='language-'] {
+    pre {
+      background-color: var(--o-color-black);
+    }
+  }
+  code,
+  pre,
+  xmp {
+    text-align: left;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: normal;
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
+    tab-size: 4;
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
+    color: var(--o-color-info2);
+    font-family: 'Consolas', 'Microsoft YaHei';
+  }
+  pre {
+    @include hover {
+      .pre-copy {
+        opacity: 1;
+      }
+    }
+  }
+  .pre-copy {
+    --copy-size: 24px;
+    --copy-gap: 12px;
+    --gradient: linear-gradient(to right, hsla(0, 0%, 100%, 0), rgb(242, 242, 242));
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    padding-top: var(--copy-gap);
+    padding-right: var(--copy-gap);
+    height: calc(var(--copy-size) + var(--copy-gap));
+    background-color: var(--o-color-fill3);
+    opacity: 0;
+    transition: all var(--o-duration-m1) var(--o-easing-standard-in);
+
+    @include respond-to('<=pad_v') {
+      opacity: 1;
+    }
+    .icon-copy {
+      display: block;
+      width: 24px;
+      height: 24px;
+      -webkit-mask-image: url(@/assets/svg-icons/icon-copy.svg);
+      mask-image: url(@/assets/svg-icons/icon-copy.svg);
+      -webkit-mask-size: cover;
+      background-color: var(--o-color-info1);
+      --gradient: linear-gradient(to right, hsla(0, 0%, 100%, 0), var(--o-color-fill3));
+      &:hover {
+        background-color: var(--o-color-primary1);
+      }
+    }
+
+    @include respond-to('phone') {
+      top: 4px;
+    }
+  }
+
+  pre {
+    position: relative;
+    border-radius: 4px;
+    background-color: var(--o-color-fill3);
+    padding: 0;
+    overflow: hidden;
+
+    code {
+      display: block;
+      overflow-x: auto;
+      padding: 16px;
+      margin: 0;
+    }
+  }
+
+  code {
+    padding: 0.2em 0.4em;
+    margin: 0 2px;
+    font-size: 85%;
+    white-space: break-spaces;
+    background-color: var(--o-color-fill3);
+    border-radius: 4px;
+    @include tip1;
+  }
+}
+
+.dark .markdown img {
+  filter: brightness(80%) grayscale(20%) contrast(1.2);
+}
+
+@include in-dark {
+  .markdown img {
+    @include img-in-dark;
+  }
+}
+.md-content {
+  padding: 40px 56px;
+  @include respond-to('laptop') {
+    padding: 24px 56px;
+  }
+  @include respond-to('pad') {
+    padding: 16px 40px;
+  }
+  @include respond-to('phone') {
+    padding: 12px 24px;
+  }
+}

@@ -1,0 +1,18 @@
+.o-icon {
+  --icon-btn-color: var(--o-color-info2);
+  --icon-btn-color-hover: var(--o-color-info1);
+  --icon-btn-color-active: var(--o-color-info1);
+}
+
+.o-icon {
+  svg {
+    width: 1em;
+    height: 1em;
+  }
+}
+
+.o-svg-icon {
+  &.o-icon-close {
+    transform: none !important;
+  }
+}

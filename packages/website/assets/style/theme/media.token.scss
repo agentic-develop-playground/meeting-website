@@ -1,0 +1,157 @@
+@use '../mixin/screen.scss' as *;
+
+:root,
+[data-o-theme='light'],
+[data-o-theme='dark'] {
+  --layout-border-radius: 8px;
+  @include respond-to('pad_v') {
+    --layout-border-radius: 4px;
+  }
+
+  @include respond-to('phone') {
+    --layout-border-radius: 4px;
+  }
+}
+
+@include respond-to('laptop') {
+  :root,
+  [data-o-theme='light'],
+  [data-o-theme='dark'] {
+    /**
+    * @name 中尺寸
+    * @type size
+    * @group control_size
+    * @description 尺寸
+    */
+    --o-control_size-m: 28px;
+    /**
+    * @name 大尺寸
+    * @type size
+    * @group control_size
+    * @description 尺寸
+    */
+    --o-control_size-l: 36px;
+  }
+}
+
+@include respond-to('<=pad') {
+  :root,
+  [data-o-theme='light'],
+  [data-o-theme='dark'] {
+    /**
+    * @name 中尺寸
+    * @type size
+    * @group control_size
+    * @description 尺寸
+    */
+    --o-control_size-m: 28px;
+  }
+}
+
+:root,
+[data-o-theme='light'],
+[data-o-theme='dark'] {
+  --o-gap-t2c: 40px;
+  --o-gap-section: 72px;
+  --o-gap-section-3: 12px;
+  --o-gap-section-4: 16px;
+  --o-gap-section-5: 24px;
+  --o-gap-section-6: 32px;
+  --o-gap-section-7: 40px;
+  --o-gap-section-8: 48px;
+  --layout-header-height: 72px;
+
+  @include respond-to('laptop') {
+    --o-gap-t2c: 24px;
+    --o-gap-section: 56px;
+    --o-gap-section-3: 8px;
+    --o-gap-section-4: 12px;
+    --o-gap-section-5: 16px;
+    --o-gap-section-6: 24px;
+    --o-gap-section-7: 24px;
+    --o-gap-section-8: 40px;
+    --layout-header-height: 64px;
+  }
+
+  @include respond-to('pad_h') {
+    --o-gap-t2c: 16px;
+    --o-gap-section: 40px;
+    --o-gap-section-3: 8px;
+    --o-gap-section-4: 8px;
+    --o-gap-section-5: 12px;
+    --o-gap-section-6: 16px;
+    --o-gap-section-7: 16px;
+    --o-gap-section-8: 24px;
+    --layout-header-height: 56px;
+  }
+
+  @include respond-to('pad_v') {
+    --o-gap-t2c: 16px;
+    --o-gap-section: 32px;
+    --o-gap-section-3: 12px;
+    --o-gap-section-4: 16px;
+    --o-gap-section-5: 24px;
+    --o-gap-section-6: 28px;
+    --o-gap-section-7: 12px;
+    --layout-header-height: 48px;
+  }
+
+  @include respond-to('phone') {
+    --o-gap-t2c: 12px;
+    --o-gap-section: 32px;
+    --o-gap-section-3: 12px;
+    --o-gap-section-4: 16px;
+    --o-gap-section-5: 24px;
+    --o-gap-section-6: 28px;
+    --o-gap-section-7: 12px;
+    --layout-header-height: 48px;
+  }
+}
+
+:root,
+[data-o-theme='light'],
+[data-o-theme='dark'] {
+  @include respond-to('laptop') {
+    --o-icon_size-xs: 16px;
+    --o-icon_size-s: 20px;
+    --o-icon_size-m: 24px;
+    --o-icon_size-l: 32px;
+    --o-icon_size-xl: 40px;
+    --o-icon_size-2xl: 48px;
+    --o-icon_size-3xl: 48px;
+    --o-icon_size-4xl: 56px;
+  }
+
+  @include respond-to('pad_h') {
+    --o-icon_size-xs: 16px;
+    --o-icon_size-s: 20px;
+    --o-icon_size-m: 24px;
+    --o-icon_size-l: 24px;
+    --o-icon_size-xl: 32px;
+    --o-icon_size-2xl: 40px;
+    --o-icon_size-3xl: 40px;
+    --o-icon_size-4xl: 48px;
+  }
+
+  @include respond-to('pad_v') {
+    --o-icon_size-xs: 16px;
+    --o-icon_size-s: 20px;
+    --o-icon_size-m: 24px;
+    --o-icon_size-l: 24px;
+    --o-icon_size-xl: 32px;
+    --o-icon_size-2xl: 32px;
+    --o-icon_size-3xl: 40px;
+    --o-icon_size-4xl: 40px;
+  }
+
+  @include respond-to('phone') {
+    --o-icon_size-xs: 16px;
+    --o-icon_size-s: 24px;
+    --o-icon_size-m: 24px;
+    --o-icon_size-l: 24px;
+    --o-icon_size-xl: 32px;
+    --o-icon_size-2xl: 32px;
+    --o-icon_size-3xl: 40px;
+    --o-icon_size-4xl: 40px;
+  }
+}

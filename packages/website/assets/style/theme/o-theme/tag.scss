@@ -1,0 +1,11 @@
+.o-tag {
+  &.o-tag-medium {
+    --tag-padding: 4px 8px;
+  }
+  &.o-tag-small {
+    --tag-padding: 0 2px;
+    .o-tag-label {
+      transform: scale(0.8888888888);
+    }
+  }
+}

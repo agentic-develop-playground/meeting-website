@@ -1,0 +1,58 @@
+@use "./media.token.scss" as *;
+
+@use "./o-theme/index.scss" as *;
+
+
+
+.hover-stress {
+  color: var(--o-color-info2);
+  @include hover {
+    color: var(--o-color-info1) !important;
+  }
+}
+
+.hover-info1-to-info3 {
+  color: var(--o-color-info1);
+  @include hover {
+    color: var(--o-color-info3);
+  }
+}
+
+.hover-underline {
+  --link-color-hover: var(--o-color-ubmc);
+  --link-underline-x: 100%;
+  background: linear-gradient(0deg, var(--link-color-hover), var(--link-color-hover)) no-repeat var(--link-underline-x) bottom;
+  background-size: 0 1px;
+  transition: background-size var(--o-easing-standard) var(--o-duration-m2);
+
+  @include hover {
+    background-size: var(--link-underline-x) 1px;
+    background-position-x: left;
+  }
+}
+
+.hover-icon-rotate {
+  .o-icon {
+    transition: all var(--o-duration-m1) var(--o-easing-standard-in);
+  }
+
+  @include hover {
+    .o-icon {
+      transform: rotate(-180deg);
+    }
+  }
+}
+.personal-wrapper {
+  display: flex;
+  .personal-left {
+    background-color: transparent;
+    width: 264px;
+    margin-right: var(--grid-column-gutter);
+  }
+  .personal-right {
+    flex-grow: 1;
+    @include respond-to('laptop-pc') {
+      width: var(--grid-17);
+    }
+  }
+}
