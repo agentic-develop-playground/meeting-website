@@ -1,17 +1,16 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import Icons from 'unplugin-icons/vite';
 import { FileSystemIconLoader } from 'unplugin-icons/loaders';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import path from 'path';
 
 export default defineNuxtConfig({
-  devtools: {
-    enabled: false,
-  },
-  modules: ['@element-plus/nuxt'],
-  experimental: { payloadExtraction: false },
+  ssr: false,
+  devtools: { enabled: false },
+  runtimeConfig: {},
+  css: ['@/assets/style/theme/index.scss', '@/assets/style/theme/element-plus.scss', '@/assets/style/markdown.scss'],
   app: {
     rootId: 'cann-portal',
-    buildAssetsDir: '_static',
+    buildAssetsDir: 'assets',
     head: {
       htmlAttrs: {
         lang: 'zh',
@@ -33,26 +32,35 @@ export default defineNuxtConfig({
       ],
     },
   },
+  modules: ['@nuxt/content', '@element-plus/nuxt', '@vueuse/nuxt'],
+  content: {
+    markdown: {
+      anchorLinks: false,
+      mdc: true,
+      toc: {
+        depth: 4,
+        searchDepth: 4,
+      },
+    },
+    highlight: {
+      theme: {
+        default: 'github-light',
+        dark: 'github-dark',
+        sepia: 'monokai',
+      },
+    },
+    respectPathCase: true,
+    experimental: {
+      clientDB: true,
+    },
+    components: {
+      prose: true,
+      map: {
+        code: 'content/ProseCode',
+      },
+    },
+  },
   vite: {
-    build: {
-      target: ['chrome74'],
-    },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: `
-          @use "@/assets/style/mixin/screen.scss" as *;
-          @use "@/assets/style/mixin/font.scss" as *;
-          @use "@/assets/style/mixin/common.scss" as *;
-          `,
-        },
-      },
-    },
-    resolve: {
-      alias: {
-        'vue-i18n': 'vue-i18n/dist/vue-i18n.cjs.js',
-      },
-    },
     plugins: [
       Icons({
         compiler: 'vue3',
@@ -62,7 +70,22 @@ export default defineNuxtConfig({
           meeting: FileSystemIconLoader(path.resolve(__dirname, './assets/category/meeting/svg-icons')),
         },
       }),
+      vueJsx(),
     ],
+    resolve: {
+      alias: {},
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: `
+          @use "@/assets/style/mixin/common.scss" as *;
+          @use "@/assets/style/mixin/screen.scss" as *;
+          @use "@/assets/style/mixin/font.scss" as *;
+          `,
+        },
+      },
+    },
     server: {
       proxy: {
         '/api-meeting/': {
@@ -76,15 +99,22 @@ export default defineNuxtConfig({
         },
       },
     },
+    define: {
+      __VUE_I18N_FULL_INSTALL__: 'true',
+      __VUE_I18N_LEGACY_API__: 'false',
+      __VUE_I18N_COMPOSITION_API__: 'true',
+    },
   },
-  css: ['@opensig/opendesign/es/index.scss', '@/assets/style/theme/default-light.token.css', '@/assets/style/theme/dark.token.css'],
-  alias: {
-    '@types': fileURLToPath(new URL('./@types', import.meta.url)),
+  elementPlus: {
+    importStyle: 'scss',
   },
   nitro: {
     prerender: {
       failOnError: false,
     },
   },
-  compatibilityDate: '2025-05-19',
+  compatibilityDate: '2024-11-21',
+  build: {
+    transpile: ['jsencrypt'],
+  },
 });
