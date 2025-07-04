@@ -1,15 +1,16 @@
+import { request } from '@/utils/axios';
+import Cookies from 'js-cookie';
+
+const getUserAuth = () => {
+  const token = Cookies.get('_U_T_');
+  return token;
+};
+
 /**
  * @file  登录获取用户信息
  * */
-
-import { request } from '@/utils/axios';
-import type { AxiosResponse } from '@/utils/axios';
-import Cookies from 'js-cookie';
-
-export const getState = async () => {
-  const res = await request.get(
-    `/api-id/oneid/oidc/authorize?response_type=code&access_type=offline&client_id=114589635&redirect_uri=${encodeURIComponent(window.location.href)}&scope=openid+profile`,
-    { showError: false }
-  );
-  return res.data?.data || [];
+export const getUser = async () => {
+  const token = getUserAuth();
+  const res = await request.get(`/api-id/oneid/hwaccount/getUser`, { headers: { token }, showError: false });
+  return res.data;
 };

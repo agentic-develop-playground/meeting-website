@@ -201,7 +201,9 @@ const confirm = async () => {
     if (isPhone.value) {
       showMsg(msg);
     } else {
-      message.success(msg);
+      message.success({
+        content: msg,
+      });
     }
 
     close();
@@ -268,7 +270,7 @@ defineExpose({
             </OPopover>
           </div>
         </template>
-        <OInput size="large" placeholder="请输入Etherpad" style="width: 100%" v-model="form.etherpad"></OInput>
+        <OInput size="large" :disabled="true" placeholder="请输入Etherpad" style="width: 100%" v-model="form.etherpad"></OInput>
       </OFormItem>
       <OFormItem label="会议日期" field="date" :rules="rules.date">
         <ElDatePicker
@@ -526,6 +528,15 @@ defineExpose({
 </style>
 
 <style lang="scss">
+.o-message-list-top {
+  --app-header-height: 80px;
+  top: calc(var(--app-header-height) + 32px);
+
+  @include respond-to('phone') {
+    --app-header-height: 48px;
+  }
+}
+
 .popover-content {
   @include tip1;
   max-width: 256px;

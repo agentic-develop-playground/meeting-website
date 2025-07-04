@@ -12,7 +12,7 @@ import setConfig from './setConfig';
 import { isBoolean, useLoading, useMessage, isNull, isObject, isUndefined } from '@opensig/opendesign';
 import type { LoadingPropsT } from '@opensig/opendesign/lib/loading/types';
 
-// import { login } from '@/utils/login';
+import { doLogin } from '@/utils/login';
 
 interface RequestConfig<D = any> extends AxiosRequestConfig {
   data?: D;
@@ -199,7 +199,7 @@ const responseInterceptorId = request.interceptors.response.use(
     // token过期，重新登录
     if (err.response?.status === 401) {
       if (config.skipAuth !== true) {
-        // login();
+        // doLogin();
       }
     }
 

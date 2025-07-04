@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, watch } from 'vue';
-import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog } from '@opensig/opendesign';
+import { ref, nextTick, onMounted, watch, computed } from 'vue';
+import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog, useMessage } from '@opensig/opendesign';
 import dayjs from 'dayjs';
 
 import { getGroupInfosApi, getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
@@ -10,7 +10,14 @@ import EditForm from './EditForm.vue';
 import IconMeet from '~icons/home/icon-meet.svg';
 import type { GroupItemT, MeetingItemT } from '~/@types/type-meeting';
 
+import { useLoginStore } from '@/stores/user';
+import { useMeetingStore } from '@/stores/meeting';
+
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+
+const loginStore = useLoginStore();
+const message = useMessage();
+const meetingStore = useMeetingStore();
 
 const router = useRouter();
 
@@ -22,11 +29,27 @@ const activityType = ['线下', '线上', '线上 + 线下'];
 const sig = ref('');
 const sigOptions = ref<GroupItemT[]>([]);
 const getSigList = () => {
-  getGroupInfosApi().then((res) => {
-    sigOptions.value = res.data;
-  });
+  getGroupInfosApi()
+    .then((res) => {
+      meetingStore.$patch({
+        hasPerm: res.length > 0,
+      });
+      sigOptions.value = res || [];
+    })
+    .catch(() => {
+      meetingStore.$patch({
+        hasPerm: false,
+      });
+    });
 };
-getSigList();
+watch(
+  () => loginStore.isLogined,
+  (val) => {
+    if (val) {
+      getSigList();
+    }
+  }
+);
 
 // -------------------- 获取存在会议的日期列表 --------------------
 const tableData = ref([]);
@@ -40,7 +63,7 @@ const getTableData = async (day?: string) => {
   if (!tableData.value.length) {
     latestDay.value = new Date();
   } else {
-    let find = [...allTableData].reverse().find((v) => dayjs(v).unix() <= dayjs().unix());
+    let find = [...allTableData].find((v) => dayjs(v).unix() >= dayjs().unix());
     if (!find) {
       find = allTableData.find((v) => dayjs(v).unix() >= dayjs().unix());
     }
@@ -130,11 +153,6 @@ const watchChange = (element: HTMLElement) => {
   });
 };
 
-const getSummitHighlight = (date: string, data: any[]) => {
-  return data.find((item) => {
-    return item.dates?.includes(date);
-  });
-};
 onMounted(() => {
   // 设置右侧 日程列表高度
   const tbody = document.querySelector('.calendar-body .el-calendar__body') as HTMLElement;
@@ -174,6 +192,7 @@ const closeForm = () => {
   currentRow.value = null;
 };
 const confirmForm = () => {
+  getTableData();
   closeForm();
 };
 
@@ -183,9 +202,9 @@ const toMeetingList = () => {
 </script>
 <template>
   <div class="home-calendar">
-    <div class="calendar-header">
-      <OButton color="primary" variant="outline" @click="toMeetingList">我创建的会议</OButton>
-      <OButton color="primary" variant="solid" @click="toCreateMeeting">创建会议</OButton>
+    <div v-if="loginStore.isLogined" class="calendar-header">
+      <OButton color="primary" variant="outline" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
+      <OButton color="primary" variant="solid" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
     </div>
     <div class="calendar-body">
       <el-calendar ref="calendar" class="calender">

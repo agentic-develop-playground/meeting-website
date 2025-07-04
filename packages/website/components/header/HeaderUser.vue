@@ -5,9 +5,12 @@ import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 import IconLogOff from '~icons/app/icon-log-off.svg';
 import IconAvatar from '~icons/app/icon-avatar-line.svg';
 
-import { doLogin } from '@/utils/login';
+import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
-const token = '';
+import { doLogin, doLogout } from '@/utils/login';
+
+const loginStore = useLoginStore();
+const userInfoStore = useUserInfoStore();
 
 const { lePadV } = useScreen();
 </script>
@@ -15,7 +18,7 @@ const { lePadV } = useScreen();
 <template>
   <div class="header-user">
     <!-- 未登录或登录失败 -->
-    <template v-if="!token">
+    <template v-if="loginStore.isLoginNot || loginStore.isLoginFailed">
       <OIcon class="avatar-icon" @click="doLogin">
         <IconAvatar></IconAvatar>
       </OIcon>
@@ -23,18 +26,18 @@ const { lePadV } = useScreen();
 
     <!-- 已登录 -->
     <Transition name="header-user-zoom-in">
-      <div class="user-info" v-if="token">
+      <div class="user-info" v-if="loginStore.isLogined">
         <ODropdown :trigger="lePadV ? 'click' : 'hover'" :optionPosition="lePadV ? 'br' : 'bottom'" option-wrap-class="user-dropdown">
           <div class="info-wrap hover-icon-rotate">
-            <AppAvatar :avatar="''" :name="''" :custom-size="lePadV ? 24 : 32" />
-            <p class="user-account"></p>
+            <AppAvatar :avatar="''" :name="userInfoStore.username" :custom-size="lePadV ? 24 : 32" />
+            <p class="user-account">{{ userInfoStore.username }}</p>
             <OIcon class="icon">
               <IconChevronDown />
             </OIcon>
           </div>
 
           <template #dropdown>
-            <ODropdownItem>
+            <ODropdownItem @click="doLogout">
               <OIcon>
                 <IconLogOff />
               </OIcon>
@@ -163,6 +166,7 @@ const { lePadV } = useScreen();
   color: var(--o-color-info1);
   max-width: 90px;
   font-weight: 500;
+  margin-left: 8px;
   @include text-truncate(1);
 }
 

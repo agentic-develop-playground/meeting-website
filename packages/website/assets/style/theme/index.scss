@@ -1,8 +1,6 @@
-@use "./media.token.scss" as *;
+@use './media.token.scss' as *;
 
-@use "./o-theme/index.scss" as *;
-
-
+@use './o-theme/index.scss' as *;
 
 .hover-stress {
   color: var(--o-color-info2);

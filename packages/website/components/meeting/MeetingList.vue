@@ -1,16 +1,29 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ORow, OCol, OButton, useMessage, OPagination } from '@opensig/opendesign';
+import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag } from '@opensig/opendesign';
 
 import MeetingDetail from './MeetingDetail.vue';
+import EditForm from './EditForm.vue';
 
-import { getMyMeetingListApi } from '~/api/api-meeting';
+import dayjs from 'dayjs';
+
+import { getMyMeetingListApi, deleteMeetingApi } from '~/api/api-meeting';
 
 import type { MeetingItemT } from '~/@types/type-meeting';
 
 import noData from '@/assets/category/common/empty.svg';
 
+import { useLoginStore } from '@/stores/user';
+
+import zhCn from 'element-plus/es/locale/lang/zh-cn';
+
+const loginStore = useLoginStore();
+const message = useMessage();
+
 const COUNT_PER_PAGE = [16, 32, 64];
+
+const detailListRef = ref([]);
+const loading = ref(true);
 
 const meetingList = ref<MeetingItemT[]>([]);
 const totals = ref(0);
@@ -21,14 +34,63 @@ const queryData = ref({
 });
 
 const getMeeting = () => {
-  getMyMeetingListApi().then((res) => {
-    meetingList.value = res.data;
-  });
+  getMyMeetingListApi()
+    .then((res) => {
+      meetingList.value = (res.data || []).map((v: MeetingItemT) => {
+        return {
+          ...v,
+          time: `${v.start}-${v.end}`,
+          record: v.is_record,
+          isEnd: dayjs(`${v.date} ${v.end}`).isBefore(dayjs()),
+        };
+      });
+    })
+    .finally(() => {
+      loading.value = false;
+    });
 };
 getMeeting();
 
-const cancelMeeting = () => {};
-const modifyMeeting = () => {};
+const currentRow = ref<MeetingItemT | null>(null); // 当前激活行，用于取消事件
+
+// -------------------- 取消会议 --------------------
+const cancelMeetingVisible = ref(false); // 取消弹窗
+const cancelLoading = ref(false);
+const cancelMeeting = (val: MeetingItemT) => {
+  currentRow.value = val;
+  cancelMeetingVisible.value = true;
+};
+
+const confirmCancel = async () => {
+  try {
+    cancelMeetingVisible.value = true;
+    await deleteMeetingApi(currentRow.value.id);
+    cancelMeetingVisible.value = false;
+    message.success({
+      content: `“${currentRow.value.topic}”会议取消成功`,
+    });
+    getMeeting();
+  } finally {
+    cancelMeetingVisible.value = false;
+  }
+};
+
+// -------------------- 修改会议 --------------------
+const modifyMeetingVisible = ref(false); // 修改弹窗
+const modifyMeeting = (val: MeetingItemT) => {
+  currentRow.value = val;
+  modifyMeetingVisible.value = true;
+};
+
+// -------------------- 表单事件 --------------------
+const closeForm = () => {
+  modifyMeetingVisible.value = false;
+  currentRow.value = null;
+};
+const confirmForm = () => {
+  getMeeting();
+  closeForm();
+};
 
 // -------------------- 分页器change事件 --------------------
 const onPaginationChange = (val: { page: number; pageSize: number }) => {
@@ -46,17 +108,19 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
 <template>
   <div class="meeting">
     <p class="title">我创建的会议</p>
-    <div class="meeting-box">
-      <ORow v-if="meetingList.length" gap="32px 24px" wrap="wrap">
+    <div v-if="loginStore.isLogined" class="meeting-box">
+      <ORow v-if="!loading && meetingList.length" gap="32px 24px" wrap="wrap">
         <OCol v-for="item in meetingList" :key="item.id" flex="0 0 50%">
           <div class="item-card">
             <div class="card-top">
               <div class="title-box">
                 <span class="topic">{{ item.topic }}</span>
+                <OTag variant="solid" v-if="!item.isEnd && item.is_delete" class="cancel-tag">会议已取消</OTag>
+                <OTag variant="solid" v-if="item.isEnd" class="end-tag">会议已结束</OTag>
               </div>
-              <div class="operate-btn">
-                <OButton color="primary" variant="outline" @click="cancelMeeting">取消</OButton>
-                <OButton color="primary" variant="outline" @click="modifyMeeting">修改</OButton>
+              <div v-if="!item.is_delete" class="operate-btn">
+                <OButton color="primary" variant="outline" @click="cancelMeeting(item)">取消</OButton>
+                <OButton color="primary" variant="outline" @click="modifyMeeting(item)">修改</OButton>
               </div>
             </div>
             <div class="card-content">
@@ -65,7 +129,7 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
           </div>
         </OCol>
       </ORow>
-      <AppEmpty v-else :src="noData">
+      <AppEmpty v-if="!loading && !meetingList.length" :src="noData">
         <template #description>暂无已创建的会议</template>
       </AppEmpty>
       <!-- 分页 -->
@@ -82,17 +146,50 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
       </div>
     </div>
   </div>
+  <ODialog v-model:visible="modifyMeetingVisible" class="edit-meeting-dialog">
+    <template #header>修改会议</template>
+    <ElConfigProvider :locale="zhCn">
+      <EditForm v-if="modifyMeetingVisible" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
+    </ElConfigProvider>
+  </ODialog>
+  <ODialog v-model:visible="cancelMeetingVisible" main-class="cancel-dialog">
+    <template #header>确定取消</template>
+    <div class="dialog-content">是否确认要取消“{{ currentRow.topic }}”会议？</div>
+    <template #footer>
+      <div class="dialog-footer">
+        <OButton color="primary" variant="solid" size="large" @click="confirmCancel" :loading="cancelLoading">确认</OButton>
+        <OButton color="primary" variant="outline" size="large" @click="cancelMeetingVisible = false">取消</OButton>
+      </div>
+    </template>
+  </ODialog>
 </template>
 
 <style scoped lang="scss">
 .meeting {
   margin-top: 16px;
 }
+.title-box {
+  display: flex;
+  align-items: center;
+}
 .title {
   text-align: center;
   font-weight: 500;
   color: var(--o-color-info1);
   @include display3;
+}
+.cancel-tag {
+  --tag-padding: 3px 12px;
+  --tag-radius: 100px;
+  --tag-color: var(--o-color-info1-inverse);
+  --tag-bg-color: var(--o-color-primary4);
+  --tag-bd-color: var(--o-color-primary4);
+  margin-left: 8px;
+}
+.end-tag {
+  --tag-padding: 3px 12px;
+  --tag-radius: 100px;
+  margin-left: 8px;
 }
 .meeting-box {
   border-radius: 16px;
@@ -130,5 +227,32 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+</style>
+
+<style lang="scss">
+.edit-meeting-dialog {
+  --dlg-radius: 16px;
+  .o-dlg-body {
+    padding: 0 22px;
+    @include respond-to('pad') {
+      padding: 0 16px;
+    }
+  }
+}
+
+.cancel-dialog {
+  --dlg-radius: 16px;
+  .dialog-content {
+    width: 384px;
+    text-align: center;
+  }
+
+  .dialog-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    column-gap: 16px;
+  }
 }
 </style>

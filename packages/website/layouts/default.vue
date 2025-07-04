@@ -5,6 +5,8 @@ import zhCN from '@opensig/opendesign/es/locale/lang/zh-cn';
 import enUS from '@opensig/opendesign/es/locale/lang/en-us';
 import AppHeader from '~/components/header/AppHeader.vue';
 
+import { tryLogin } from '@/utils/login';
+
 const { locale, isZh } = useLocale();
 
 const isLite = ref(false);
@@ -26,6 +28,9 @@ watch(
     immediate: true,
   }
 );
+
+// -------------------- 登录 --------------------
+tryLogin();
 </script>
 
 <template>
