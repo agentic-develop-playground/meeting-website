@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { MeetingItemT } from '~/@types/type-meeting';
 import { OLink } from '@opensig/opendesign';
-import { ACTIVITY_DATA } from '~/config/meeting';
 
 const props = defineProps<{
   data: MeetingItemT;

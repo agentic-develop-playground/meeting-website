@@ -1,7 +1,21 @@
 <script setup lang="ts">
-import { OIconTime, useMessage } from '@opensig/opendesign';
 import { onMounted } from 'vue';
-import { OButton, OForm, OFormItem, OIcon, OInput, OOption, OPopover, ORadio, ORadioGroup, OSelect, OSwitch, OTextarea } from '@opensig/opendesign';
+import {
+  OButton,
+  OForm,
+  OFormItem,
+  OIcon,
+  OInput,
+  OOption,
+  OPopover,
+  ORadio,
+  ORadioGroup,
+  OSelect,
+  OSwitch,
+  OTextarea,
+  OIconTime,
+  useMessage,
+} from '@opensig/opendesign';
 import IconHelp from '~icons/meeting/icon-help.svg';
 import IconTip from '~icons/meeting/icon-tip.svg';
 import type { MeetingItemT, MeetingPostT, OptionItemT } from '~/@types/type-meeting';
@@ -269,7 +283,7 @@ defineExpose({
           <template #prev-month></template>
         </ElDatePicker>
       </OFormItem>
-      <OFormItem label="会议时间" field="time" :rules="rules.time">
+      <OFormItem field="time" :rules="rules.time" class="time-form-item">
         <div class="time-select-wrapper">
           <OFormItem field="start">
             <ElTimeSelect
@@ -319,26 +333,11 @@ defineExpose({
           </div>
         </div>
       </OFormItem>
-      <OFormItem field="email_list" :rules="rules.email_list">
-        <template #label>
-          <div class="label-wrapper">
-            <span>邮件地址&nbsp;</span>
-            <OPopover wrap-class="blue-theme">
-              <div class="popover-content">
-                默认会向已订阅SIG组成员发送会议通知也可添加其他SIG组邮件地址或个人邮件地址。<span class="link-text" @click="toSigEmail">SIG组邮件列表</span>
-              </div>
-              <template #target>
-                <OIcon>
-                  <IconHelp />
-                </OIcon>
-              </template>
-            </OPopover>
-          </div>
-        </template>
+      <OFormItem field="email_list" label="邮件地址" :rules="rules.email_list">
         <OTextarea
           :disabled="!!data"
           size="large"
-          placeholder="请输入邮件地址，多个邮件地址以“;”间隔"
+          placeholder="请输入电子邮件地址，多个邮件地址以“;”间隔，最多20个邮件"
           style="width: 100%"
           :rows="4"
           v-model="form.email_list"
@@ -374,6 +373,23 @@ defineExpose({
         color: var(--o-placeholder-color);
       }
     }
+    .o-input,
+    .o-textarea {
+      --_box-radius: 16px;
+    }
+    .o-select {
+      --select-radius: 16px;
+    }
+    .el-input {
+      width: 320px !important;
+      .el-input__wrapper {
+        border-radius: 16px;
+      }
+    }
+    .time-select-wrapper {
+      width: 320px;
+      border-radius: 16px;
+    }
 
     .o-form-item-label {
       flex: 0 0 100px;
@@ -381,6 +397,14 @@ defineExpose({
 
     .o-form-item-main {
       margin-left: var(--o-gap-3);
+    }
+
+    .time-form-item {
+      .o-form-item-label {
+        .o-form-require-symbol {
+          display: none;
+        }
+      }
     }
 
     .switch-wrapper {

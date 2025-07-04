@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import HomeContentWrapper from './HomeContentWrapper.vue';
-import MeetingCard2 from '../meeting/MeetingCard2.vue';
+import MeetingCard from '../meeting/MeetingCard.vue';
 </script>
 
 <template>
   <HomeContentWrapper :title="$t('home.calendarTitle')">
-    <MeetingCard2 />
+    <MeetingCard />
   </HomeContentWrapper>
 </template>
 

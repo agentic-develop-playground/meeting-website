@@ -1,499 +1,720 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { ODivider, OIcon, OIconChevronLeft, OIconChevronRight, OOption, OSelect } from '@opensig/opendesign';
-import MeetingCardList from './MeetingCardList.vue';
-import IconMeeting from '~icons/meeting/icon-meeting.svg';
-import type { GroupItemT, MeetingItemT } from '~/@types/type-meeting';
-import { getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
-import useWindowResize from '~/composables/useWindowResize';
+import { ref, nextTick, onMounted, watch } from 'vue';
+import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog } from '@opensig/opendesign';
 import dayjs from 'dayjs';
+
+import { getGroupInfosApi, getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
+import MeetingCardList from '~/components/meeting/MeetingCardList.vue';
+import EditForm from './EditForm.vue';
+
+import IconMeet from '~icons/home/icon-meet.svg';
+import type { GroupItemT, MeetingItemT } from '~/@types/type-meeting';
+
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
-const sig = ref(''); // 已选sig组
-// sig组列表
+const router = useRouter();
+
+// 日历展示时间限制
+const limitTime = '2021 年 1 月';
+const activityType = ['线下', '线上', '线上 + 线下'];
+
+// -------------------- 获取sig列表 --------------------
+const sig = ref('');
 const sigOptions = ref<GroupItemT[]>([]);
-
-const dates = ref<string[]>([]); //存在会议的日期
-const loading = ref(false); // 数据加载状态
-const newestDate = ref<string>(dayjs().format('YYYY-MM-DD')); // 最新日期
-// 根据日期互殴前后存在会议的日期
-const getMeetingDays = async (day?: string) => {
-  try {
-    loading.value = true;
-    const date = dayjs(day).format('YYYY-MM-DD');
-    dates.value = await getMeetingDateListApi(date);
-    if (dates.value.length) {
-      newestDate.value = dates.value.sort().find((date) => date >= dayjs().format('YYYY-MM-DD')) || dayjs().format('YYYY-MM-DD');
-    }
-  } finally {
-    loading.value = false;
-  }
-};
-onMounted(() => {
-  clickDateCell();
-});
-// -------------------- 日历 --------------------
-const calendarRef = ref(null); // 日历组件实例
-const windowWidth = ref(useWindowResize()); // 屏幕宽度
-const currentDate = ref(new Date()); // 默认选择当前月
-const calendarRows = ref(5); // 日历行数
-const list = ref<MeetingItemT[]>([]); // 某天的会议列表
-// 手动切换月份，并计算出当前面板有多少行
-const changeMonth = (step: -1 | 1) => {
-  const instance = calendarRef.value;
-  instance.selectDate(step > 0 ? 'next-month' : 'prev-month');
-  currentDate.value = instance.selectedDay;
-  getMeetingDays(dayjs(currentDate.value).format('YYYY-MM-DD'));
-  updateHeight();
-};
-const leftCalendarRef = ref(null);
-
-const updateHeight = () => {
-  nextTick(() => {
-    const rows = [...(leftCalendarRef.value?.querySelectorAll('.el-calendar-table__row') || [])];
-    calendarRows.value = rows.length || 5;
+const getSigList = () => {
+  getGroupInfosApi().then((res) => {
+    sigOptions.value = res.data;
   });
 };
+getSigList();
 
-// 获取所选日期的会议列表
-const clickDateCell = async (day?: string) => {
-  currentDate.value = day;
-  getMeetingDays(day);
-  try {
-    loading.value = true;
-    const date = dayjs(day).format('YYYY-MM-DD');
-    const res = await getMeetingListApi(date, sig.value);
-    list.value = res.map((v) => {
+// -------------------- 获取存在会议的日期列表 --------------------
+const tableData = ref([]);
+const latestDay = ref(new Date()); // 截止当天最新的活动日期
+
+const getTableData = async (day?: string) => {
+  const date = dayjs(day).format('YYYY-MM-DD');
+  const dateList = await getMeetingDateListApi(date);
+  tableData.value = [...new Set([...dateList])];
+  const allTableData = tableData.value.sort((a, b) => dayjs(a).unix() - dayjs(b).unix());
+  if (!tableData.value.length) {
+    latestDay.value = new Date();
+  } else {
+    let find = [...allTableData].reverse().find((v) => dayjs(v).unix() <= dayjs().unix());
+    if (!find) {
+      find = allTableData.find((v) => dayjs(v).unix() >= dayjs().unix());
+    }
+    latestDay.value = find;
+  }
+};
+
+// -------------------- 获取sig组列表 --------------------
+const renderData = ref([]);
+const currentDay = ref(undefined);
+
+const paramGetDaysData = async (params: { date: string }) => {
+  getMeetingListApi(params.date, sig.value).then((res) => {
+    renderData.value = res.map((v) => {
       return {
         ...v,
         time: `${v.start}-${v.end}`,
+        type: 'meetings',
       };
     });
-    sigOptions.value = [...new Set(list.value.map((v) => v.group_name))].map((v) => ({ group_name: v }));
+
+    // 会议时间排序
+    renderData.value.sort((a: any, b: any) => {
+      return parseInt(a.startTime?.replace(':', '')) - parseInt(b.startTime?.replace(':', ''));
+    });
+    renderData.value.map((item2) => {
+      if (item2?.etherpad) {
+        item2['duration_time'] = `${item2.startTime}-${item2.endTime}`;
+      }
+      if (item2?.activity_type && !item2.dates) {
+        item2.activity_type = activityType[Number(item2.activity_type) - 1];
+      }
+    });
+    sigOptions.value = [...new Set(renderData.value.map((v) => v.group_name))].map((v) => ({ group_name: v }));
     if (!sigOptions.value.find((v) => v.group_name === sig.value)) {
       sig.value = '';
     }
-  } finally {
-    loading.value = false;
-    updateHeight();
-  }
+  });
 };
-const isSmall = computed(() => windowWidth.value <= 840); // 是否是小屏幕
+
+const calendar = ref();
+const calendarHeight = ref<string>('407px');
+const isLimit = ref(false);
+
+function setMeetingDay(day: string, event?: Event) {
+  getTableData(day);
+  if (new Date(day).getTime() / 1000 < 1610380800) {
+    event?.stopPropagation();
+    return;
+  }
+  if (tableData.value?.includes(day)) {
+    paramGetDaysData({
+      date: day,
+    });
+  } else {
+    renderData.value = [];
+  }
+  currentDay.value = day;
+}
 
 const meetingList = computed(() => {
-  return list.value.filter((v) => !sig.value || v.group_name === sig.value);
+  return renderData.value.filter((v) => !sig.value || v.group_name === sig.value);
 });
-</script>
+const selectDate = (val: string, date: string) => {
+  if (date === limitTime && val === 'prev-month') {
+    isLimit.value = true;
+    return;
+  }
+  isLimit.value = false;
+  calendar.value.selectDate(val);
+  setMeetingDay(calendar.value.selectedDay);
+};
 
+const removeLeadingZero = (str: string) => {
+  // 使用正则表达式匹配以 0 开头的字符串，然后去除开头的 0
+  return str.replace(/^0+(?=\d)/, '');
+};
+
+const watchChange = (element: HTMLElement) => {
+  const observe = new MutationObserver(function () {
+    calendarHeight.value = `${element.offsetHeight - 2}px`;
+  });
+  observe.observe(element, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+};
+
+const getSummitHighlight = (date: string, data: any[]) => {
+  return data.find((item) => {
+    return item.dates?.includes(date);
+  });
+};
+onMounted(() => {
+  // 设置右侧 日程列表高度
+  const tbody = document.querySelector('.calendar-body .el-calendar__body') as HTMLElement;
+  if (tbody) {
+    watchChange(tbody);
+    calendarHeight.value = `${tbody.offsetHeight - 2}px`;
+  }
+  getTableData();
+});
+const stopWatchData = watch(
+  () => tableData.value.length,
+  () => {
+    if (isClient) {
+      nextTick(() => {
+        const activeBoxs = document.querySelector('.is-today .out-box') as HTMLElement;
+        if (activeBoxs) {
+          activeBoxs.click();
+          stopWatchData();
+        }
+      });
+    }
+  }
+);
+
+// -------------------- 预定会议 --------------------
+const createMeetingVisible = ref(false); // 新增or编辑弹窗
+const currentRow = ref<MeetingItemT | null>(null); // 当前激活行，用于取消事件
+
+const toCreateMeeting = () => {
+  currentRow.value = null;
+  createMeetingVisible.value = true;
+};
+
+// -------------------- 表单事件 --------------------
+const closeForm = () => {
+  createMeetingVisible.value = false;
+  currentRow.value = null;
+};
+const confirmForm = () => {
+  closeForm();
+};
+
+const toMeetingList = () => {
+  router.push('/my/meeting');
+};
+</script>
 <template>
-  <div class="meeting-card top blue-theme" v-if="isSmall">
+  <div class="home-calendar">
     <div class="calendar-header">
-      <div class="flex align-center month">
-        <OIconChevronLeft @click.stop="changeMonth(-1)"></OIconChevronLeft>
-        <div>{{ dayjs(currentDate).format('YYYY年M月') }}</div>
-        <OIconChevronRight @click.stop="changeMonth(1)"></OIconChevronRight>
-      </div>
+      <OButton color="primary" variant="outline" @click="toMeetingList">我创建的会议</OButton>
+      <OButton color="primary" variant="solid" @click="toCreateMeeting">创建会议</OButton>
     </div>
-    <ElConfigProvider :locale="zhCn">
-      <ElCalendar ref="calendarRef">
-        <template #date-cell="{ data }">
-          <div class="date-cell" @click="clickDateCell(data.day)">
-            <div class="date-cell-day">{{ Number(data.day.slice(-2)) }}</div>
-            <div class="meeting-dot" v-if="dates.includes(data.day)"></div>
+    <div class="calendar-body">
+      <el-calendar ref="calendar" class="calender">
+        <template #header="{ date }">
+          <div class="calender-header-left">
+            <div class="left-title">
+              <OIcon @click="selectDate('prev-month', date)">
+                <OIconChevronLeft :class="{ disable: isLimit }"></OIconChevronLeft>
+              </OIcon>
+              <span class="month-date">{{ date }}</span>
+              <OIcon @click="selectDate('next-month', date)">
+                <OIconChevronRight></OIconChevronRight>
+              </OIcon>
+            </div>
+            <OSelect v-model="sig" placeholder="全部SIG组" clearable>
+              <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
+            </OSelect>
+          </div>
+
+          <div class="right-title">
+            最新日程：
+            <span>{{ dayjs(latestDay).format('YYYY/MM/DD') }}</span>
           </div>
         </template>
-      </ElCalendar>
+        <template #date-cell="{ data }">
+          <div class="out-box" :class="{ 'has-calender': tableData.includes(data.day) }" @click="setMeetingDay(data.day, $event)">
+            <div class="day-box">
+              <p :class="data.isSelected ? 'is-selected' : ''" class="date-calender">
+                {{ removeLeadingZero(data.day.split('-').at(-1) || '') }}
+              </p>
+              <div class="icon-box">
+                <OIcon class="meetings" v-if="tableData.includes(data.day)">
+                  <IconMeet></IconMeet>
+                </OIcon>
+              </div>
+            </div>
+          </div>
+        </template>
+      </el-calendar>
+      <div class="detail-list">
+        <div class="current-day">
+          最新日程：
+          <span>{{ dayjs(currentDay).format('YYYY/MM/DD') }}</span>
+        </div>
+        <div class="right-title">
+          <div class="title-list">
+            <OSelect style="max-width: 320px" v-model="sig" placeholder="全部SIG组" clearable>
+              <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
+            </OSelect>
+          </div>
+        </div>
+
+        <div>
+          <OScroller class="meeting-list" show-type="hover" size="small">
+            <MeetingCardList :list="meetingList"></MeetingCardList>
+          </OScroller>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ODialog v-model:visible="createMeetingVisible" class="create-meeting-dialog">
+    <template #header>创建会议</template>
+    <ElConfigProvider :locale="zhCn">
+      <EditForm v-if="createMeetingVisible" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
     </ElConfigProvider>
-  </div>
-
-  <div class="meeting-card blue-theme">
-    <div class="meeting-card-header" v-if="!isSmall">
-      <div class="calendar-header">
-        <div class="flex align-center month">
-          <OIconChevronLeft @click="changeMonth(-1)"></OIconChevronLeft>
-          <div>{{ dayjs(currentDate).format('YYYY年M月') }}</div>
-          <OIconChevronRight @click="changeMonth(1)"></OIconChevronRight>
-        </div>
-      </div>
-      <div class="list-header-text">最新日程：{{ newestDate }}</div>
-      <OSelect style="max-width: 320px" v-model="sig" placeholder="全部SIG组" clearable>
-        <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
-      </OSelect>
-    </div>
-    <div class="meeting-card-content">
-      <div class="calendar-wrapper left" v-if="!isSmall" ref="leftCalendarRef">
-        <ODivider></ODivider>
-        <ClientOnly>
-          <ElConfigProvider :locale="zhCn">
-            <ElCalendar ref="calendarRef">
-              <template #date-cell="{ data }">
-                <div class="date-cell" @click="clickDateCell(data.day)">
-                  <div class="date-cell-day">{{ Number(data.day.slice(-2)) }}</div>
-                  <OIcon v-if="dates.includes(data.day)">
-                    <IconMeeting class="initial-fill"></IconMeeting>
-                  </OIcon>
-                </div>
-              </template>
-            </ElCalendar>
-          </ElConfigProvider>
-        </ClientOnly>
-      </div>
-      <div class="list-wrapper">
-        <div class="list-header" v-if="isSmall">
-          <div class="list-header-text">最新日程：{{ newestDate }}</div>
-          <OSelect style="max-width: 320px" v-model="sig" placeholder="全部SIG组" clearable>
-            <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
-          </OSelect>
-        </div>
-        <ODivider></ODivider>
-        <div class="list-content">
-          <MeetingCardList :list="meetingList" :rows="isSmall ? 10 : calendarRows"></MeetingCardList>
-        </div>
-      </div>
-    </div>
-  </div>
+  </ODialog>
 </template>
-
-<style scoped lang="scss">
-.flex {
-  display: flex;
+<style lang="scss" scoped>
+.meetings {
+  background-color: #007af0;
+  z-index: 3;
 }
 
-.align-center {
-  align-items: center;
+.o-link {
+  --link-icon-size: 16px;
 }
 
-.meeting-card + .meeting-card {
-  margin-top: var(--o-gap-3);
-}
+.home-calendar {
+  --cell-bg: rgb(231, 240, 253);
+  --cell-active-bg: rgb(209, 227, 255);
 
-.meeting-card {
-  background-color: var(--o-color-fill2);
-  border-radius: var(--o-radius-m);
-  overflow: hidden;
-
-  .meeting-card-header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 24px 0 0;
-    height: 60px;
-  }
-  .meeting-card-content {
-    display: flex;
-  }
   .calendar-header {
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    height: 60px;
-    padding: 0 24px;
     color: var(--o-color-info2);
-
-    .today {
-      display: flex;
-      align-items: center;
-      column-gap: var(--o-gap-2);
-      border-radius: var(--o-radius-xs);
-      border: 1px solid var(--o-color-control1);
-      height: var(--o-control_size-m);
-      padding: 0 var(--o-gap-4);
-      @include h4;
-
-      :deep(.o-svg-icon) {
-        @include h2;
-      }
-
-      & > div:last-child {
-        color: var(--o-color-primary1);
-      }
-    }
-
-    .month {
-      @include text2;
-      font-weight: 500;
-
-      :deep(.o-svg-icon) {
-        @include h4;
-        margin: 0 4px;
-        cursor: pointer;
-      }
-    }
-
-    :deep(.o-svg-icon) {
-      cursor: pointer;
+    column-gap: var(--o-gap-5);
+    margin-top: var(--o-gap-t2c);
+    margin-bottom: var(--o-gap-section-5);
+    @include respond-to('<=pad_v') {
+      margin-top: 12px;
     }
   }
 
-  .list-header-text {
-    @include text2;
-    color: var(--o-color-info2);
-  }
-  :deep(.o-divider) {
-    margin: 0;
+  :deep(.section-body) {
+    position: relative;
+    width: 100%;
+    z-index: 1;
   }
 
-  :deep(.el-calendar) {
-    .el-calendar__header {
-      display: none;
-    }
-    .el-calendar__body {
-      background-color: var(--o-color-fill2);
+  .o-select {
+    flex-grow: 1;
+    max-width: 320px;
+  }
+
+  .calendar-body {
+    display: flex;
+    border-radius: var(--o-radius-xs);
+    background-color: var(--o-color-fill2);
+    overflow: hidden;
+    @include respond-to('<=pad_v') {
+      background-color: transparent;
+      flex-direction: column;
     }
 
-    .el-calendar-table__row {
-      td {
-        border: none;
-        background-color: transparent;
+    :deep(.calender) {
+      width: 56%;
+      --el-calendar-borde: none;
+      --el-calendar-selected-bg-color: none;
+      @include respond-to('<=pad_v') {
+        width: 100%;
+        flex-direction: column;
+        background-color: var(--o-color-fill2);
+        border-radius: var(--o-radius-xs);
+      }
 
-        &.current {
-          .date-cell-day {
-            color: var(--o-color-info1);
+      .el-calendar__header {
+        height: 60px;
+        padding: 14px 24px;
+        border-bottom: 1px solid var(--o-color-control4);
+        @include respond-to('<=pad_v') {
+          justify-content: center;
+          padding: 16px 16px 12px;
+          height: auto;
+          border-bottom: none;
+        }
+
+        td {
+          border: none;
+        }
+
+        .calender-header-left {
+          display: flex;
+          align-items: center;
+          gap: var(--grid-column-gutter);
+          flex-grow: 1;
+          @include respond-to('<=pad_v') {
+            justify-content: center;
+            .o-select {
+              display: none;
+            }
           }
         }
 
-        .el-calendar-day {
-          padding: var(--o-gap-1);
-          height: 72px;
-          &:hover {
-            background-color: transparent !important;
+        .left-title {
+          display: flex;
+          align-items: center;
+          flex-shrink: 0;
+          @include text2;
+
+          .o-icon {
+            cursor: pointer;
+            font-size: 24px;
           }
 
-          .date-cell {
-            height: 64px;
-            background-color: rgb(var(--o-mixedgray-3));
-            box-sizing: border-box;
-            border: 1px solid transparent;
-            border-radius: var(--o-radius-xs);
-            padding: var(--o-gap-2) var(--o-gap-3) var(--o-gap-1);
+          .month-date {
+            font-weight: 500;
+            margin: 0 4px;
+          }
+
+          .date {
+            color: var(--o-color-primary1);
+          }
+
+          .o-icon {
+            font-size: 24px;
+          }
+        }
+
+        .right-title {
+          display: flex;
+          align-items: center;
+          position: relative;
+          right: -24px;
+          transform: translateX(50%);
+          color: var(--o-color-info2);
+          word-break: keep-all;
+          margin-left: -72px;
+          @include text2;
+          @include respond-to('<=pad_v') {
+            display: none;
+          }
+        }
+      }
+
+      .el-calendar__body {
+        padding: 12px 24px 32px;
+        border-right: 1px solid var(--o-color-control4);
+
+        thead {
+          th {
+            padding: 12px 0 16px 20px;
+            text-align: left;
+            color: var(--o-color-info3);
+            @include text1;
+            @include respond-to('<=pad_v') {
+              padding: 0;
+              text-align: center;
+            }
+          }
+        }
+
+        td:first-child {
+          .el-calendar-day {
+            margin-left: 0 !important;
+          }
+        }
+
+        tr:last-child {
+          .el-calendar-day {
+            margin-bottom: 0 !important;
+          }
+        }
+
+        @include respond-to('<=pad_v') {
+          border: none;
+          padding: 0 16px 16px;
+          thead {
+            background-color: var(--o-color-control4-light);
+            overflow: hidden;
+
+            th {
+              padding: 9px 0;
+            }
+
+            th:first-child {
+              border-top-left-radius: var(--o-radius-xs);
+              border-bottom-left-radius: var(--o-radius-xs);
+            }
+
+            th:last-child {
+              border-top-right-radius: var(--o-radius-xs);
+              border-bottom-right-radius: var(--o-radius-xs);
+            }
+          }
+          tr:last-child {
+            .out-box {
+              margin-bottom: 0 !important;
+            }
+          }
+        }
+      }
+
+      td {
+        border: none;
+      }
+
+      .el-calendar-day {
+        padding: 0;
+        margin-left: 8px;
+        margin-bottom: 8px;
+        max-width: 100px;
+        height: 64px;
+        color: var(--o-color-info1);
+        @include respond-to('<=pad_v') {
+          display: flex;
+          justify-content: center;
+          padding: 0;
+          height: fit-content;
+        }
+
+        .out-box {
+          position: relative;
+          border-radius: var(--o-radius-xs);
+          padding: 6px 12px;
+          width: 100%;
+          height: 100%;
+          background-color: var(--cell-bg);
+          border: 1px solid transparent;
+          @include tip1;
+          @include hover {
+            background-color: var(--cell-active-bg);
+            @include respond-to('<=pad_v') {
+              @include hover {
+                background-color: inherit;
+                border: 1px solid transparent;
+              }
+            }
+          }
+
+          .day-box {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            align-items: flex-start;
+            height: 100%;
+          }
 
-            .date-cell-day {
-              border-radius: 50%;
-              text-align: center;
-              line-height: 20px;
-              width: 20px;
-            }
+          .icon-box {
+            display: flex;
+            margin-top: 4px;
+            color: var(--o-color-white);
+            height: 20px;
 
             .o-icon {
+              flex-shrink: 0;
+              position: relative;
+              border-radius: 50%;
+              padding: 2px;
+              width: 20px;
+              height: 20px;
               font-size: 20px;
-              color: #fff;
+              margin-left: -6px;
+              @include respond-to('<=pad_v') {
+                height: 6px;
+                width: 6px;
+                margin-left: -2px;
+              }
+
+              &:first-child {
+                margin: 0;
+              }
             }
           }
 
-          &:hover {
-            background-color: #fff;
+          @include respond-to('<=pad_v') {
+            background-color: transparent;
+            padding: 0;
+            margin: 6px 8px;
+            text-align: center;
+            width: 24px;
+            height: 24px;
+            .day-box {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              font-size: 14px;
+              line-height: 22px;
+            }
+            .icon-box {
+              display: flex;
+              justify-content: center;
+              margin-top: 0;
+              position: absolute;
+              left: 50%;
+              bottom: -2px;
+              height: 6px;
+              transform: translate(-50%, 100%);
+            }
+            .o-icon {
+              width: 6px;
+              height: 6px;
 
-            .date-cell {
-              background-color: rgb(var(--o-mixedgray-4));
-              border-color: var(--o-color-primary1);
+              svg {
+                display: none;
+              }
             }
           }
         }
+      }
 
-        &.is-selected {
-          .date-cell {
-            background-color: rgb(var(--o-mixedgray-3));
-            border-color: var(--o-color-primary1);
+      .is-selected {
+        .out-box {
+          background-color: var(--cell-active-bg);
+          border: 1px solid var(--o-color-primary1);
+          @include respond-to('<=pad_v') {
+            background-color: transparent;
+            border: 1px solid transparent;
+            .date-calender {
+              position: relative;
+              color: var(--o-color-white);
+              z-index: 1;
+
+              &::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                height: 24px;
+                width: 40px;
+                background-color: var(--o-color-primary1);
+                border-radius: var(--o-radius-l);
+                z-index: -1;
+              }
+            }
           }
         }
+      }
 
-        &.is-today {
-          color: inherit;
+      .is-today {
+        .date-calender {
+          $size: 32px;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: fit-content;
+          height: 24px;
+          line-height: 24px;
+          z-index: 1;
+          flex-shrink: 1;
+          flex-basis: 18px;
 
-          .date-cell-day {
-            position: relative;
-            z-index: 1;
+          &::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: $size;
+            height: $size;
+            background-color: var(--cell-active-bg);
+            border-radius: 50%;
+            z-index: -1;
+          }
+
+          @include respond-to('<=pad_v') {
+            height: auto;
+            width: auto;
             &::after {
               content: '';
-              border-radius: 50%;
-              width: var(--o-control_size-m);
-              height: var(--o-control_size-m);
-              background-color: rgb(var(--o-mixedgray-5));
               position: absolute;
-              z-index: -1;
-              left: 0;
-              top: 0;
-              transform: translate(-6px, -6px);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .calendar-wrapper {
-    width: 55%;
-    flex-shrink: 0;
-
-    :deep(.el-calendar) {
-      border-right: 1px solid var(--o-color-control4);
-    }
-  }
-
-  .list-wrapper {
-    flex-grow: 1;
-
-    .list-header {
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 var(--o-gap-5) 0 var(--o-gap-5);
-    }
-
-    .list-content {
-      height: calc(100% - 70px);
-    }
-  }
-
-  &.top {
-    border-radius: 4px;
-    .calendar-header {
-      height: 52px;
-      justify-content: center;
-      .month {
-        font-size: 16px;
-        line-height: 24px;
-        .o-svg-icon {
-          font-size: 24px;
-          margin: 0;
-        }
-        & > div {
-          margin: 0 24px;
-        }
-      }
-    }
-    :deep(.el-calendar) {
-      border-right: none;
-      .el-calendar__body {
-        padding-top: 0;
-        padding-bottom: 16px;
-        .el-calendar-table {
-          thead {
-            background-color: var(--o-color-fill1);
-            th {
-              overflow: hidden;
-              color: var(--o-color-info3);
-              &:first-child {
-                border-radius: 4px 0 0 4px;
-              }
-              &:last-child {
-                border-radius: 0 4px 4px 0;
-              }
-            }
-          }
-          .el-calendar-table__row {
-            .el-calendar-day {
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
               height: 24px;
-              padding: 0;
-              margin-top: 12px;
-              .date-cell {
-                height: 24px;
-                padding: 0;
-                display: flex;
-                flex-direction: row;
-                justify-content: center;
-                background-color: transparent;
-                position: relative;
-                border: none;
-                .date-cell-day {
-                  height: 24px;
-                  line-height: 24px;
-                  width: 40px;
-                  border-radius: 12px;
-                  border: 1px solid transparent;
-                  &::after {
-                    content: none;
-                  }
-                }
-                .meeting-dot {
-                  width: 6px;
-                  height: 6px;
-                  border-radius: 6px;
-                  background-color: var(--o-color-ubmc);
-                  position: absolute;
-                  left: 50%;
-                  top: 100%;
-                  transform: translateX(-50%) translateY(2px);
-                }
-              }
-              &:hover {
-                .date-cell {
-                  .date-cell-day {
-                    border: 1px solid var(--o-color-ubmc);
-                  }
-                }
-              }
-            }
-
-            .is-selected {
-              .date-cell {
-                .date-cell-day {
-                  background-color: var(--o-color-ubmc);
-                  color: var(--o-color-info1-inverse);
-                  border: 1px solid var(--o-color-ubmc);
-                }
-              }
-              .el-calendar-day:hover {
-                .date-cell-day {
-                  line-height: 24px;
-                }
-              }
+              width: 40px;
+              background-color: var(--o-color-control1-light);
+              border-radius: var(--o-radius-l);
+              z-index: -1;
             }
           }
         }
       }
     }
-  }
-}
-</style>
-<style lang="scss">
-[data-o-theme='dark'] {
-  .is-selected,
-  .is-today {
-    .date-cell {
-      background-color: rgb(43, 43, 47);
+
+    .detail-list {
+      width: 44%;
+      @include respond-to('<=pad_v') {
+        margin-top: 12px;
+        background-color: var(--o-color-fill2);
+        width: 100%;
+        border-radius: var(--o-radius-xs);
+      }
+      @include respond-to('>pad_v') {
+        .current-day {
+          display: none;
+        }
+      }
+      @include respond-to('<=pad_v') {
+        .current-day {
+          @include text2;
+          display: flex;
+          margin: 16px 16px 12px;
+          padding: 7px 12px;
+          justify-content: center;
+          border-radius: var(--o-radius-s);
+          background-color: var(--o-color-control4-light);
+        }
+      }
+
+      .title-list {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 14px 24px;
+        position: relative;
+        height: 60px;
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 1px;
+          background-color: var(--o-color-control4);
+        }
+        .o-select {
+          display: none;
+        }
+        @include respond-to('<=pad_v') {
+          justify-content: space-between;
+          padding: 0 16px;
+          gap: 24px;
+          height: auto;
+          align-items: flex-start;
+          .o-select {
+            display: inline-flex;
+          }
+        }
+      }
+
+      .o-link {
+        font-weight: 400;
+        font-size: var(--o-font_size-tip1);
+        line-height: var(--o-line_height-tip1);
+        margin-left: 36px;
+        @include respond-to('<=pad_v') {
+          margin-left: 32px;
+          padding: 0;
+        }
+      }
     }
-  }
-}
-</style>
-<style lang="scss" scoped>
-@include respond-to('laptop') {
-  .meeting-card {
-    :deep(.el-calendar) {
-      .el-calendar__body {
-        padding-bottom: 32px;
+
+    .meeting-list {
+      height: v-bind('calendarHeight');
+      @include respond-to('<=pad_v') {
+        height: auto;
       }
     }
   }
 }
 
-@include respond-to('<=pad') {
-  .meeting-card {
-    .list-wrapper {
-      .list-header {
-        padding: 16px 16px 0;
-        flex-wrap: wrap;
-        height: 100px;
-        & > div {
-          width: 100%;
-        }
-        .list-header-text {
-          height: 36px;
-          background-color: var(--o-color-fill1);
-          border-radius: 8px;
-          line-height: 36px;
-          text-align: center;
-          font-weight: 500;
-        }
-        :deep(.o-select) {
-          max-width: 100% !important;
-        }
-      }
+@include in-dark {
+  .home-calendar {
+    --cell-bg: rgb(43, 43, 47);
+    --cell-active-bg: rgb(53, 53, 57);
+  }
+}
+</style>
+
+<style lang="scss">
+.create-meeting-dialog {
+  --dlg-radius: 16px;
+  .o-dlg-body {
+    padding: 0 22px;
+    @include respond-to('pad') {
+      padding: 0 16px;
     }
   }
 }

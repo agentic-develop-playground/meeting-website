@@ -5,6 +5,8 @@ import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 import IconLogOff from '~icons/app/icon-log-off.svg';
 import IconAvatar from '~icons/app/icon-avatar-line.svg';
 
+import { doLogin } from '@/utils/login';
+
 const token = '';
 
 const { lePadV } = useScreen();
@@ -14,7 +16,7 @@ const { lePadV } = useScreen();
   <div class="header-user">
     <!-- 未登录或登录失败 -->
     <template v-if="!token">
-      <OIcon class="avatar-icon">
+      <OIcon class="avatar-icon" @click="doLogin">
         <IconAvatar></IconAvatar>
       </OIcon>
     </template>

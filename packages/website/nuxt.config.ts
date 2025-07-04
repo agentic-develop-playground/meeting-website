@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     rootId: 'cann-portal',
     buildAssetsDir: 'assets',
     head: {
+      title: '会议日历 | CANN开放项目',
       htmlAttrs: {
         lang: 'zh',
       },
@@ -32,34 +33,7 @@ export default defineNuxtConfig({
       ],
     },
   },
-  modules: ['@nuxt/content', '@element-plus/nuxt', '@vueuse/nuxt'],
-  content: {
-    markdown: {
-      anchorLinks: false,
-      mdc: true,
-      toc: {
-        depth: 4,
-        searchDepth: 4,
-      },
-    },
-    highlight: {
-      theme: {
-        default: 'github-light',
-        dark: 'github-dark',
-        sepia: 'monokai',
-      },
-    },
-    respectPathCase: true,
-    experimental: {
-      clientDB: true,
-    },
-    components: {
-      prose: true,
-      map: {
-        code: 'content/ProseCode',
-      },
-    },
-  },
+  modules: ['@element-plus/nuxt', '@vueuse/nuxt'],
   vite: {
     plugins: [
       Icons({
@@ -89,13 +63,18 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/api-meeting/': {
-          target: 'https://meeting-cann.test.osinfra.cn/',
+          target: 'https://ascend.test.osinfra.cn/',
           changeOrigin: true,
         },
         '/api-dsapi/': {
           target: 'https://dsapi.test.osinfra.cn/',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api-dsapi/, ''),
+        },
+        '/api-id/': {
+          target: 'https://id.ascend.test.osinfra.cn/',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api-id/, ''),
         },
       },
     },
@@ -104,6 +83,11 @@ export default defineNuxtConfig({
       __VUE_I18N_LEGACY_API__: 'false',
       __VUE_I18N_COMPOSITION_API__: 'true',
     },
+  },
+  devServer: {
+    port: 9999,
+    host: 'localhost',
+    https: true,
   },
   elementPlus: {
     importStyle: 'scss',

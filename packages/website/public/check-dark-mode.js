@@ -11,7 +11,7 @@ function getCookie(key) {
   return null;
 }
 
-const e = getCookie('openUBMC-theme-appearance') || 'auto';
+const e = getCookie('ascend-cann-theme-appearance') || 'auto';
 const a = window.matchMedia('(prefers-color-scheme: dark)').matches;
 if (!e || e === 'auto' ? a : e === 'dark') {
   document.documentElement.setAttribute('data-o-theme', 'dark');

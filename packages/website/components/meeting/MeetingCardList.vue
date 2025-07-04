@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { OCol, OCollapse, OCollapseItem, ODivider, OIcon, ORow, OScroller, useMessage } from '@opensig/opendesign';
+import { OCollapse, OCollapseItem, ODivider, OIcon, OLink, useMessage } from '@opensig/opendesign';
 import MeetingDetail from './MeetingDetail.vue';
 import { ref, watch } from 'vue';
-import IconMeeting from '~icons/meeting/icon-meeting.svg';
+
 import IconCopy from '~icons/meeting/icon-copy.svg';
 import type { MeetingItemT } from '~/@types/type-meeting';
 import { storeToRefs } from 'pinia';
 import { useThemeStore } from '~/stores/common';
-import emptyBg from '@/assets/meeting/svg-icons/icon-empty.svg';
-import emptyBgDark from '@/assets/meeting/svg-icons/icon-empty_dark.svg';
+import emptyBg from '@/assets/category/meeting/svg-icons/icon-empty.svg';
+import emptyBgDark from '@/assets/category/meeting/svg-icons/icon-empty_dark.svg';
 
-const props = defineProps<{ list: MeetingItemT[]; rows: number }>();
+import IconEvent from '~icons/home/icon-event.svg';
+import IconSummit from '~icons/home/icon-summit.svg';
+import IconMeet from '~icons/home/icon-meet.svg';
+import IconChevronRight from '~icons/app/icon-chevron-right.svg';
+
+const props = defineProps<{ list: MeetingItemT[] }>();
 const detailListRef = ref([]);
 const message = useMessage();
 const copyInfo = async (idx) => {
@@ -34,59 +39,85 @@ watch(
 );
 const themeStore = useThemeStore();
 const { isDark } = storeToRefs(themeStore);
+const resolveDate = (date: string) => {
+  return date?.replaceAll?.('-', '/');
+};
+const i18n = {
+  SIG_GROUP: 'SIG组:',
+  NEW_DATE: '最新日程：',
+  EMPTY_TEXT: '当日没有活动，敬请期待',
+  LEARN_MORE: '查看详情',
+};
 </script>
 
 <template>
   <div class="meeting-card-list">
     <div v-if="!list || !list.length" class="empty-placeholder">
       <img :src="isDark ? emptyBgDark : emptyBg" alt="" />
-      <div>当日暂无会议，敬请期待</div>
+      <div>当日没有活动，敬请期待</div>
     </div>
-    <OScroller v-else class="container" show-type="auto" disabled-x :style="{ maxHeight: `${72 * rows + 90}px` }">
-      <OCollapse v-model="collapseNames">
-        <OCollapseItem v-for="(row, idx) in list" :key="row.id" :value="row.id">
-          <template #title>
-            <div class="collapse-header-left">
-              <OIcon style="margin-top: 2px">
-                <IconMeeting></IconMeeting>
-              </OIcon>
-              <div class="title">
-                <div class="title-name">{{ row.topic }}</div>
-                <div class="title-desc">
-                  <span>{{ row.date }}</span>
-                  <span>&nbsp;</span>
-                  <span>{{ row.time }}</span>
-                  <ODivider direction="v"></ODivider>
-                  <span>SIG组：{{ row.group_name }}</span>
-                </div>
-              </div>
-            </div>
-            <OIcon @click.stop="() => copyInfo(idx)" class="copy-icon">
-              <IconCopy></IconCopy>
+    <OCollapse v-else v-model="collapseNames" :style="{ '--collapse-padding': '0' }">
+      <OCollapseItem v-for="(item, index) in list" :key="item.id" :value="item.id">
+        <template #title>
+          <div class="meet-title" :title="item.name || item.title">
+            <OIcon :class="item.type || 'meeting'">
+              <IconSummit v-if="item.type === 'summit'"></IconSummit>
+              <IconEvent v-else-if="item.type === 'activity'"></IconEvent>
+              <IconMeet v-else></IconMeet>
             </OIcon>
-          </template>
-          <div class="tr-content">
-            <ORow gap="0">
-              <OCol flex="0 0 100%">
-                <MeetingDetail :data="row" :ref="(insRef) => (detailListRef[idx] = insRef)" from="home"></MeetingDetail>
-              </OCol>
-            </ORow>
+            <div class="text">
+              {{ item.topic || item.name || item.title }}
+            </div>
           </div>
-        </OCollapseItem>
-      </OCollapse>
-    </OScroller>
+          <div class="meet-info">
+            <span class="start-time">
+              <span v-if="item.start">{{ item.date }} {{ item.start }} - {{ item.end }}</span>
+              <span v-else>{{ resolveDate(item.start_date) }}-{{ resolveDate(item.end_date || '') }}</span>
+            </span>
+            <ODivider direction="v" />
+            <div v-if="item.group_name">{{ i18n.SIG_GROUP }} {{ item.group_name }}</div>
+            <div v-if="item.activity_type">
+              {{ item.activity_type }}
+            </div>
+          </div>
+          <OLink v-if="item.type !== 'meetings'" :href="item.url" target="_blank" class="jump-detail-link">
+            查看更多
+            <template #suffix>
+              <OIcon><IconChevronRight /> </OIcon>
+            </template>
+          </OLink>
+          <OIcon @click.stop="() => copyInfo(index)" class="copy-icon" v-else>
+            <IconCopy></IconCopy>
+          </OIcon>
+        </template>
+        <div class="calendar-info">
+          <MeetingDetail :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
+        </div>
+      </OCollapseItem>
+    </OCollapse>
   </div>
 </template>
 
 <style scoped lang="scss">
 .meeting-card-list {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  .meetings {
+    background-color: #007af0;
+    z-index: 3;
+  }
 
-  :deep(.o-scroller) {
-    flex-grow: 1;
-    transition: max-height ease-in-out 0.2s;
+  .summit {
+    background-color: #3422ff;
+    z-index: 2;
+  }
+
+  .activity {
+    background-color: #ffa122;
+    z-index: 1;
+  }
+
+  .jump-detail-link {
+    @include text1;
+    padding-left: 36px;
   }
 
   .empty-placeholder {
@@ -103,137 +134,164 @@ const { isDark } = storeToRefs(themeStore);
       width: 206px;
     }
   }
-  .o-icon {
-    font-size: 24px;
-    &.copy-icon {
-      font-size: 18px;
-      &:hover {
-        color: var(--o-color-ubmc-hover);
-      }
-    }
-  }
-  :deep(.copy-icon) {
-    path {
-      fill: currentColor;
-    }
-  }
 
   :deep(.o-collapse) {
-    padding: 0;
-
     .o-collapse-item {
-      border: none;
       position: relative;
+      border-top: none;
+
       &::after {
-        display: block;
-        content: '';
         position: absolute;
-        left: 24px;
-        right: 24px;
+        content: '';
         bottom: 0;
-        border-bottom: 1px solid var(--collapse-division-color);
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 2 * 24px);
+        height: 1px;
+        background-color: var(--collapse-division-color);
       }
-    }
 
-    .o-icon-chevron-right:hover {
-      color: var(--o-color-primary1);
-    }
-
-    .o-collapse-item-header {
-      padding: var(--o-gap-4) 70px 20px 16px;
-      position: relative;
+      @include hover {
+        .text {
+          color: var(--o-color-primary1);
+        }
+      }
+      @include respond-to('<=pad_v') {
+        &::after {
+          width: calc(100% - 2 * 16px);
+        }
+        &:last-child {
+          &::after {
+            display: none;
+          }
+        }
+      }
     }
 
     .o-collapse-item-icon {
-      width: 24px;
-      position: absolute;
-      right: 24px;
-      top: 50%;
-      margin-top: -16px;
-      transition: transform linear 0.2s;
+      height: min-content;
     }
 
-    .o-collapse-item-title {
-      flex-grow: 1;
-      display: flex;
+    .o-collapse-item-header {
       align-items: center;
-      justify-content: space-between;
+      padding: 16px 24px;
+      position: relative;
+      @include respond-to('<=pad_v') {
+        padding: 12px 16px;
+      }
 
-      .collapse-header-left {
-        display: flex;
-        align-items: flex-start;
-        flex-grow: 1;
-        width: 0;
-        padding-right: var(--o-gap-2);
-
-        .o-icon {
-          color: #fff;
-        }
-
-        .title {
-          margin-left: var(--o-gap-4);
-          width: 0;
-          flex-grow: 1;
-        }
-
-        .title-name {
-          @include text2;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          font-weight: 500;
-
+      .o-collapse-item-icon {
+        .o-svg-icon {
           &:hover {
             color: var(--o-color-ubmc-hover);
-          }
-        }
-
-        .title-desc {
-          @include tip1;
-          color: var(--o-color-info3);
-          margin-top: var(--o-gap-2);
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-
-          .o-divider {
-            margin: 0 var(--o-gap-3);
           }
         }
       }
     }
 
     .o-collapse-item-body {
-      background-color: rgb(var(--o-mixedgray-3));
-      padding: 16px 60px;
+      background-color: #f7f9fd;
       margin-bottom: 0;
+
+      a {
+        word-break: break-all;
+      }
     }
-    .o-collapse-item {
-      .o-collapse-item-body {
-        padding-top: 0;
-        padding-bottom: 0;
-        transition: all var(--o-duration-m2) var(--o-easing-standard);
-        .o-col {
-          margin-bottom: 0;
-        }
+  }
+
+  .meet-title {
+    display: flex;
+    align-items: center;
+    color: var(--o-color-info1);
+    @include text2;
+
+    .o-icon {
+      flex-shrink: 0;
+      padding: 2px;
+      border-radius: 50%;
+      overflow: hidden;
+      color: var(--o-color-white);
+      margin-right: 12px;
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      @include respond-to('<=pad_v') {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
       }
-      &.o-collapse-item-expanded {
-        .o-collapse-item-body {
-          padding: 16px 60px;
-          .o-col {
-            margin-bottom: var(--col-gap-y);
-          }
-        }
+    }
+
+    .text {
+      @include text-truncate(1);
+      display: block;
+      width: 100%;
+    }
+  }
+
+  .meet-info {
+    margin-left: 36px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    @include tip1;
+    color: var(--o-color-info3);
+    text-decoration: none;
+    @include respond-to('<=pad_v') {
+      margin-left: 32px;
+    }
+
+    .o-divider {
+      @include tip1;
+    }
+  }
+
+  .copy-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 64px;
+    font-size: 18px;
+
+    &:hover {
+      color: var(--o-color-ubmc-hover);
+    }
+
+    @include respond-to('<=pad_v') {
+      right: 60px;
+    }
+  }
+
+  .calendar-info {
+    display: flex;
+    @include tip1;
+    color: var(--o-color-info3);
+    flex-direction: column;
+    padding: 16px 60px;
+    @include respond-to('<=pad_v') {
+      padding: 12px 16px;
+    }
+
+    .info-item {
+      display: flex;
+      margin-top: 8px;
+
+      .item-title {
+        min-width: 110px;
       }
+    }
+
+    .info-item:first-child {
+      margin-top: 0;
     }
   }
 }
 
-@include respond-to('<=pad') {
+@include in-dark {
   .meeting-card-list {
     :deep(.o-collapse) {
       .o-collapse-item-body {
-        padding: 12px 16px;
+        background-color: #2b2b2f;
       }
     }
   }

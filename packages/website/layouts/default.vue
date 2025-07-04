@@ -49,8 +49,6 @@ watch(
   --layout-content-max-width: 1440px;
   --layout-content-padding: 12px;
 
-  --layout-footer-height: 288px;
-
   .content-width {
     width: var(--grid-content-width);
   }
@@ -72,16 +70,12 @@ watch(
     --layout-header-padding: 32px;
 
     --layout-content-padding: 32px;
-
-    --layout-footer-height: 200px;
   }
 
   @include respond-to('phone') {
     --layout-header-padding: 24px;
 
     --layout-content-padding: 24px;
-
-    --layout-footer-height: 200px;
   }
 }
 </style>
@@ -114,7 +108,7 @@ watch(
 
 .ly-main {
   padding-top: var(--layout-header-height);
-  min-height: calc(100vh - var(--layout-footer-height));
+  min-height: 100vh;
   background-color: var(--o-color-fill1);
 }
 </style>
