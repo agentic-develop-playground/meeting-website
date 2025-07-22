@@ -718,13 +718,6 @@ const toMeetingList = () => {
     }
   }
 }
-
-@include in-dark {
-  .home-calendar {
-    --cell-bg: rgb(43, 43, 47);
-    --cell-active-bg: rgb(53, 53, 57);
-  }
-}
 </style>
 
 <style lang="scss">
