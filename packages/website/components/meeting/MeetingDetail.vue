@@ -68,13 +68,13 @@ defineExpose({ copyInfo });
 
 <style scoped lang="scss">
 .label-item {
-  color: var(--o-color-info3);
+  color: var(--o-color-info2);
   display: flex;
   align-items: flex-start;
-  font-size: 14px;
+  @include tip1;
 
   .label {
-    width: 132px;
+    width: 125px;
     flex-shrink: 0;
   }
 

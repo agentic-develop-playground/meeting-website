@@ -283,8 +283,8 @@ const toMeetingList = () => {
 }
 
 .home-calendar {
-  --cell-bg: rgb(231, 240, 253);
-  --cell-active-bg: rgb(209, 227, 255);
+  --cell-bg: rgba(184, 217, 255, 0.4);
+  --cell-active-bg: rgba(184, 217, 255, 1);
 
   .calendar-header {
     display: flex;

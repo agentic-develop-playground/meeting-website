@@ -25,12 +25,6 @@ export default defineNuxtConfig({
           content: 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no',
         },
       ],
-      script: [
-        {
-          src: '/check-dark-mode.js',
-          type: 'text/javascript',
-        },
-      ],
     },
   },
   modules: ['@element-plus/nuxt', '@vueuse/nuxt'],

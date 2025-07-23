@@ -47,9 +47,9 @@ export const creatMeetingApi = async (data: MeetingPostT) => {
  * @param {PageParamsT} params 分页参数
  * @returns {Promise<MeetingItemT[]>} 会议列表
  */
-export const getMyMeetingListApi = async (): Promise<MeetingItemT[]> => {
+export const getMyMeetingListApi = async (params: PageParamsT): Promise<MeetingItemT[]> => {
   const token = getUserAuth();
-  const res = await request.get('/api-meeting/', { headers: { token } });
+  const res = await request.get('/api-meeting/', { params, headers: { token } });
   return res.data;
 };
 

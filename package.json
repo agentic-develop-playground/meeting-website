@@ -34,7 +34,7 @@
     "swiper": "11.1.8",
     "vue": "3.5.13",
     "vue-dompurify-html": "3.1.2",
-    "vue-i18n": "9.14.3"
+    "vue-i18n": "latest"
   },
   "devDependencies": {
     "@element-plus/nuxt": "^1.1.0",
@@ -55,7 +55,7 @@
     "eslint-plugin-vue": "^9.15.1",
     "npm-run-all2": "^6.1.1",
     "prettier": "^3.2.5",
-    "sass": "1.62.0",
+    "sass": "^1.62.0",
     "typescript": "4.9.5",
     "unplugin-auto-import": "^0.17.2",
     "unplugin-icons": "^0.17.1",

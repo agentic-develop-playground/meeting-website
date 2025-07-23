@@ -272,7 +272,7 @@ defineExpose({
         </template>
         <OInput size="large" :disabled="true" placeholder="请输入Etherpad" style="width: 100%" v-model="form.etherpad"></OInput>
       </OFormItem>
-      <OFormItem label="会议日期" field="date" :rules="rules.date">
+      <OFormItem label="会议时间" field="date" :rules="rules.date">
         <ElDatePicker
           size="large"
           v-model="form.date"
@@ -375,22 +375,27 @@ defineExpose({
         color: var(--o-placeholder-color);
       }
     }
-    .o-input,
+    .o-input {
+      --_box-radius: 100px;
+    }
     .o-textarea {
       --_box-radius: 16px;
     }
     .o-select {
-      --select-radius: 16px;
+      --select-radius: 100px;
     }
     .el-input {
       width: 320px !important;
       .el-input__wrapper {
-        border-radius: 16px;
+        border-radius: 100px;
       }
     }
     .time-select-wrapper {
       width: 320px;
-      border-radius: 16px;
+      border-radius: 100px;
+      .o-form-item-main {
+        margin-left: 0;
+      }
     }
 
     .o-form-item-label {
@@ -493,6 +498,7 @@ defineExpose({
 
       .el-select__wrapper {
         box-shadow: none;
+        padding: 0;
       }
 
       .el-select__caret,

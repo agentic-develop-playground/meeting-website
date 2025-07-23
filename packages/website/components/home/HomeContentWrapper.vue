@@ -15,6 +15,7 @@ defineProps({
 
 <style lang="scss" scoped>
 .home-content-wrapper {
+  --padding-y: 72px;
   .title {
     @include display3;
     color: var(--o-color-info1);

@@ -190,7 +190,7 @@ const i18n = {
     }
 
     .o-collapse-item-body {
-      background-color: #f7f9fd;
+      background-color: #f4f6fa;
       margin-bottom: 0;
 
       a {

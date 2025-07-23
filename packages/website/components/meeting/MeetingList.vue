@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag } from '@opensig/opendesign';
+import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag, ODivider } from '@opensig/opendesign';
 
 import MeetingDetail from './MeetingDetail.vue';
 import EditForm from './EditForm.vue';
@@ -28,14 +28,14 @@ const loading = ref(true);
 const meetingList = ref<MeetingItemT[]>([]);
 const totals = ref(0);
 const queryData = ref({
-  page_num: 1,
-  count_per_page: 16,
-  count: true,
+  page: 1,
+  size: 16,
 });
 
 const getMeeting = () => {
-  getMyMeetingListApi()
+  getMyMeetingListApi(queryData.value)
     .then((res) => {
+      totals.value = res.total;
       meetingList.value = (res.data || []).map((v: MeetingItemT) => {
         return {
           ...v,
@@ -94,33 +94,49 @@ const confirmForm = () => {
 
 // -------------------- 分页器change事件 --------------------
 const onPaginationChange = (val: { page: number; pageSize: number }) => {
-  // 当 pageSize 变化时将page_num 置为1
-  if (val.pageSize !== queryData.value.count_per_page) {
-    // resetPageData();
+  if (val.pageSize !== queryData.value.size) {
+    queryData.value.page = 1;
   } else {
-    queryData.value.page_num = val.page;
-    // handleQueryChange();
+    queryData.value.page = val.page;
   }
-  queryData.value.count_per_page = val.pageSize;
+  queryData.value.size = val.pageSize;
+  getMeeting();
+};
+
+const resolveDate = (date: string) => {
+  return date?.replaceAll?.('-', '/');
 };
 </script>
 
 <template>
   <div class="meeting">
     <p class="title">我创建的会议</p>
-    <div v-if="loginStore.isLogined" class="meeting-box">
+    <div v-if="loginStore.isLogined" class="meeting-box" :class="{ 'meeting-box-empty': !loading && !meetingList.length }">
       <ORow v-if="!loading && meetingList.length" gap="32px 24px" wrap="wrap">
         <OCol v-for="item in meetingList" :key="item.id" flex="0 0 50%">
           <div class="item-card">
-            <div class="card-top">
-              <div class="title-box">
-                <span class="topic">{{ item.topic }}</span>
-                <OTag variant="solid" v-if="!item.isEnd && item.is_delete" class="cancel-tag">会议已取消</OTag>
-                <OTag variant="solid" v-if="item.isEnd" class="end-tag">会议已结束</OTag>
+            <div class="card-header">
+              <div class="card-top">
+                <div class="title-box">
+                  <span class="topic">{{ item.topic }}</span>
+                  <OTag variant="solid" v-if="!item.isEnd && item.is_delete" class="cancel-tag">会议已取消</OTag>
+                  <OTag variant="solid" v-if="item.isEnd" class="end-tag">会议已结束</OTag>
+                </div>
+                <div v-if="!item.is_delete" class="operate-btn">
+                  <OButton color="primary" variant="outline" @click="cancelMeeting(item)">取消</OButton>
+                  <OButton color="primary" variant="outline" @click="modifyMeeting(item)">修改</OButton>
+                </div>
               </div>
-              <div v-if="!item.is_delete" class="operate-btn">
-                <OButton color="primary" variant="outline" @click="cancelMeeting(item)">取消</OButton>
-                <OButton color="primary" variant="outline" @click="modifyMeeting(item)">修改</OButton>
+              <div class="top-info">
+                <span class="start-time">
+                  <span v-if="item.start">{{ item.date }} {{ item.start }} - {{ item.end }}</span>
+                  <span v-else>{{ resolveDate(item.start_date) }}-{{ resolveDate(item.end_date || '') }}</span>
+                </span>
+                <ODivider direction="v" />
+                <div v-if="item.group_name">SIG组: {{ item.group_name }}</div>
+                <div v-if="item.activity_type">
+                  {{ item.activity_type }}
+                </div>
               </div>
             </div>
             <div class="card-content">
@@ -137,8 +153,8 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
         <OPagination
           v-if="totals > COUNT_PER_PAGE[0]"
           :total="totals"
-          :page="queryData.page_num"
-          :page-size="queryData.count_per_page"
+          :page="queryData.page"
+          :page-size="queryData.size"
           :page-sizes="COUNT_PER_PAGE"
           :show-more="false"
           @change="onPaginationChange"
@@ -167,6 +183,7 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
 <style scoped lang="scss">
 .meeting {
   margin-top: 16px;
+  height: calc(100% - 70px);
 }
 .title-box {
   display: flex;
@@ -192,17 +209,25 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
   margin-left: 8px;
 }
 .meeting-box {
+  height: calc(100% - 80px);
   border-radius: 16px;
   background-color: var(--o-color-fill2);
   margin-top: 24px;
   padding: 24px 32px 32px;
 }
+.meeting-box-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .item-card {
   border-radius: 16px;
   border: 1px solid rgba(var(--o-mixedgray-14), 0.2);
 }
-.card-top {
+.card-header {
   padding: 16px 24px;
+}
+.card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -216,10 +241,34 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
   margin-left: 16px;
 }
 
+.top-info {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  color: var(--o-color-info3);
+  text-decoration: none;
+  @include tip1;
+  @include respond-to('<=pad_v') {
+    margin-left: 32px;
+  }
+
+  .o-divider {
+    @include tip1;
+  }
+}
+
 .card-content {
   background-color: #f4f6fa;
   padding: 16px 24px;
   border-radius: 0 0 16px 16px;
+  :deep(.label-item) {
+    color: var(--o-color-info3);
+    @include tip2;
+
+    .label {
+      width: 110px;
+    }
+  }
 }
 
 .pagination {
@@ -246,13 +295,14 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
   .dialog-content {
     width: 384px;
     text-align: center;
+    color: var(--o-color-info2);
+    @include text1;
   }
 
   .dialog-footer {
     display: flex;
     justify-content: center;
     margin-top: 16px;
-    column-gap: 16px;
   }
 }
 </style>
