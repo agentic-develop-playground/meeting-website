@@ -50,7 +50,7 @@ export const useBackgroundStore = defineStore('background', () => {
 
   watch(
     () => themeStore.theme,
-    (v) => {
+    () => {
       getImg();
     }
   );

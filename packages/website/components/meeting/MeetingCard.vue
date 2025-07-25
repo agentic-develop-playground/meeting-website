@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, computed } from 'vue';
-import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog, useMessage } from '@opensig/opendesign';
+import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog } from '@opensig/opendesign';
 import dayjs from 'dayjs';
 
 import { getGroupInfosApi, getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
@@ -16,7 +16,6 @@ import { useMeetingStore } from '@/stores/meeting';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 const loginStore = useLoginStore();
-const message = useMessage();
 const meetingStore = useMeetingStore();
 
 const router = useRouter();

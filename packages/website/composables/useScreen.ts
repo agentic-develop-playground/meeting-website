@@ -1,5 +1,5 @@
 import { isClient } from '@opensig/opendesign';
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 export enum Size {
   Phone = 'phone',
@@ -94,7 +94,6 @@ export const useScreen = () => {
   const leLaptop = computed(() => compare('le', Size.Laptop)); // [0, 1440]
   const isLaptop = computed(() => compare('le', Size.Laptop) && compare('gt', Size.PadH)); // [1201, 1440]
   const gtLaptop = computed(() => compare('gt', Size.Laptop)); // [1441, -]
-
 
   const onWindowResize = () => {
     screenSize.width = window.innerWidth;

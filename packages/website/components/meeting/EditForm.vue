@@ -21,7 +21,6 @@ import IconTip from '~icons/meeting/icon-tip.svg';
 import type { MeetingItemT, MeetingPostT, OptionItemT } from '~/@types/type-meeting';
 import { creatMeetingApi, editMeetingApi, getGroupInfosApi, getPlatformsApi } from '~/api/api-meeting';
 import dayjs from 'dayjs';
-import { openWindow } from '~/utils/common';
 import showMsg from '~/utils/showMsg';
 
 const props = defineProps<{ data?: MeetingItemT }>();
@@ -234,11 +233,6 @@ const changeTime = () => {
     form.value.time = '';
   }
 };
-const router = useRouter();
-const toSigEmail = () => {
-  const routerData = router.resolve({ path: '/sig' });
-  openWindow(routerData.fullPath);
-};
 
 defineExpose({
   confirm,
@@ -322,7 +316,16 @@ defineExpose({
         <span v-else>{{ form.platform }}</span>
       </OFormItem>
       <OFormItem field="agenda" label="会议内容" :rules="rules.genda">
-        <OTextarea size="large" placeholder="请输入会议内容" style="width: 100%" :rows="4" v-model="form.agenda"></OTextarea>
+        <OTextarea
+          size="large"
+          placeholder="请输入会议内容"
+          style="width: 100%"
+          :rows="4"
+          resize="none"
+          :max-length="100"
+          :input-on-outlimit="false"
+          v-model="form.agenda"
+        ></OTextarea>
       </OFormItem>
       <OFormItem label="会议录制" field="is_record">
         <div class="switch-wrapper">
@@ -342,15 +345,18 @@ defineExpose({
           placeholder="请输入电子邮件地址，多个邮件地址以“;”间隔，最多20个邮件"
           style="width: 100%"
           :rows="4"
+          resize="none"
+          :max-length="1000"
+          :input-on-outlimit="false"
           v-model="form.email_list"
         ></OTextarea>
       </OFormItem>
     </OForm>
     <div class="form-btns">
       <OButton color="primary" variant="solid" size="large" @click="confirm" :loading="loading">
-        {{ data ? '修改' : '创建' }}
+        {{ data ? '修改' : '立即创建' }}
       </OButton>
-      <OButton color="primary" variant="outline" size="large" @click="close">取消</OButton>
+      <OButton color="primary" variant="outline" size="large" @click="close">{{ data ? '取消' : '重置' }}</OButton>
     </div>
   </div>
 </template>
@@ -380,6 +386,11 @@ defineExpose({
     }
     .o-textarea {
       --_box-radius: 16px;
+      height: 126px;
+
+      @include respond-to('<=pad') {
+        height: 116px;
+      }
     }
     .o-select {
       --select-radius: 100px;
