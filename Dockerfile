@@ -104,6 +104,7 @@ RUN sed -i "s|repo.openeuler.org|mirrors.nju.edu.cn/openeuler|g" /etc/yum.repos.
     && chmod 640 /etc/nginx/nginx.conf.template \
     && chmod 440 /etc/nginx/mime.types \
     && chmod 700 /var/lib/nginx/tmp/client_body \
+    && chmod -R 500 /home/nginx/. \
     && lsd() { \
       local v="$1"; \
         ls -ld "$v"; \
@@ -156,6 +157,8 @@ RUN sed -i "s|repo.openeuler.org|mirrors.nju.edu.cn/openeuler|g" /etc/yum.repos.
     && rm -rf /usr/share/licenses/glibc \
     && rm -rf /usr/share/locale/ar \
     && rm -rf /usr/share/locale/cpp \
+    && rm -rf /usr/bin/nc \
+    && rm -rf /usr/bin/ncat \
     && yum remove gdb-gdbserver findutils passwd shadow -y
 
 RUN chmod 500 /etc/nginx/monitor.sh \
