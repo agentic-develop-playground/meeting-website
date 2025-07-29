@@ -5,7 +5,7 @@ import Cookies from 'js-cookie';
  * @param {string} key cookie的key值
  * @returns {(string|undefined)} 若cookie中存在key则返回对应的value内容，否则返回undefined
  */
-export function getCustomCookie(key: string) {
+export function getCookie(key: string) {
   return Cookies.get(key);
 }
 
@@ -15,20 +15,20 @@ export function getCustomCookie(key: string) {
  * @param {string} value cookie的值
  * @param {number} [day=1] cookie的过期时间 默认1天
  */
-export function setCustomCookie(key: string, value: string, day = 1) {
-  Cookies.set(key, value, { expires: day, path: '/' });
+export function setCookie(key: string, value: string, day = 1, domain: string = location.hostname) {
+  Cookies.set(key, value, { expires: day, path: '/', domain });
 }
 
 /**
  * 删除cookie
  * @param {string} key cookie的key
  */
-export function removeCustomCookie(key: string) {
+export function removeCookie(key: string) {
   Cookies.remove(key);
 }
 
 // cookie的key
-export const COOKIE_KEY = 'agreed-cookiepolicy';
+export const COOKIE_KEY = 'agreed-cann-cookiepolicy';
 
 // -------------------- cookie状态 --------------------
 export const COOKIE_AGREED_STATUS = {

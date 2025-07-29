@@ -4,6 +4,7 @@ import { OConfigProvider } from '@opensig/opendesign';
 import zhCN from '@opensig/opendesign/es/locale/lang/zh-cn';
 import enUS from '@opensig/opendesign/es/locale/lang/en-us';
 import AppHeader from '~/components/header/AppHeader.vue';
+import CookieNotice from '~/components/CookieNotice.vue';
 
 import { tryLogin } from '@/utils/login';
 
@@ -40,6 +41,7 @@ tryLogin();
       <main class="ly-main">
         <slot></slot>
       </main>
+      <CookieNotice />
     </div>
   </OConfigProvider>
 </template>

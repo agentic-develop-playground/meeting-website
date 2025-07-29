@@ -11,7 +11,7 @@ import { deleteUser, getPrivacy } from '@/api/api-user';
 
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
-import { doLogin, doLogout } from '@/utils/login';
+import { doLogin, doLogout, getUserAuth } from '@/utils/login';
 
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
@@ -44,7 +44,10 @@ const cancelAccount = () => {
 watch(
   () => route.path,
   () => {
-    requestPrivacyInfo();
+    const { token } = getUserAuth();
+    if (token) {
+      requestPrivacyInfo();
+    }
   },
   { immediate: true }
 );
