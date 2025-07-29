@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { ODropdown, ODropdownItem, OIcon } from '@opensig/opendesign';
 
+import AppServiceStatement from '~/components/AppServiceStatement.vue';
+
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
-import IconLogOff from '~icons/app/icon-log-off.svg';
 import IconAvatar from '~icons/app/icon-avatar-line.svg';
+
+import { deleteUser, getPrivacy } from '@/api/api-user';
 
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
@@ -11,14 +15,45 @@ import { doLogin, doLogout } from '@/utils/login';
 
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
+const router = useRouter();
+const route = useRoute();
 
 const { lePadV } = useScreen();
+
+// 获取签署隐私信息
+const requestPrivacyInfo = async () => {
+  const res = await getPrivacy();
+  const userInfoStore = useUserInfoStore();
+  userInfoStore.$patch({
+    oneidPrivacyAccepted: res.data.oneidPrivacyAccepted,
+  });
+};
+
+// 取消签署隐私声明
+const cancelSignatureVisible = ref(false);
+const cancelSignature = () => {
+  cancelSignatureVisible.value = true;
+};
+// 注销账号
+const cancelAccount = () => {
+  deleteUser().then(() => {
+    router.push('/');
+  });
+};
+
+watch(
+  () => route.path,
+  () => {
+    requestPrivacyInfo();
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <div class="header-user">
     <!-- 未登录或登录失败 -->
-    <template v-if="loginStore.isLoginNot || loginStore.isLoginFailed">
+    <template v-if="loginStore.isLoginNot || loginStore.isLoginFailed || userInfoStore.oneidPrivacyAccepted === 'revoked'">
       <OIcon class="avatar-icon" @click="doLogin">
         <IconAvatar></IconAvatar>
       </OIcon>
@@ -26,7 +61,7 @@ const { lePadV } = useScreen();
 
     <!-- 已登录 -->
     <Transition name="header-user-zoom-in">
-      <div class="user-info" v-if="loginStore.isLogined">
+      <div class="user-info" v-if="loginStore.isLogined && userInfoStore.oneidPrivacyAccepted !== 'revoked'">
         <ODropdown :trigger="lePadV ? 'click' : 'hover'" :optionPosition="lePadV ? 'br' : 'bottom'" option-wrap-class="user-dropdown">
           <div class="info-wrap hover-icon-rotate">
             <AppAvatar :avatar="''" :name="userInfoStore.username" :custom-size="lePadV ? 24 : 32" />
@@ -37,16 +72,21 @@ const { lePadV } = useScreen();
           </div>
 
           <template #dropdown>
+            <ODropdownItem @click="cancelSignature">
+              <div>取消签署隐私声明</div>
+            </ODropdownItem>
+            <ODropdownItem @click="cancelAccount">
+              <div>注销账号</div>
+            </ODropdownItem>
             <ODropdownItem @click="doLogout">
-              <OIcon>
-                <IconLogOff />
-              </OIcon>
               <div>退出登录</div>
             </ODropdownItem>
           </template>
         </ODropdown>
       </div>
     </Transition>
+
+    <AppServiceStatement :signature="cancelSignatureVisible" />
   </div>
 </template>
 

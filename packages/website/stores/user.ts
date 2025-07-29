@@ -44,6 +44,7 @@ export const useUserInfoStore = defineStore('userInfo', {
     return {
       userId: '', // id
       username: '', // 账号
+      oneidPrivacyAccepted: '', // 签署隐私
     };
   },
 });

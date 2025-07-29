@@ -68,12 +68,13 @@ export function clearUserAuth() {
   const userInfoStore = useUserInfoStore();
   userInfoStore.$reset();
   // 清除cookie
+
   Cookies.remove(LOGIN_KEYS.USER_TOKEN, { domain: COOKIE_DOMAIN });
   Cookies.remove(LOGIN_KEYS.USER_INFO, { domain: COOKIE_DOMAIN });
 }
 
 // 登录之后的回调
-const afterLogined = (userInfo) => {
+const afterLogined = (userInfo: any) => {
   const { userId } = userInfo;
 
   if (!userId) {
@@ -127,5 +128,5 @@ export async function doLogin() {
 
 // 退出登录
 export function doLogout() {
-  location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(window?.location?.href)}`;
+  window.location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(window?.location?.href)}`;
 }
