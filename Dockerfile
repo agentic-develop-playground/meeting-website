@@ -1,12 +1,11 @@
 FROM swr.cn-north-4.myhuaweicloud.com/opensourceway/node:latest as Builder
 
-RUN mkdir -p /home/mindspore/web
-WORKDIR /home/mindspore/web
-COPY . /home/mindspore/web
+RUN mkdir -p /home/ascend/web
+WORKDIR /home/ascend/web
+COPY . /home/ascend/web
 
 
-RUN npm install pnpm -g
-
+RUN npm install -g pnpm@10.9.0
 RUN pnpm install
 RUN pnpm generate
 
@@ -18,7 +17,7 @@ RUN sed -i "s|repo.openeuler.org|mirrors.pku.edu.cn/openeuler|g" /etc/yum.repos.
     && yum install -y git \
     && git config --global http.postBuffer 524288000 \
     && git config --global https.postBuffer 524288000 \
-    && mkdir -p /home/mindspore/web/
+    && mkdir -p /home/ascend/web/
 
 FROM swr.cn-north-4.myhuaweicloud.com/opensourceway/openeuler/base:latest
 
@@ -37,7 +36,7 @@ COPY --from=NginxBuilder /usr/share/nginx/sbin/nginx /usr/share/nginx/sbin/nginx
 COPY --from=NginxBuilder /etc/nginx/modules /etc/nginx/modules
 COPY --from=NginxBuilder /etc/nginx/geoip  /etc/nginx/geoip
 COPY --from=NginxBuilder /etc/nginx/mime.types  /etc/nginx/mime.types
-COPY --from=Builder /home/mindspore/web/packages/website/.output/public /usr/share/nginx/www/
+COPY --from=Builder /home/ascend/web/packages/website/.output/public /usr/share/nginx/www/
 
 COPY ./deploy/monitor.sh ./deploy/entrypoint.sh /etc/nginx/
 COPY ./deploy/nginx/nginx.conf /etc/nginx/nginx.conf.template
