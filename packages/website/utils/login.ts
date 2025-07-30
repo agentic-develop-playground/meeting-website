@@ -1,7 +1,7 @@
 import { isClient } from '@opensig/opendesign';
 import Cookies from 'js-cookie';
 
-import { getUser } from '@/api/api-user';
+import { getUser, getPrivacy } from '@/api/api-user';
 
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
@@ -68,12 +68,13 @@ export function clearUserAuth() {
   const userInfoStore = useUserInfoStore();
   userInfoStore.$reset();
   // 清除cookie
+
   Cookies.remove(LOGIN_KEYS.USER_TOKEN, { domain: COOKIE_DOMAIN });
   Cookies.remove(LOGIN_KEYS.USER_INFO, { domain: COOKIE_DOMAIN });
 }
 
 // 登录之后的回调
-const afterLogined = (userInfo) => {
+const afterLogined = (userInfo: any) => {
   const { userId } = userInfo;
 
   if (!userId) {
@@ -107,12 +108,38 @@ export async function requestUserInfo() {
   }
 }
 
+// 获取签署隐私信息
+const requestPrivacyInfo = async () => {
+  const { token } = getUserAuth();
+  if (token) {
+    try {
+      setStatus(LOGIN_STATUS.DOING);
+      const res = await getPrivacy();
+      if (res && res.data) {
+        const userInfoStore = useUserInfoStore();
+        userInfoStore.$patch({
+          oneidPrivacyAccepted: res.data.oneidPrivacyAccepted,
+        });
+        if (res.data.oneidPrivacyAccepted !== 'revoked') {
+          await requestUserInfo();
+        }
+      } else {
+        setStatus(LOGIN_STATUS.FAILED);
+        clearUserAuth();
+      }
+    } catch (err) {
+      setStatus(LOGIN_STATUS.FAILED);
+      clearUserAuth();
+    }
+  }
+};
+
 // 尝试登录
 export async function tryLogin() {
   const token = getCookie(LOGIN_KEYS.USER_TOKEN) || '';
 
   if (token) {
-    await requestUserInfo();
+    await requestPrivacyInfo();
   }
 }
 
@@ -127,5 +154,5 @@ export async function doLogin() {
 
 // 退出登录
 export function doLogout() {
-  location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(window?.location?.href)}`;
+  window.location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(window?.location?.href)}`;
 }

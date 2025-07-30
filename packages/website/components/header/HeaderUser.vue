@@ -1,24 +1,47 @@
 <script setup lang="ts">
-import { ODropdown, ODropdownItem, OIcon } from '@opensig/opendesign';
+import { ref } from 'vue';
+import { ODropdown, ODropdownItem, OIcon, ODialog, OButton } from '@opensig/opendesign';
+
+import AppServiceStatement from '~/components/AppServiceStatement.vue';
 
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
-import IconLogOff from '~icons/app/icon-log-off.svg';
 import IconAvatar from '~icons/app/icon-avatar-line.svg';
+
+import { deleteUser } from '@/api/api-user';
 
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
 import { doLogin, doLogout } from '@/utils/login';
 
+const DOMAIN_URL = import.meta.env.VITE_DOMAIN_URL;
+
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
 
 const { lePadV } = useScreen();
+
+// 取消签署隐私声明
+const cancelSignatureVisible = ref(false);
+const cancelSignature = () => {
+  cancelSignatureVisible.value = true;
+};
+// 注销账号
+const logoffVisible = ref(false);
+const cancelAccount = () => {
+  deleteUser(DOMAIN_URL).then(() => {
+    logoffVisible.value = false;
+  });
+};
+
+const close = (v: boolean) => {
+  cancelSignatureVisible.value = v;
+};
 </script>
 
 <template>
   <div class="header-user">
     <!-- 未登录或登录失败 -->
-    <template v-if="loginStore.isLoginNot || loginStore.isLoginFailed">
+    <template v-if="loginStore.isLoginNot || loginStore.isLoginFailed || userInfoStore.oneidPrivacyAccepted === 'revoked'">
       <OIcon class="avatar-icon" @click="doLogin">
         <IconAvatar></IconAvatar>
       </OIcon>
@@ -26,7 +49,7 @@ const { lePadV } = useScreen();
 
     <!-- 已登录 -->
     <Transition name="header-user-zoom-in">
-      <div class="user-info" v-if="loginStore.isLogined">
+      <div class="user-info" v-if="loginStore.isLogined && userInfoStore.oneidPrivacyAccepted !== 'revoked'">
         <ODropdown :trigger="lePadV ? 'click' : 'hover'" :optionPosition="lePadV ? 'br' : 'bottom'" option-wrap-class="user-dropdown">
           <div class="info-wrap hover-icon-rotate">
             <AppAvatar :avatar="''" :name="userInfoStore.username" :custom-size="lePadV ? 24 : 32" />
@@ -37,16 +60,35 @@ const { lePadV } = useScreen();
           </div>
 
           <template #dropdown>
+            <ODropdownItem @click="cancelSignature">
+              <div>取消签署隐私声明</div>
+            </ODropdownItem>
+            <ODropdownItem @click="logoffVisible = true">
+              <div>注销账号</div>
+            </ODropdownItem>
             <ODropdownItem @click="doLogout">
-              <OIcon>
-                <IconLogOff />
-              </OIcon>
               <div>退出登录</div>
             </ODropdownItem>
           </template>
         </ODropdown>
       </div>
     </Transition>
+
+    <AppServiceStatement :signature="cancelSignatureVisible" @close="close" />
+
+    <!-- 注销账号 -->
+    <ODialog v-model:visible="logoffVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="logoff-dialog">
+      <template #header>注销华为计算开源社区服务</template>
+      <div class="body-content">
+        <span>注销后，此账号的所有数据都将被删除且不可逆，请谨慎操作！</span>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <OButton color="primary" variant="solid" size="large" @click="logoffVisible = false">暂不注销</OButton>
+          <OButton color="primary" variant="outline" size="large" @click="cancelAccount">确定注销</OButton>
+        </div>
+      </template>
+    </ODialog>
   </div>
 </template>
 
@@ -118,7 +160,7 @@ const { lePadV } = useScreen();
   width: 142px;
   white-space: nowrap;
   --dropdown-item-color: var(--o-color-info1);
-  --dropdown-item-justify: flex-start;
+  --dropdown-item-justify: center;
   --dropdown-item-padding: 6px 8px;
 
   .o-icon {
@@ -168,6 +210,14 @@ const { lePadV } = useScreen();
   font-weight: 500;
   margin-left: 8px;
   @include text-truncate(1);
+}
+
+.body-content {
+  text-align: center;
+}
+.dialog-footer {
+  text-align: center;
+  margin-top: 8px;
 }
 
 @include respond-to('<=pad_v') {

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import backgroundImg from '@/assets/category/common/background.jpg';
 import backgroundImgDark from '@/assets/category/common/background_dark.jpg';
 import { APPEARANCE_KEY } from '~/config/common';
-import { setCustomCookie, getCustomCookie } from '@/utils/cookie-notice';
+import { setCookie, getCookie } from '@/utils/cookie-notice';
 import type { BreadcrumbItemT, ThemeT } from '~/@types/type-locale';
 import { ref } from 'vue';
 
@@ -21,7 +21,7 @@ export const useCookieStore = defineStore('cookie', {
   },
   actions: {
     getUserCookieStatus() {
-      const cookieVal = getCustomCookie(COOKIE_KEY) ?? COOKIE_AGREED_STATUS.NOT_SIGNED;
+      const cookieVal = getCookie(COOKIE_KEY) ?? COOKIE_AGREED_STATUS.NOT_SIGNED;
       const cookieStatusVal = cookieVal[0];
 
       if (cookieStatusVal === COOKIE_AGREED_STATUS.ALL_AGREED) {
@@ -65,11 +65,11 @@ export const useThemeStore = defineStore('theme', () => {
   const theme = ref<ThemeT>('light');
   const setTheme = (val: ThemeT) => {
     theme.value = val;
-    setCustomCookie(APPEARANCE_KEY, val, 180);
+    setCookie(APPEARANCE_KEY, val, 180);
   };
 
   onMounted(() => {
-    let current = getCustomCookie(APPEARANCE_KEY);
+    let current = getCookie(APPEARANCE_KEY);
     if (!current) {
       const preferDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       current = preferDark ? 'dark' : 'light';
