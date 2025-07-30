@@ -22,8 +22,9 @@ export const getUser = async () => {
  * @returns {Promise<ResponseT>}
  */
 export const baseInfo = async (params: { oneidPrivacyAccepted: string }) => {
+  const token = getUserAuth();
   const url = '/api-id/oneid/hwaccount/update/baseInfo';
-  return request.post(url, params).then((res) => {
+  return request.post(url, params, { headers: { token }, showError: false }).then((res) => {
     const data = res.data;
     return data;
   });
@@ -33,9 +34,9 @@ export const baseInfo = async (params: { oneidPrivacyAccepted: string }) => {
  * 注销账号
  * @returns {Promise<ResponseT>}
  */
-export const deleteUser = async () => {
+export const deleteUser = async (redirect_uri: string) => {
   const token = getUserAuth();
-  const url = '/api-id/oneid/hwaccount/delete/user';
+  const url = `/api-id/oneid/hwaccount/delete/user?redirect_uri=${redirect_uri}`;
   return request.get(url, { headers: { token }, showError: false }).then((res) => {
     const data = res.data;
     return data;

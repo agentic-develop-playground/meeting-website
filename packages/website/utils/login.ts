@@ -1,7 +1,7 @@
 import { isClient } from '@opensig/opendesign';
 import Cookies from 'js-cookie';
 
-import { getUser } from '@/api/api-user';
+import { getUser, getPrivacy } from '@/api/api-user';
 
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
@@ -108,12 +108,38 @@ export async function requestUserInfo() {
   }
 }
 
+// 获取签署隐私信息
+const requestPrivacyInfo = async () => {
+  const { token } = getUserAuth();
+  if (token) {
+    try {
+      setStatus(LOGIN_STATUS.DOING);
+      const res = await getPrivacy();
+      if (res && res.data) {
+        const userInfoStore = useUserInfoStore();
+        userInfoStore.$patch({
+          oneidPrivacyAccepted: res.data.oneidPrivacyAccepted,
+        });
+        if (res.data.oneidPrivacyAccepted !== 'revoked') {
+          await requestUserInfo();
+        }
+      } else {
+        setStatus(LOGIN_STATUS.FAILED);
+        clearUserAuth();
+      }
+    } catch (err) {
+      setStatus(LOGIN_STATUS.FAILED);
+      clearUserAuth();
+    }
+  }
+};
+
 // 尝试登录
 export async function tryLogin() {
   const token = getCookie(LOGIN_KEYS.USER_TOKEN) || '';
 
   if (token) {
-    await requestUserInfo();
+    await requestPrivacyInfo();
   }
 }
 

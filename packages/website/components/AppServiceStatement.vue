@@ -2,11 +2,11 @@
 import { ref, watch } from 'vue';
 import { ODialog, OLink, OButton } from '@opensig/opendesign';
 
-import dayjs from 'dayjs';
-
-import { clearUserAuth, LOGIN_STATUS, doLogout } from '@/utils/login';
+import { clearUserAuth, LOGIN_STATUS, doLogout, tryLogin } from '@/utils/login';
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 import { baseInfo, getPrivacyVersion } from '@/api/api-user';
+
+const route = useRoute();
 
 const props = defineProps({
   signature: {
@@ -14,6 +14,10 @@ const props = defineProps({
     default: false,
   },
 });
+
+const emits = defineEmits<{
+  (e: 'close', value: boolean): void;
+}>();
 
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
@@ -43,12 +47,11 @@ const params = ref({
   oneidPrivacyAccepted: '',
 });
 const agree = () => {
-  const date = dayjs(new Date()).format('YYYY-MM-DD');
-  params.value.oneidPrivacyAccepted = date.replaceAll('-', '');
+  params.value.oneidPrivacyAccepted = version.value;
   baseInfo(params.value)
     .then(() => {
       dialogVisible.value = false;
-      loginStore.setLoginStatus(LOGIN_STATUS.DONE);
+      tryLogin();
     })
     .catch(() => {
       disagree();
@@ -59,12 +62,13 @@ const disagree = () => {
   cancelVisible.value = false;
   updateVisible.value = false;
   clearUserAuth();
-  loginStore.setLoginStatus(LOGIN_STATUS.NOT);
+  loginStore.setLoginStatus(LOGIN_STATUS.FAILED);
+  doLogout();
 };
 watch(
-  () => [userInfoStore.oneidPrivacyAccepted, version.value],
+  () => [userInfoStore.oneidPrivacyAccepted, version.value, route.path],
   (val) => {
-    if (val[0]) {
+    if (val[0] && !val[2].includes('privacy') && !val[2].includes('legal') && !val[2].includes('cookies')) {
       dialogVisible.value = false;
       updateVisible.value = false;
       if (val[0] && val[0] === 'revoked' && loginStore.isLoggingIn) {
@@ -98,10 +102,19 @@ watch(
   },
   { immediate: true }
 );
+
+watch(
+  () => cancelVisible.value,
+  (val) => {
+    if (!val) {
+      emits('close', val);
+    }
+  }
+);
 </script>
 
 <template>
-  <ODialog v-model:visible="dialogVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="service-statement-dialog">
+  <ODialog v-model:visible="dialogVisible" :hide-close="true" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="service-statement-dialog">
     <template #header>openSource-Ascend 社区服务声明</template>
     <div class="body-content">
       <span
@@ -118,7 +131,7 @@ watch(
       </div>
     </template>
   </ODialog>
-  <ODialog v-model:visible="cancelVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="cancel-dialog">
+  <ODialog v-model:visible="cancelVisible" :hide-close="true" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="cancel-dialog">
     <template #header>取消签署</template>
     <div class="body-content">
       <span>尊敬的 openSource-Ascend 社区用户，如果您撤销</span>
@@ -132,7 +145,7 @@ watch(
       </div>
     </template>
   </ODialog>
-  <ODialog v-model:visible="updateVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="change-dialog">
+  <ODialog v-model:visible="updateVisible" :hide-close="true" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="change-dialog">
     <template #header>openSource-Ascend 社区隐私政策变更声明</template>
     <div class="body-content">
       <span>尊敬的 openSource-Ascend 社区用户，为了给您提供更好的服务，并让您更清楚了解我们如何处理和保护您的个人信息，我们更新了</span>
