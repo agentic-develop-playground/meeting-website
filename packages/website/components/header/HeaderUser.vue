@@ -13,6 +13,8 @@ import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
 import { doLogin, doLogout } from '@/utils/login';
 
+import { HWCLOUDTEST } from '@/config/url-config';
+
 const DOMAIN_URL = import.meta.env.VITE_DOMAIN_URL;
 
 const loginStore = useLoginStore();
@@ -28,7 +30,10 @@ const cancelSignature = () => {
 // 注销账号
 const logoffVisible = ref(false);
 const cancelAccount = () => {
-  deleteUser(DOMAIN_URL).then(() => {});
+  deleteUser(DOMAIN_URL).then(() => {
+    window.location.href = `${HWCLOUDTEST}/AMW/logout?service=${DOMAIN_URL}`;
+  });
+  logoffVisible.value = false;
 };
 
 const close = (v: boolean) => {

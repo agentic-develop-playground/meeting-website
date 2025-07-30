@@ -36,6 +36,7 @@ export default defineNuxtConfig({
           app: FileSystemIconLoader(path.resolve(__dirname, './assets/svg-icons')),
           home: FileSystemIconLoader(path.resolve(__dirname, './assets/category/home/svg-icons')),
           meeting: FileSystemIconLoader(path.resolve(__dirname, './assets/category/meeting/svg-icons')),
+          footer: FileSystemIconLoader(path.resolve(__dirname, './assets/category/footer/svg-icons')),
         },
       }),
       vueJsx(),
