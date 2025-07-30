@@ -1,10 +1,12 @@
+import { HIASCEND_URL, MINDSPORE_URL, HUAWEI_URL, EHUAWEI_URL, HIKUNPENG_URL, HUAWEICLOUD_URL, OPENI_URL } from '@/config/url-config';
+
 export const FOOTER_LINK = [
   {
     title: '关于昇腾',
     children: [
       {
         title: '昇腾计算产业概述',
-        link: 'https://www.hiascend.com/ecosystem/industry',
+        link: `${HIASCEND_URL}/ecosystem/industry`,
       },
     ],
   },
@@ -13,11 +15,11 @@ export const FOOTER_LINK = [
     children: [
       {
         title: '新闻资讯',
-        link: 'https://www.hiascend.com/activities/news',
+        link: `${HIASCEND_URL}/activities/news`,
       },
       {
         title: '昇腾活动',
-        link: 'https://www.hiascend.com/activities',
+        link: `${HIASCEND_URL}/activities`,
       },
     ],
   },
@@ -26,11 +28,11 @@ export const FOOTER_LINK = [
     children: [
       {
         title: '昇腾论坛',
-        link: 'https://www.hiascend.com/forum/',
+        link: `${HIASCEND_URL}/forum/`,
       },
       {
         title: '技术干货',
-        link: 'https://www.hiascend.com/developer/techArticles',
+        link: `${HIASCEND_URL}/developer/techArticles`,
       },
     ],
   },
@@ -39,11 +41,11 @@ export const FOOTER_LINK = [
     children: [
       {
         title: '文档',
-        link: 'https://www.hiascend.com/zh/document',
+        link: `${HIASCEND_URL}/zh/document`,
       },
       {
         title: '技术工单',
-        link: 'https://www.hiascend.com/zh/feedback',
+        link: `${HIASCEND_URL}/zh/feedback`,
       },
     ],
   },
@@ -52,11 +54,11 @@ export const FOOTER_LINK = [
     children: [
       {
         title: '昇思社区',
-        link: 'https://www.mindspore.cn/',
+        link: MINDSPORE_URL,
       },
       {
         title: '昇腾开放资源',
-        link: 'https://www.hiascend.com/zh/developer/opensource',
+        link: `${HIASCEND_URL}/zh/developer/opensource`,
       },
     ],
   },
@@ -65,22 +67,22 @@ export const FOOTER_LINK = [
 export const FRIEND_LINK = [
   {
     title: '华为官网',
-    link: 'https://www.huawei.com/cn/',
+    link: HUAWEI_URL,
   },
   {
     title: '华为计算',
-    link: 'https://e.huawei.com/cn/solutions/computing',
+    link: EHUAWEI_URL,
   },
   {
     title: '鲲鹏社区',
-    link: 'https://www.hikunpeng.com/',
+    link: HIKUNPENG_URL,
   },
   {
     title: '华为云',
-    link: 'https://www.huaweicloud.com/',
+    link: HUAWEICLOUD_URL,
   },
   {
     title: '启智社区',
-    link: 'https://www.openi.org.cn/',
+    link: OPENI_URL,
   },
 ];

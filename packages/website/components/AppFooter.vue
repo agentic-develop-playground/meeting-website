@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { FOOTER_LINK, FRIEND_LINK } from '@/config/footer';
 import { getYearByOffset } from '@/utils/common';
-import { ODivider, OLink, OIcon, OPopup } from '@opensig/opendesign';
+import { ODivider, OLink, OIcon, OPopup, OFigure } from '@opensig/opendesign';
 
 import IconWeChat from '~icons/footer/icon-we-chat.svg';
 import IconWeChatAi from '~icons/footer/icon-we-chat-ai.svg';
@@ -48,7 +48,7 @@ const toutiaoRef = ref();
             <OIcon ref="wechatRef" id="wechat"><IconWeChat /></OIcon>
             <OPopup position="top" :target="wechatRef" wrapper="#wechat" body-class="popup-wechat" trigger="hover">
               <div class="popup-content">
-                <img :src="weixin" />
+                <OFigure :src="weixin" />
                 <p class="popup-text">华为计算微信公众号</p>
               </div>
             </OPopup>
@@ -57,7 +57,7 @@ const toutiaoRef = ref();
             <OIcon ref="wechatAiRef" id="wechatai"><IconWeChatAi /></OIcon>
             <OPopup position="top" :target="wechatAiRef" wrapper="#wechatai" body-class="popup-wechat" trigger="hover">
               <div class="popup-content">
-                <img :src="weixinAi" />
+                <OFigure :src="weixinAi" />
                 <p class="popup-text">昇腾AI开发者公众号</p>
               </div>
             </OPopup>
@@ -66,7 +66,7 @@ const toutiaoRef = ref();
             <OIcon ref="weiboRef" id="weibo"><IconWeibo /></OIcon>
             <OPopup position="top" :target="weiboRef" wrapper="#weibo" body-class="popup-wechat" trigger="hover">
               <div class="popup-content">
-                <img :src="weibo" />
+                <OFigure :src="weibo" />
                 <p class="popup-text">华为计算微博</p>
               </div>
             </OPopup>
@@ -75,7 +75,7 @@ const toutiaoRef = ref();
             <OIcon ref="toutiaoRef" id="toutiao"><IconToutiao /></OIcon>
             <OPopup position="top" :target="toutiaoRef" wrapper="#toutiao" body-class="popup-wechat" trigger="hover">
               <div class="popup-content">
-                <img :src="toutiao" />
+                <OFigure :src="toutiao" />
                 <p class="popup-text">华为计算今日头条</p>
               </div>
             </OPopup>
@@ -240,7 +240,7 @@ const toutiaoRef = ref();
     flex-direction: column;
     align-items: center;
   }
-  img {
+  .o-figure {
     width: 100px;
   }
   .popup-text {
