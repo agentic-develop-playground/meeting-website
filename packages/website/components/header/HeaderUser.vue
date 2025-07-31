@@ -54,11 +54,11 @@ const cancelAccount = () => {
           </div>
 
           <template #dropdown>
-            <ODropdownItem @click="logoffVisible = true">
-              <div>注销账号</div>
-            </ODropdownItem>
             <ODropdownItem @click="doLogout">
               <div>退出登录</div>
+            </ODropdownItem>
+            <ODropdownItem @click="logoffVisible = true">
+              <div>注销账号</div>
             </ODropdownItem>
           </template>
         </ODropdown>
@@ -69,7 +69,7 @@ const cancelAccount = () => {
 
     <!-- 注销账号 -->
     <ODialog v-model:visible="logoffVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="logoff-dialog">
-      <template #header>注销华为计算开源社区服务</template>
+      <template #header>注销账号</template>
       <div class="body-content">
         <div>
           注销后，将撤销您签署的
