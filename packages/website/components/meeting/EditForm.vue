@@ -169,7 +169,7 @@ const close = () => {
 };
 const { isPhone } = useScreen();
 const confirm = async () => {
-  let type = props.data ? '编辑' : '创建';
+  let type = props.data ? '修改' : '创建';
   try {
     loading.value = true;
     const valid = await formRef.value.validate();
@@ -356,7 +356,7 @@ defineExpose({
       <OButton color="primary" variant="solid" size="large" @click="confirm" :loading="loading">
         {{ data ? '修改' : '立即创建' }}
       </OButton>
-      <OButton color="primary" variant="outline" size="large" @click="close">{{ data ? '取消' : '重置' }}</OButton>
+      <OButton color="primary" variant="outline" size="large" @click="close">取消</OButton>
     </div>
   </div>
 </template>
