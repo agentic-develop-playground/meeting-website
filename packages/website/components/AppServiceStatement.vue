@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { ODialog, OLink, OButton } from '@opensig/opendesign';
 
-import { clearUserAuth, LOGIN_STATUS, doLogout, tryLogin } from '@/utils/login';
+import { doLogout, tryLogin } from '@/utils/login';
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 import { baseInfo, getPrivacyVersion } from '@/api/api-user';
 
@@ -50,8 +50,6 @@ const disagree = () => {
   dialogVisible.value = false;
   cancelVisible.value = false;
   updateVisible.value = false;
-  clearUserAuth();
-  loginStore.setLoginStatus(LOGIN_STATUS.FAILED);
   doLogout();
 };
 watch(
