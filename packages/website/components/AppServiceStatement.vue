@@ -8,17 +8,6 @@ import { baseInfo, getPrivacyVersion } from '@/api/api-user';
 
 const route = useRoute();
 
-const props = defineProps({
-  signature: {
-    type: Boolean,
-    default: false,
-  },
-});
-
-const emits = defineEmits<{
-  (e: 'close', value: boolean): void;
-}>();
-
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
 
@@ -68,7 +57,13 @@ const disagree = () => {
 watch(
   () => [userInfoStore.oneidPrivacyAccepted, version.value, route.path],
   (val) => {
-    if (val[0] && !val[2].includes('privacy') && !val[2].includes('legal') && !val[2].includes('cookies')) {
+    if (
+      val[0] &&
+      !val[2].includes('privacy') &&
+      !val[2].includes('legal') &&
+      !val[2].includes('cookies') &&
+      !val[2].includes('personal-data-collection-overview')
+    ) {
       dialogVisible.value = false;
       updateVisible.value = false;
       if (val[0] && val[0] === 'revoked' && loginStore.isLoggingIn) {
@@ -80,36 +75,6 @@ watch(
     }
   },
   { immediate: true }
-);
-
-// -------------------- 取消签署隐私声明 --------------------
-const cancelSignature = () => {
-  params.value.oneidPrivacyAccepted = 'revoked';
-  baseInfo(params.value)
-    .then(() => {
-      doLogout();
-    })
-    .finally(() => {
-      cancelVisible.value = false;
-    });
-};
-watch(
-  () => props.signature,
-  (val) => {
-    if (val) {
-      cancelVisible.value = true;
-    }
-  },
-  { immediate: true }
-);
-
-watch(
-  () => cancelVisible.value,
-  (val) => {
-    if (!val) {
-      emits('close', val);
-    }
-  }
 );
 </script>
 
@@ -128,20 +93,6 @@ watch(
       <div class="dialog-footer">
         <OButton color="primary" variant="outline" size="large" @click="agree">我已阅读并同意</OButton>
         <OButton color="primary" variant="outline" size="large" @click="disagree">不同意</OButton>
-      </div>
-    </template>
-  </ODialog>
-  <ODialog v-model:visible="cancelVisible" :hide-close="true" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="cancel-dialog">
-    <template #header>取消签署</template>
-    <div class="body-content">
-      <span>尊敬的 openSource-Ascend 社区用户，如果您撤销</span>
-      <OLink color="primary" href="/privacy" target="_blank" class="privacy-link hover-underline">《隐私政策》</OLink>
-      条款，您将不能正常使用openSource-Ascend社区的部分服务并自动退出登录，请您慎重考虑。
-    </div>
-    <template #footer>
-      <div class="dialog-footer">
-        <OButton color="primary" variant="solid" size="large" @click="cancelVisible = false">暂不取消</OButton>
-        <OButton color="primary" variant="outline" size="large" @click="cancelSignature">确定取消</OButton>
       </div>
     </template>
   </ODialog>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ODropdown, ODropdownItem, OIcon, ODialog, OButton } from '@opensig/opendesign';
+import { ODropdown, ODropdownItem, OIcon, ODialog, OButton, OLink } from '@opensig/opendesign';
 
 import AppServiceStatement from '~/components/AppServiceStatement.vue';
 
@@ -22,11 +22,6 @@ const userInfoStore = useUserInfoStore();
 
 const { lePadV } = useScreen();
 
-// 取消签署隐私声明
-const cancelSignatureVisible = ref(false);
-const cancelSignature = () => {
-  cancelSignatureVisible.value = true;
-};
 // 注销账号
 const logoffVisible = ref(false);
 const cancelAccount = () => {
@@ -34,10 +29,6 @@ const cancelAccount = () => {
     window.location.href = `${HWCLOUDTEST}/AMW/logout?service=${DOMAIN_URL}`;
   });
   logoffVisible.value = false;
-};
-
-const close = (v: boolean) => {
-  cancelSignatureVisible.value = v;
 };
 </script>
 
@@ -63,9 +54,6 @@ const close = (v: boolean) => {
           </div>
 
           <template #dropdown>
-            <ODropdownItem @click="cancelSignature">
-              <div>取消签署隐私声明</div>
-            </ODropdownItem>
             <ODropdownItem @click="logoffVisible = true">
               <div>注销账号</div>
             </ODropdownItem>
@@ -77,13 +65,17 @@ const close = (v: boolean) => {
       </div>
     </Transition>
 
-    <AppServiceStatement :signature="cancelSignatureVisible" @close="close" />
+    <AppServiceStatement />
 
     <!-- 注销账号 -->
     <ODialog v-model:visible="logoffVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="logoff-dialog">
       <template #header>注销华为计算开源社区服务</template>
       <div class="body-content">
-        <span>注销后，此账号的所有数据都将被删除且不可逆，请谨慎操作！</span>
+        <div>
+          注销后，将撤销您签署的
+          <OLink color="primary" href="/privacy" target="_blank" class="privacy-link hover-underline">《隐私政策》</OLink>
+          条款，此账号的所有数据都将被删除且不可逆，请谨慎操作！
+        </div>
       </div>
       <template #footer>
         <div class="dialog-footer">
