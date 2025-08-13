@@ -2,5 +2,8 @@
   .o-message-list {
     --message-list-top-offset: calc(var(--o-gap-section-5) + var(--layout-header-height));
     z-index: 9999;
+    .o-message {
+      --message-radius: 8px;
+    }
   }
 }

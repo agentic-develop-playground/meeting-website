@@ -202,8 +202,8 @@ const toMeetingList = () => {
 <template>
   <div class="home-calendar">
     <div v-if="loginStore.isLogined" class="calendar-header">
-      <OButton color="primary" variant="outline" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
-      <OButton color="primary" variant="solid" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
+      <OButton color="primary" variant="outline" size="large" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
+      <OButton color="primary" variant="solid" size="large" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
     </div>
     <div class="calendar-body">
       <el-calendar ref="calendar" class="calender">
@@ -332,7 +332,7 @@ const toMeetingList = () => {
 
       .el-calendar__header {
         height: 60px;
-        padding: 14px 24px;
+        padding: 13px 24px;
         border-bottom: 1px solid var(--o-color-control4);
         @include respond-to('<=pad_v') {
           justify-content: center;
@@ -400,7 +400,7 @@ const toMeetingList = () => {
       }
 
       .el-calendar__body {
-        padding: 12px 24px 32px;
+        padding: 12px 24px 14px;
         border-right: 1px solid var(--o-color-control4);
 
         thead {
@@ -478,12 +478,12 @@ const toMeetingList = () => {
         .out-box {
           position: relative;
           border-radius: var(--o-radius-xs);
-          padding: 6px 12px;
+          padding: 7px 11px;
           width: 100%;
           height: 100%;
           background-color: var(--cell-bg);
           border: 1px solid transparent;
-          @include tip1;
+          @include text1;
           @include hover {
             background-color: var(--cell-active-bg);
             @include respond-to('<=pad_v') {
@@ -670,7 +670,7 @@ const toMeetingList = () => {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        padding: 14px 24px;
+        padding: 13px 24px;
         position: relative;
         height: 60px;
         &::after {
