@@ -68,7 +68,7 @@ const cancelAccount = () => {
     <AppServiceStatement />
 
     <!-- 注销账号 -->
-    <ODialog v-model:visible="logoffVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="logoff-dialog">
+    <ODialog v-model:visible="logoffVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px', '--dlg-radius': '16px' }" class="logoff-dialog">
       <template #header>注销账号</template>
       <div class="body-content">
         <div>

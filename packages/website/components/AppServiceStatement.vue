@@ -77,7 +77,12 @@ watch(
 </script>
 
 <template>
-  <ODialog v-model:visible="dialogVisible" :hide-close="true" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="service-statement-dialog">
+  <ODialog
+    v-model:visible="dialogVisible"
+    :hide-close="true"
+    :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px', '--dlg-radius': '16px' }"
+    class="service-statement-dialog"
+  >
     <template #header>openSource-Ascend 社区服务声明</template>
     <div class="body-content">
       <span
@@ -94,7 +99,12 @@ watch(
       </div>
     </template>
   </ODialog>
-  <ODialog v-model:visible="updateVisible" :hide-close="true" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="change-dialog">
+  <ODialog
+    v-model:visible="updateVisible"
+    :hide-close="true"
+    :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px', '--dlg-radius': '16px' }"
+    class="change-dialog"
+  >
     <template #header>openSource-Ascend 社区隐私政策变更声明</template>
     <div class="body-content">
       <span>尊敬的 openSource-Ascend 社区用户，为了给您提供更好的服务，并让您更清楚了解我们如何处理和保护您的个人信息，我们更新了</span>

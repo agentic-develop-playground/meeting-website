@@ -17,5 +17,7 @@ import MeetingList from '~/components/meeting/MeetingList.vue';
 <style lang="scss" scoped>
 .meeting-list-wrapper {
   min-height: calc(100vh - var(--layout-header-height));
+  padding-top: 32px;
+  padding-bottom: 72px;
 }
 </style>

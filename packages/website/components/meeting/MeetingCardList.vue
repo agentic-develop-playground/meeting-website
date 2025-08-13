@@ -7,8 +7,7 @@ import IconCopy from '~icons/meeting/icon-copy.svg';
 import type { MeetingItemT } from '~/@types/type-meeting';
 import { storeToRefs } from 'pinia';
 import { useThemeStore } from '~/stores/common';
-import emptyBg from '@/assets/category/meeting/svg-icons/icon-empty.svg';
-import emptyBgDark from '@/assets/category/meeting/svg-icons/icon-empty_dark.svg';
+import emptyBg from '@/assets/category/common/empty.svg';
 
 import IconEvent from '~icons/home/icon-event.svg';
 import IconSummit from '~icons/home/icon-summit.svg';
@@ -53,7 +52,7 @@ const i18n = {
 <template>
   <div class="meeting-card-list">
     <div v-if="!list || !list.length" class="empty-placeholder">
-      <img :src="isDark ? emptyBgDark : emptyBg" alt="" />
+      <img :src="emptyBg" alt="" />
       <div>当日没有活动，敬请期待</div>
     </div>
     <OCollapse v-else v-model="collapseNames" :style="{ '--collapse-padding': '0' }">
@@ -291,7 +290,7 @@ const i18n = {
   .meeting-card-list {
     :deep(.o-collapse) {
       .o-collapse-item-body {
-        background-color: #2b2b2f;
+        background-color: #f4f6fa;
       }
     }
   }

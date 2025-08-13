@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import {
   OButton,
   OForm,
@@ -237,6 +237,10 @@ const changeTime = () => {
 defineExpose({
   confirm,
 });
+
+const disabledState = computed(() => {
+  return !form.value.topic || !form.value.group_name || !form.value.date || !form.value.start || !form.value.end;
+});
 </script>
 
 <template>
@@ -353,7 +357,7 @@ defineExpose({
       </OFormItem>
     </OForm>
     <div class="form-btns">
-      <OButton color="primary" variant="solid" size="large" @click="confirm" :loading="loading">
+      <OButton color="primary" variant="solid" size="large" @click="confirm" :loading="loading" :disabled="disabledState">
         {{ data ? '修改' : '立即创建' }}
       </OButton>
       <OButton color="primary" variant="outline" size="large" @click="close">取消</OButton>
@@ -480,6 +484,9 @@ defineExpose({
     align-items: center;
     justify-content: center;
     column-gap: var(--o-gap-4);
+    .o-btn {
+      width: 112px;
+    }
   }
 
   .time-select-wrapper {
