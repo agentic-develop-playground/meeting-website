@@ -196,7 +196,7 @@ const confirmForm = () => {
 };
 
 const toMeetingList = () => {
-  router.push('/my/meeting');
+  router.push('/cann/meeting');
 };
 </script>
 <template>
@@ -264,7 +264,7 @@ const toMeetingList = () => {
       </div>
     </div>
   </div>
-  <ODialog v-model:visible="createMeetingVisible" class="create-meeting-dialog">
+  <ODialog v-model:visible="createMeetingVisible" :mask-close="false" class="create-meeting-dialog">
     <template #header>创建会议</template>
     <ElConfigProvider :locale="zhCn">
       <EditForm v-if="createMeetingVisible" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
@@ -305,6 +305,7 @@ const toMeetingList = () => {
   }
 
   .o-select {
+    --select-radius: var(--o-control_size-l);
     flex-grow: 1;
     max-width: 320px;
   }
