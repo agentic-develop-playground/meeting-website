@@ -33,7 +33,7 @@ const cancelAccount = () => {
 <template>
   <div class="header-user">
     <!-- 未登录或登录失败 -->
-    <template v-if="loginStore.isLoginNot || loginStore.isLoginFailed || userInfoStore.oneidPrivacyAccepted === 'revoked'">
+    <template v-if="loginStore.isLoginNot || loginStore.isLoginFailed">
       <OIcon class="avatar-icon" @click="doLogin">
         <IconAvatar></IconAvatar>
       </OIcon>
@@ -41,7 +41,7 @@ const cancelAccount = () => {
 
     <!-- 已登录 -->
     <Transition name="header-user-zoom-in">
-      <div class="user-info" v-if="loginStore.isLogined && userInfoStore.oneidPrivacyAccepted !== 'revoked'">
+      <div class="user-info" v-if="loginStore.isLogined">
         <ODropdown :trigger="lePadV ? 'click' : 'hover'" :optionPosition="lePadV ? 'br' : 'bottom'" option-wrap-class="user-dropdown">
           <div class="info-wrap hover-icon-rotate">
             <AppAvatar :avatar="''" :name="userInfoStore.username" :custom-size="lePadV ? 24 : 32" />
