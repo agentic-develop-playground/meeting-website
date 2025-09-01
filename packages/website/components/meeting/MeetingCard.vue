@@ -583,7 +583,7 @@ const toMeetingList = () => {
                 position: absolute;
                 top: 50%;
                 left: 50%;
-                transform: translate(-50%, -50%);
+                transform: translate(calc(-50% + 1px), -50%);
                 height: 24px;
                 width: 40px;
                 background-color: var(--o-color-primary1);
@@ -614,7 +614,7 @@ const toMeetingList = () => {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(calc(-50% + 1px), -50%);
             width: $size;
             height: $size;
             background-color: var(--cell-active-bg);

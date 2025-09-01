@@ -17,7 +17,7 @@ import police from '@/assets/category/footer/police.png';
           </div>
           <div class="filing">
             <img :src="police" class="filing-img" />
-            <p>粤公网安备 44030702005057号</p>
+            <p>粤公网安备 32011402010008号</p>
           </div>
         </div>
         <div class="footer-right">
