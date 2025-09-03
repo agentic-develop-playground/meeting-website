@@ -78,11 +78,19 @@ tryLogin();
     --layout-content-padding: 5%;
   }
 
+  @include respond-to('pad_h') {
+    --layout-footer-height: 76px;
+  }
+
   @include respond-to('<=pad') {
     --layout-header-height: 48px;
     --layout-header-padding: 32px;
 
     --layout-content-padding: 32px;
+  }
+
+  @include respond-to('<=pad_v') {
+    --layout-footer-height: 102px;
   }
 
   @include respond-to('phone') {

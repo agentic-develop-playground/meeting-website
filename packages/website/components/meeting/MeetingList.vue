@@ -123,8 +123,8 @@ const resolveDate = (date: string) => {
                   <OTag variant="solid" v-if="item.isEnd" class="end-tag">已结束</OTag>
                 </div>
                 <div v-if="!item.is_delete && !item.isEnd" class="operate-btn">
-                  <OLink color="normal" class="hover-underline" @click="modifyMeeting(item)">修改会议</OLink>
-                  <OLink color="normal" class="hover-underline" @click="cancelMeeting(item)">取消会议</OLink>
+                  <OLink color="normal" @click="modifyMeeting(item)">修改会议</OLink>
+                  <OLink color="normal" @click="cancelMeeting(item)">取消会议</OLink>
                 </div>
               </div>
               <div class="top-info">
@@ -200,6 +200,7 @@ const resolveDate = (date: string) => {
   --tag-radius: 100px;
   --tag-bg-color: rgba(32, 35, 41, 0.4);
   --tag-color: var(--o-color-info1-inverse);
+  border: none;
   margin-left: 8px;
 }
 .meeting-box {
@@ -234,6 +235,7 @@ const resolveDate = (date: string) => {
 .operate-btn {
   .o-link {
     padding: 0;
+    @include tip1;
   }
   .o-link + .o-link {
     margin-left: 24px;

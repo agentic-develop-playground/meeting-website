@@ -376,6 +376,18 @@ const disabledState = computed(() => {
   :deep(.o-form) {
     --o-input-color: var(--o-color-info2);
     --o-placeholder-color: var(--o-color-info4);
+    --form-label-gap-top: 8px;
+
+    @include respond-to('laptop') {
+      --form-label-gap-top: 7px;
+    }
+
+    .o-form-item-main-wrap {
+      min-height: 40px;
+      @include respond-to('laptop') {
+        min-height: 36px;
+      }
+    }
 
     input,
     textarea {
@@ -387,10 +399,12 @@ const disabledState = computed(() => {
     }
     .o-input {
       --_box-radius: 100px;
+      @include text1;
     }
     .o-textarea {
       --_box-radius: 16px;
       height: 126px;
+      @include text1;
 
       @include respond-to('<=pad') {
         height: 116px;
@@ -400,9 +414,17 @@ const disabledState = computed(() => {
       --select-radius: 100px;
     }
     .el-input {
+      --el-input-height: 40px;
       width: 320px !important;
+      @include respond-to('laptop') {
+        --el-input-height: 38px;
+      }
+
       .el-input__wrapper {
         border-radius: 100px;
+        .el-input__inner {
+          @include text1;
+        }
       }
     }
     .time-select-wrapper {
@@ -438,7 +460,7 @@ const disabledState = computed(() => {
         display: flex;
         align-items: center;
         column-gap: var(--o-gap-1);
-        @include tip1;
+        @include text1;
         color: var(--o-color-info3);
 
         .o-icon {
@@ -517,6 +539,16 @@ const disabledState = computed(() => {
       .el-select__wrapper {
         box-shadow: none;
         padding: 0;
+        min-height: 38px;
+        @include respond-to('laptop') {
+          min-height: 34px;
+        }
+        .el-select__selection {
+          @include text1;
+        }
+      }
+      .el-select__placeholder.is-transparent {
+        color: var(--o-placeholder-color);
       }
 
       .el-select__caret,

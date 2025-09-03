@@ -62,8 +62,10 @@ watch(
         <OIcon class="cookie-notice-warning">
           <IconWarning />
         </OIcon>
-        <div class="title">我们使用cookie来确保您的高速浏览体验。继续浏览本站，即表示您同意我们使用cookie。</div>
-        <OLink color="primary" href="/cookies" target="_blank" class="hover-underline">查看详情</OLink>
+        <div class="cookie-content-txt">
+          <span class="title">我们使用cookie来确保您的高速浏览体验。继续浏览本站，即表示您同意我们使用cookie。</span>
+          <OLink color="primary" href="/cookies" target="_blank" class="hover-underline">查看详情</OLink>
+        </div>
         <OIcon class="cookie-notice-close" @click="acceptAll">
           <IconClose />
         </OIcon>
@@ -90,7 +92,11 @@ watch(
 
 .cookie-content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+}
+
+.cookie-content-txt {
+  margin: 0 16px 0 8px;
 }
 
 .o-icon {
@@ -99,7 +105,6 @@ watch(
 
 .title {
   color: var(--o-color-info1);
-  margin: 0 16px 0 8px;
   @include tip1;
 }
 

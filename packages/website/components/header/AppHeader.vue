@@ -69,10 +69,4 @@
   align-items: center;
   cursor: pointer;
 }
-
-@include respond-to('<=pad_v') {
-  .app-header {
-    display: none;
-  }
-}
 </style>

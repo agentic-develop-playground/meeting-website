@@ -3,6 +3,8 @@ import { getYearByOffset } from '@/utils/common';
 import { OLink, ODivider } from '@opensig/opendesign';
 
 import police from '@/assets/category/footer/police.png';
+
+const { lePadV } = useScreen();
 </script>
 
 <template>
@@ -10,7 +12,7 @@ import police from '@/assets/category/footer/police.png';
     <div class="app-footer-wrap content-width">
       <ODivider :style="{ '--o-divider-gap': '0' }" />
       <div class="footer-content">
-        <div class="footer-left">
+        <div v-if="!lePadV" class="footer-left">
           <div class="footer-top">
             <span>版权所有 © 华为技术有限公司 {{ getYearByOffset() }} 保留一切权利</span>
             <OLink href="https://beian.miit.gov.cn/" target="_blank" color="normal" variant="text" class="text">粤A2-20044005号</OLink>
@@ -22,12 +24,20 @@ import police from '@/assets/category/footer/police.png';
         </div>
         <div class="footer-right">
           <OLink href="/legal" target="_blank" color="normal" variant="text">法律声明</OLink>
-          <ODivider direction="v" />
+          <ODivider v-if="!lePadV" direction="v" />
           <OLink href="/privacy" target="_blank" color="normal" variant="text">隐私政策</OLink>
-          <ODivider direction="v" />
+          <ODivider v-if="!lePadV" direction="v" />
           <OLink href="/cookies" target="_blank" color="normal" variant="text">Cookie协议</OLink>
-          <ODivider direction="v" />
+          <ODivider v-if="!lePadV" direction="v" />
           <OLink href="https://www.huawei.com/cn/contact-us" target="_blank" color="normal" variant="text">联系我们</OLink>
+        </div>
+        <div v-if="lePadV" class="footer-bottom">
+          <p>版权所有 © 华为技术有限公司 {{ getYearByOffset() }} 保留一切权利</p>
+          <div class="filing">
+            <OLink href="https://beian.miit.gov.cn/" target="_blank" color="normal" variant="text" class="text">粤A2-20044005号</OLink>
+            <img :src="police" class="filing-img" />
+            <p>粤公网安备 32011402010008号</p>
+          </div>
         </div>
       </div>
     </div>
@@ -40,6 +50,9 @@ import police from '@/assets/category/footer/police.png';
   background-color: var(--o-color-fill1);
   color: var(--o-color-info3);
   @include tip2;
+  @include respond-to('<=pad_v') {
+    @include tip1;
+  }
 }
 
 .o-link {
@@ -53,6 +66,14 @@ import police from '@/assets/category/footer/police.png';
   display: flex;
   justify-content: space-between;
   padding-top: 15px;
+  @include respond-to('pad_h') {
+    padding-bottom: 16px;
+  }
+  @include respond-to('<=pad_v') {
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 16px;
+  }
 }
 
 .app-footer-wrap {
@@ -79,6 +100,38 @@ import police from '@/assets/category/footer/police.png';
     .o-divider-v {
       --o-divider-label-gap: 0 16px;
     }
+  }
+}
+
+@include respond-to('pad_h') {
+  .app-footer-wrap {
+    .footer-left {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .filing {
+      margin-left: 0;
+      margin-top: 8px;
+    }
+  }
+}
+
+@include respond-to('<=pad_v') {
+  .footer-right {
+    .o-link + .o-link {
+      margin-left: 8px;
+    }
+  }
+  .footer-bottom {
+    text-align: center;
+    margin-top: 8px;
+  }
+  .app-footer-wrap .filing {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+  .filing-img {
+    margin-left: 8px;
   }
 }
 </style>

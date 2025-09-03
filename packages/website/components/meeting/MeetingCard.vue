@@ -250,7 +250,7 @@ const toMeetingList = () => {
         </div>
         <div class="right-title">
           <div class="title-list">
-            <OSelect style="max-width: 320px" v-model="sig" placeholder="全部SIG组" clearable>
+            <OSelect v-model="sig" placeholder="全部SIG组" clearable>
               <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
             </OSelect>
           </div>
@@ -690,10 +690,11 @@ const toMeetingList = () => {
           justify-content: space-between;
           padding: 0 16px;
           gap: 24px;
-          height: auto;
+          height: 32px;
           align-items: flex-start;
           .o-select {
             display: inline-flex;
+            max-width: 100%;
           }
         }
       }

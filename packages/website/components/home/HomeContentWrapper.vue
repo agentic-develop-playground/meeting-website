@@ -38,6 +38,11 @@ defineProps({
     margin-bottom: var(--o-gap-7);
   }
 }
+@include respond-to('<=pad_v') {
+  .home-content-wrapper {
+    --padding-y: 40px;
+  }
+}
 </style>
 <style scoped lang="scss">
 @include respond-to('laptop') {

@@ -155,9 +155,10 @@ const cancelAccount = () => {
 
 .o-dropdown-item {
   @include text1;
-  width: 128px;
+  min-width: 128px;
   white-space: nowrap;
   --dropdown-item-color: var(--o-color-info1);
+  --dropdown-item-color-hover: var(--o-color-info1);
   --dropdown-item-justify: center;
 
   .o-icon {
