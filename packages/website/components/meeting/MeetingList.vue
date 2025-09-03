@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag, ODivider } from '@opensig/opendesign';
+import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag, ODivider, OLink } from '@opensig/opendesign';
 
 import MeetingDetail from './MeetingDetail.vue';
 import EditForm from './EditForm.vue';
@@ -119,12 +119,12 @@ const resolveDate = (date: string) => {
               <div class="card-top">
                 <div class="title-box">
                   <span class="topic">{{ item.topic }}</span>
-                  <OTag variant="solid" v-if="!item.isEnd && item.is_delete" class="cancel-tag">会议已取消</OTag>
-                  <OTag variant="solid" v-if="item.isEnd" class="end-tag">会议已结束</OTag>
+                  <OTag variant="solid" v-if="!item.isEnd && item.is_delete" class="cancel-tag">已取消</OTag>
+                  <OTag variant="solid" v-if="item.isEnd" class="end-tag">已结束</OTag>
                 </div>
-                <div v-if="!item.is_delete" class="operate-btn">
-                  <OButton color="primary" variant="outline" @click="cancelMeeting(item)">取消</OButton>
-                  <OButton color="primary" variant="outline" @click="modifyMeeting(item)">修改</OButton>
+                <div v-if="!item.is_delete && !item.isEnd" class="operate-btn">
+                  <OLink color="normal" class="hover-underline" @click="modifyMeeting(item)">修改会议</OLink>
+                  <OLink color="normal" class="hover-underline" @click="cancelMeeting(item)">取消会议</OLink>
                 </div>
               </div>
               <div class="top-info">
@@ -162,7 +162,7 @@ const resolveDate = (date: string) => {
       </div>
     </div>
   </div>
-  <ODialog v-model:visible="modifyMeetingVisible" class="edit-meeting-dialog">
+  <ODialog v-model:visible="modifyMeetingVisible" :mask-close="false" class="edit-meeting-dialog">
     <template #header>修改会议</template>
     <ElConfigProvider :locale="zhCn">
       <EditForm v-if="modifyMeetingVisible" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
@@ -195,17 +195,11 @@ const resolveDate = (date: string) => {
   color: var(--o-color-info1);
   @include display3;
 }
-.cancel-tag {
+.o-tag {
   --tag-padding: 3px 12px;
   --tag-radius: 100px;
+  --tag-bg-color: rgba(32, 35, 41, 0.4);
   --tag-color: var(--o-color-info1-inverse);
-  --tag-bg-color: var(--o-color-primary4);
-  --tag-bd-color: var(--o-color-primary4);
-  margin-left: 8px;
-}
-.end-tag {
-  --tag-padding: 3px 12px;
-  --tag-radius: 100px;
   margin-left: 8px;
 }
 .meeting-box {
@@ -237,6 +231,15 @@ const resolveDate = (date: string) => {
   color: var(--o-color-info1);
   @include text2;
 }
+.operate-btn {
+  .o-link {
+    padding: 0;
+  }
+  .o-link + .o-link {
+    margin-left: 24px;
+  }
+}
+
 .o-btn + .o-btn {
   margin-left: 16px;
 }

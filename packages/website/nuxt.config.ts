@@ -58,7 +58,7 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/api-meeting/': {
-          target: 'https://ascend.test.osinfra.cn/',
+          target: 'https://meeting.osinfra.cn/',
           changeOrigin: true,
         },
         '/api-dsapi/': {
@@ -67,7 +67,7 @@ export default defineNuxtConfig({
           rewrite: (path) => path.replace(/^\/api-dsapi/, ''),
         },
         '/api-id/': {
-          target: 'https://id.ascend.test.osinfra.cn/',
+          target: 'https://id.meeting.osinfra.cn/',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api-id/, ''),
         },
@@ -95,5 +95,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-21',
   build: {
     transpile: ['jsencrypt'],
+  },
+  routeRules: {
+    '/': { redirect: '/cann' },
   },
 });

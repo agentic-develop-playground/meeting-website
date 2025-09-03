@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { OResult, OFigure } from '@opensig/opendesign';
-import noData from '@/assets/category/common/404.png';
+import noData from '@/assets/category/common/404.svg';
 defineProps<{
   src?: string;
   size?: 'small' | 'medium' | 'large';

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import TheMeeting from '@/views/my/TheMeeting.vue';
+import TheHome from '@/views/cann/TheHome.vue';
 </script>
 
 <template>
-  <TheMeeting />
+  <TheHome />
 </template>
 
 <style lang="scss" scoped></style>

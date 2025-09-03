@@ -58,6 +58,10 @@ tryLogin();
   --layout-content-max-width: 1440px;
   --layout-content-padding: 12px;
 
+  --layout-footer-height: 56px;
+
+  --layout-content-height: calc(100vh - var(--layout-footer-height));
+
   .content-width {
     width: var(--grid-content-width);
   }
@@ -117,7 +121,7 @@ tryLogin();
 
 .ly-main {
   padding-top: var(--layout-header-height);
-  min-height: 100vh;
+  min-height: var(--layout-content-height);
   background-color: var(--o-color-fill1);
 }
 </style>

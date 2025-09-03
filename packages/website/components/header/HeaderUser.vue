@@ -2,8 +2,6 @@
 import { ref } from 'vue';
 import { ODropdown, ODropdownItem, OIcon, ODialog, OButton, OLink } from '@opensig/opendesign';
 
-import AppServiceStatement from '~/components/AppServiceStatement.vue';
-
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 import IconAvatar from '~icons/app/icon-avatar-line.svg';
 
@@ -58,29 +56,34 @@ const cancelAccount = () => {
               <div>退出登录</div>
             </ODropdownItem>
             <ODropdownItem @click="logoffVisible = true">
-              <div>注销账号</div>
+              <div class="logoff">注销账号</div>
             </ODropdownItem>
           </template>
         </ODropdown>
       </div>
     </Transition>
 
-    <AppServiceStatement />
-
     <!-- 注销账号 -->
-    <ODialog v-model:visible="logoffVisible" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px', '--dlg-radius': '16px' }" class="logoff-dialog">
+    <ODialog
+      v-model:visible="logoffVisible"
+      :mask-close="false"
+      :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px', '--dlg-radius': '16px' }"
+      class="logoff-dialog"
+    >
       <template #header>注销账号</template>
       <div class="body-content">
         <div>
-          注销后，将撤销您签署的
+          您即将注销账号，并撤销您签署的
+          <OLink color="primary" href="/legal" target="_blank" class="legal-link hover-underline">《法律声明》</OLink>
+          和
           <OLink color="primary" href="/privacy" target="_blank" class="privacy-link hover-underline">《隐私政策》</OLink>
-          条款，此账号的所有数据都将被删除且不可逆，请谨慎操作！
+          条款，注销成功后，您的账号将无法使用，并且该账号下的所有数据也将被删除且无法恢复，请确认是否继续注销？
         </div>
       </div>
       <template #footer>
         <div class="dialog-footer">
-          <OButton color="primary" variant="solid" size="large" @click="logoffVisible = false">暂不注销</OButton>
-          <OButton color="primary" variant="outline" size="large" @click="cancelAccount">确定注销</OButton>
+          <OButton color="primary" variant="outline" size="large" @click="cancelAccount">继续注销</OButton>
+          <OButton color="primary" variant="solid" size="large" @click="logoffVisible = false">我再想想</OButton>
         </div>
       </template>
     </ODialog>
@@ -151,12 +154,11 @@ const cancelAccount = () => {
 }
 
 .o-dropdown-item {
-  @include tip1;
-  width: 142px;
+  @include text1;
+  width: 128px;
   white-space: nowrap;
   --dropdown-item-color: var(--o-color-info1);
   --dropdown-item-justify: center;
-  --dropdown-item-padding: 6px 8px;
 
   .o-icon {
     color: var(--o-color-info3);
@@ -175,6 +177,10 @@ const cancelAccount = () => {
     :deep(.o-badge-content) {
       right: 14px;
     }
+  }
+
+  .logoff {
+    color: var(--o-color-danger1);
   }
 }
 
@@ -207,9 +213,6 @@ const cancelAccount = () => {
   @include text-truncate(1);
 }
 
-.body-content {
-  text-align: center;
-}
 .dialog-footer {
   text-align: center;
   margin-top: 8px;
@@ -252,8 +255,7 @@ const cancelAccount = () => {
 
 <style lang="scss">
 .user-dropdown {
-  --dropdown-list-padding: 11px 11px 6px !important;
-  --dropdown-list-radius: var(--o-radius-m);
+  --dropdown-list-radius: 12px !important;
 }
 .avatar-icon {
   font-size: 24px;
@@ -266,9 +268,6 @@ const cancelAccount = () => {
 }
 @include respond-to('<=pad_v') {
   .user-dropdown {
-    --dropdown-list-padding: 9px 4px !important;
-    --dropdown-list-radius: 8px;
-
     .user-info-dropdown {
       display: none;
     }
