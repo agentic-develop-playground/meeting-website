@@ -6,6 +6,7 @@ import enUS from '@opensig/opendesign/es/locale/lang/en-us';
 import AppHeader from '@/components/header/AppHeader.vue';
 import CookieNotice from '@/components/CookieNotice.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import LayoutSimple from './simple.vue';
 
 import { tryLogin } from '@/utils/login';
 
@@ -40,7 +41,9 @@ tryLogin();
     <div class="ly-default" :class="{ 'page-loaded': isLoaded, 'page-lite': isLite }">
       <AppHeader class="ly-header" />
       <main class="ly-main">
-        <slot></slot>
+        <LayoutSimple>
+          <slot></slot>
+        </LayoutSimple>
       </main>
       <CookieNotice />
       <AppFooter />
@@ -78,11 +81,19 @@ tryLogin();
     --layout-content-padding: 5%;
   }
 
+  @include respond-to('pad_h') {
+    --layout-footer-height: 76px;
+  }
+
   @include respond-to('<=pad') {
     --layout-header-height: 48px;
     --layout-header-padding: 32px;
 
     --layout-content-padding: 32px;
+  }
+
+  @include respond-to('<=pad_v') {
+    --layout-footer-height: 110px;
   }
 
   @include respond-to('phone') {

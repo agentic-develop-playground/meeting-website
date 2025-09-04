@@ -38,6 +38,15 @@ defineProps({
     margin-bottom: var(--o-gap-7);
   }
 }
+@include respond-to('<=pad_v') {
+  .home-content-wrapper {
+    --padding-y: 24px 0 32px;
+    .title {
+      justify-content: flex-start;
+      padding: 0 16px;
+    }
+  }
+}
 </style>
 <style scoped lang="scss">
 @include respond-to('laptop') {
@@ -85,7 +94,7 @@ defineProps({
   .home-content-wrapper {
     .title {
       text-align: center;
-      padding: 0 24px;
+      padding: 0 16px;
       margin-bottom: 12px;
       &.has-sub {
         margin-bottom: 8px;

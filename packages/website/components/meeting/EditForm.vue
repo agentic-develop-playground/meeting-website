@@ -167,7 +167,7 @@ const close = () => {
   form.value = {};
   emits('close');
 };
-const { isPhone } = useScreen();
+const { lePadV } = useScreen();
 const confirm = async () => {
   let type = props.data ? '修改' : '创建';
   try {
@@ -197,7 +197,7 @@ const confirm = async () => {
       });
     }
     const msg = `“${form.value.topic}”会议${type}成功`;
-    if (isPhone.value) {
+    if (lePadV.value) {
       showMsg(msg);
     } else {
       message.success({
@@ -245,7 +245,7 @@ const disabledState = computed(() => {
 
 <template>
   <div class="edit-form blue-theme">
-    <OForm :model="form" ref="formRef" has-required :layout="isPhone ? 'v' : 'h'">
+    <OForm :model="form" ref="formRef" has-required :layout="lePadV ? 'v' : 'h'">
       <OFormItem :rules="rules.topic" label="会议名称" field="topic">
         <OInput size="large" placeholder="请输入会议名称" style="width: 100%" v-model="form.topic"></OInput>
       </OFormItem>
@@ -270,7 +270,7 @@ const disabledState = computed(() => {
         </template>
         <OInput size="large" :disabled="true" placeholder="请输入Etherpad" style="width: 100%" v-model="form.etherpad"></OInput>
       </OFormItem>
-      <OFormItem label="会议时间" field="date" :rules="rules.date">
+      <OFormItem label="会议时间" field="date" :rules="rules.date" class="date-form-item">
         <ElDatePicker
           size="large"
           v-model="form.date"
@@ -376,6 +376,18 @@ const disabledState = computed(() => {
   :deep(.o-form) {
     --o-input-color: var(--o-color-info2);
     --o-placeholder-color: var(--o-color-info4);
+    --form-label-gap-top: 8px;
+
+    @include respond-to('laptop') {
+      --form-label-gap-top: 7px;
+    }
+
+    .o-form-item-main-wrap {
+      min-height: 40px;
+      @include respond-to('laptop') {
+        min-height: 36px;
+      }
+    }
 
     input,
     textarea {
@@ -387,10 +399,12 @@ const disabledState = computed(() => {
     }
     .o-input {
       --_box-radius: 100px;
+      @include text1;
     }
     .o-textarea {
       --_box-radius: 16px;
       height: 126px;
+      @include text1;
 
       @include respond-to('<=pad') {
         height: 116px;
@@ -400,9 +414,21 @@ const disabledState = computed(() => {
       --select-radius: 100px;
     }
     .el-input {
+      --el-input-height: 40px;
       width: 320px !important;
+      @include respond-to('laptop') {
+        --el-input-height: 38px;
+      }
+
       .el-input__wrapper {
         border-radius: 100px;
+        .el-input__inner {
+          @include text1;
+        }
+      }
+
+      @include respond-to('<=pad_v') {
+        width: 100% !important;
       }
     }
     .time-select-wrapper {
@@ -410,6 +436,10 @@ const disabledState = computed(() => {
       border-radius: 100px;
       .o-form-item-main {
         margin-left: 0;
+      }
+
+      @include respond-to('<=pad_v') {
+        width: 100%;
       }
     }
 
@@ -421,10 +451,21 @@ const disabledState = computed(() => {
       margin-left: var(--o-gap-3);
     }
 
+    .date-form-item {
+      @include respond-to('<=pad_v') {
+        margin-bottom: 0;
+      }
+    }
+
     .time-form-item {
       .o-form-item-label {
         .o-form-require-symbol {
           display: none;
+        }
+      }
+      @include respond-to('<=pad_v') {
+        .o-form-item-main {
+          margin-top: 0;
         }
       }
     }
@@ -438,7 +479,7 @@ const disabledState = computed(() => {
         display: flex;
         align-items: center;
         column-gap: var(--o-gap-1);
-        @include tip1;
+        @include text1;
         color: var(--o-color-info3);
 
         .o-icon {
@@ -501,9 +542,8 @@ const disabledState = computed(() => {
       border-color: var(--o-color-control2);
     }
 
-    @include respond-to('phone') {
+    @include respond-to('<=pad_v') {
       background-color: var(--o-color-fill2);
-      padding-left: 0;
     }
 
     :deep(.o-form-item) {
@@ -517,6 +557,16 @@ const disabledState = computed(() => {
       .el-select__wrapper {
         box-shadow: none;
         padding: 0;
+        min-height: 38px;
+        @include respond-to('laptop') {
+          min-height: 34px;
+        }
+        .el-select__selection {
+          @include text1;
+        }
+      }
+      .el-select__placeholder.is-transparent {
+        color: var(--o-placeholder-color);
       }
 
       .el-select__caret,
@@ -524,7 +574,7 @@ const disabledState = computed(() => {
         display: none;
       }
       .o-form-item-main {
-        @include respond-to('phone') {
+        @include respond-to('<=pad_v') {
           margin-top: 0;
         }
       }
@@ -536,7 +586,7 @@ const disabledState = computed(() => {
     }
   }
 
-  @include respond-to('phone') {
+  @include respond-to('<=pad_v') {
     width: auto;
     .form-btns {
       display: none;
@@ -556,7 +606,7 @@ const disabledState = computed(() => {
   --app-header-height: 80px;
   top: calc(var(--app-header-height) + 32px);
 
-  @include respond-to('phone') {
+  @include respond-to('<=pad_v') {
     --app-header-height: 48px;
   }
 }

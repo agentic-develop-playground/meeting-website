@@ -1,24 +1,29 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, computed } from 'vue';
-import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog } from '@opensig/opendesign';
+import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog, useMessage } from '@opensig/opendesign';
 import dayjs from 'dayjs';
 
 import { getGroupInfosApi, getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
 import MeetingCardList from '~/components/meeting/MeetingCardList.vue';
 import EditForm from './EditForm.vue';
+import SimpleHeader from '~/components/header/SimpleHeader.vue';
 
 import IconMeet from '~icons/home/icon-meet.svg';
 import type { GroupItemT, MeetingItemT } from '~/@types/type-meeting';
 
 import { useLoginStore } from '@/stores/user';
 import { useMeetingStore } from '@/stores/meeting';
+import { useCommonStore } from '~/stores/common';
 
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 const loginStore = useLoginStore();
 const meetingStore = useMeetingStore();
+const commonStore = useCommonStore();
 
 const router = useRouter();
+const message = useMessage();
+const { lePadV } = useScreen();
 
 // 日历展示时间限制
 const limitTime = '2021 年 1 月';
@@ -177,17 +182,25 @@ const stopWatchData = watch(
 );
 
 // -------------------- 预定会议 --------------------
-const createMeetingVisible = ref(false); // 新增or编辑弹窗
+const createMeetingVisiblePc = ref(false); // 新增or编辑弹窗
+const createMeetingVisibleMb = ref(false); // 新增or编辑弹窗
 const currentRow = ref<MeetingItemT | null>(null); // 当前激活行，用于取消事件
 
 const toCreateMeeting = () => {
   currentRow.value = null;
-  createMeetingVisible.value = true;
+  if (lePadV.value) {
+    createMeetingVisibleMb.value = true;
+    commonStore.setLayout('simple');
+  } else {
+    createMeetingVisiblePc.value = true;
+    commonStore.setLayout('default');
+  }
 };
 
 // -------------------- 表单事件 --------------------
 const closeForm = () => {
-  createMeetingVisible.value = false;
+  createMeetingVisiblePc.value = false;
+  createMeetingVisibleMb.value = false;
   currentRow.value = null;
 };
 const confirmForm = () => {
@@ -198,12 +211,30 @@ const confirmForm = () => {
 const toMeetingList = () => {
   router.push('/cann/meeting');
 };
+
+const overlayClick = () => {
+  message.info({
+    content: '仅支持拥有权限的用户创建会议',
+  });
+};
+
+const closePhoneCreate = () => {
+  createMeetingVisibleMb.value = false;
+  commonStore.setLayout('default');
+};
+const formRef = ref(null);
+const confirmPhoneForm = () => {
+  formRef.value?.confirm();
+};
 </script>
 <template>
-  <div class="home-calendar">
+  <div v-if="!createMeetingVisibleMb" class="home-calendar">
     <div v-if="loginStore.isLogined" class="calendar-header">
       <OButton color="primary" variant="outline" size="large" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
-      <OButton color="primary" variant="solid" size="large" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
+      <div :class="{ ' button-container': true, disabled: !meetingStore.hasPerm }">
+        <OButton color="primary" variant="solid" size="large" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
+        <div class="disabled-overlay" @click="overlayClick"></div>
+      </div>
     </div>
     <div class="calendar-body">
       <el-calendar ref="calendar" class="calender">
@@ -246,11 +277,11 @@ const toMeetingList = () => {
       <div class="detail-list">
         <div class="current-day">
           最新日程：
-          <span>{{ dayjs(currentDay).format('YYYY/MM/DD') }}</span>
+          <span>{{ dayjs(latestDay).format('YYYY/MM/DD') }}</span>
         </div>
         <div class="right-title">
           <div class="title-list">
-            <OSelect style="max-width: 320px" v-model="sig" placeholder="全部SIG组" clearable>
+            <OSelect v-model="sig" placeholder="全部SIG组" clearable>
               <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
             </OSelect>
           </div>
@@ -264,12 +295,24 @@ const toMeetingList = () => {
       </div>
     </div>
   </div>
-  <ODialog v-model:visible="createMeetingVisible" :mask-close="false" class="create-meeting-dialog">
+  <!-- pc -->
+  <ODialog v-model:visible="createMeetingVisiblePc" :mask-close="false" class="create-meeting-dialog">
     <template #header>创建会议</template>
     <ElConfigProvider :locale="zhCn">
-      <EditForm v-if="createMeetingVisible" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
+      <EditForm v-if="createMeetingVisiblePc" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
     </ElConfigProvider>
   </ODialog>
+  <!-- 移动 -->
+  <div class="create-meeting" v-if="createMeetingVisibleMb">
+    <SimpleHeader :title="currentRow ? '编辑会议' : '创建会议'" :backEvt="closePhoneCreate">
+      <template #right>
+        <div class="confirm-text" @click="confirmPhoneForm">确定</div>
+      </template>
+    </SimpleHeader>
+    <div class="edit-form-wrapper">
+      <EditForm :data="currentRow" ref="formRef" @confirm="confirmForm" @close="closePhoneCreate"></EditForm>
+    </div>
+  </div>
 </template>
 <style lang="scss" scoped>
 .meetings {
@@ -295,6 +338,28 @@ const toMeetingList = () => {
     margin-bottom: var(--o-gap-section-5);
     @include respond-to('<=pad_v') {
       margin-top: 12px;
+      justify-content: flex-start;
+    }
+
+    .button-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .disabled-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: transparent;
+      display: none; /* 默认隐藏 */
+      cursor: pointer;
+    }
+
+    /* 当按钮被禁用时，显示覆盖层 */
+    .button-container.disabled .disabled-overlay {
+      display: block;
     }
   }
 
@@ -587,7 +652,7 @@ const toMeetingList = () => {
                 height: 24px;
                 width: 40px;
                 background-color: var(--o-color-primary1);
-                border-radius: var(--o-radius-l);
+                border-radius: 12px;
                 z-index: -1;
               }
             }
@@ -634,7 +699,7 @@ const toMeetingList = () => {
               height: 24px;
               width: 40px;
               background-color: var(--o-color-control1-light);
-              border-radius: var(--o-radius-l);
+              border-radius: 12px;
               z-index: -1;
             }
           }
@@ -694,6 +759,10 @@ const toMeetingList = () => {
           align-items: flex-start;
           .o-select {
             display: inline-flex;
+            max-width: 100%;
+          }
+          &::after {
+            display: none;
           }
         }
       }
@@ -717,6 +786,10 @@ const toMeetingList = () => {
       }
     }
   }
+}
+
+.edit-form-wrapper {
+  padding: 16px;
 }
 </style>
 

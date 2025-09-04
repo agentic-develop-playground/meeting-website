@@ -1,18 +1,56 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { OIcon, OIconArrowLeft } from '@opensig/opendesign';
+
+import { useLocale } from '~/composables/useLocale';
+
+import type { LocaleT } from '~/@types/type-locale';
+
+const route = useRoute();
+const { locale } = useLocale();
+const { lePadV } = useScreen();
+
+const back = () => {
+  history.go(-1);
+};
+
+// 返回箭头
+const isSimpleHeader = computed(() => route.meta.simpleHeader);
+
+// 获取页面标题
+const pageTitle = computed(() => {
+  const metaTitle = route.meta.title as {
+    [K in LocaleT]: string;
+  };
+  if (metaTitle) {
+    return metaTitle[locale.value as LocaleT] || metaTitle['zh'];
+  }
+  return '';
+});
+</script>
 
 <template>
   <div class="app-header">
     <div class="app-header-wrap">
       <div class="header-content content-width">
-        <div class="header-left">
-          <!-- LOGO -->
-          <HeaderLogo />
+        <div v-if="lePadV && isSimpleHeader" class="simple-header">
+          <OIcon @click="back">
+            <OIconArrowLeft />
+          </OIcon>
+          <div v-if="pageTitle" class="header-title">
+            {{ pageTitle }}
+          </div>
         </div>
+        <template v-else>
+          <div class="header-left">
+            <!-- LOGO -->
+            <HeaderLogo />
+          </div>
 
-        <div class="header-right">
-          <!-- 用户 -->
-          <HeaderUser />
-        </div>
+          <div class="header-right">
+            <!-- 用户 -->
+            <HeaderUser />
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -31,6 +69,24 @@
     left: 0;
     pointer-events: none;
     position: absolute;
+  }
+}
+.simple-header {
+  display: flex;
+  gap: 16px;
+  color: var(--o-color-info1);
+  overflow: hidden;
+  .o-icon {
+    font-size: 24px;
+  }
+  .header-title {
+    color: var(--o-color-info1);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 }
 .app-header-wrap {
@@ -71,8 +127,12 @@
 }
 
 @include respond-to('<=pad_v') {
-  .app-header {
-    display: none;
+  .header-left {
+    flex: 1;
+    justify-content: center;
+  }
+  .header-logo {
+    margin-left: 12px;
   }
 }
 </style>
