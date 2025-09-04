@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import TheMeeting from '@/views/cann/TheMeeting.vue';
+
+definePageMeta({
+  title: { zh: '我创建的会议', en: '' },
+  simpleHeader: true,
+});
 </script>
 
 <template>

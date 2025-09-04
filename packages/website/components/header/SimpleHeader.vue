@@ -86,8 +86,7 @@ const { searchHeaderVisible } = storeToRefs(commonStore);
     position: relative;
     height: 100%;
     width: var(--grid-layout-width);
-    padding-left: var(--grid--layout-padding);
-    padding-right: var(--grid--layout-padding);
+    padding: 0 24px;
     margin: 0 auto;
   }
 
@@ -116,11 +115,11 @@ const { searchHeaderVisible } = storeToRefs(commonStore);
   .header-center {
     flex-grow: 1;
     display: flex;
-    justify-content: center;
     .title {
       font-size: 18px;
       line-height: 26px;
       font-weight: 500;
+      margin-left: 16px;
     }
   }
   .header-right {
