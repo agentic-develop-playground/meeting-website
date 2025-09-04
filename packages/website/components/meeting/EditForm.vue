@@ -167,7 +167,7 @@ const close = () => {
   form.value = {};
   emits('close');
 };
-const { isPhone } = useScreen();
+const { lePadV } = useScreen();
 const confirm = async () => {
   let type = props.data ? '修改' : '创建';
   try {
@@ -197,7 +197,7 @@ const confirm = async () => {
       });
     }
     const msg = `“${form.value.topic}”会议${type}成功`;
-    if (isPhone.value) {
+    if (lePadV.value) {
       showMsg(msg);
     } else {
       message.success({
@@ -245,7 +245,7 @@ const disabledState = computed(() => {
 
 <template>
   <div class="edit-form blue-theme">
-    <OForm :model="form" ref="formRef" has-required :layout="isPhone ? 'v' : 'h'">
+    <OForm :model="form" ref="formRef" has-required :layout="lePadV ? 'v' : 'h'">
       <OFormItem :rules="rules.topic" label="会议名称" field="topic">
         <OInput size="large" placeholder="请输入会议名称" style="width: 100%" v-model="form.topic"></OInput>
       </OFormItem>
@@ -270,7 +270,7 @@ const disabledState = computed(() => {
         </template>
         <OInput size="large" :disabled="true" placeholder="请输入Etherpad" style="width: 100%" v-model="form.etherpad"></OInput>
       </OFormItem>
-      <OFormItem label="会议时间" field="date" :rules="rules.date">
+      <OFormItem label="会议时间" field="date" :rules="rules.date" class="date-form-item">
         <ElDatePicker
           size="large"
           v-model="form.date"
@@ -426,12 +426,20 @@ const disabledState = computed(() => {
           @include text1;
         }
       }
+
+      @include respond-to('<=pad_v') {
+        width: 100% !important;
+      }
     }
     .time-select-wrapper {
       width: 320px;
       border-radius: 100px;
       .o-form-item-main {
         margin-left: 0;
+      }
+
+      @include respond-to('<=pad_v') {
+        width: 100%;
       }
     }
 
@@ -443,10 +451,21 @@ const disabledState = computed(() => {
       margin-left: var(--o-gap-3);
     }
 
+    .date-form-item {
+      @include respond-to('<=pad_v') {
+        margin-bottom: 0;
+      }
+    }
+
     .time-form-item {
       .o-form-item-label {
         .o-form-require-symbol {
           display: none;
+        }
+      }
+      @include respond-to('<=pad_v') {
+        .o-form-item-main {
+          margin-top: 0;
         }
       }
     }
@@ -465,6 +484,14 @@ const disabledState = computed(() => {
 
         .o-icon {
           font-size: 24px;
+        }
+      }
+
+      @include respond-to('phone') {
+        .switch-text {
+          .o-icon {
+            font-size: 16px;
+          }
         }
       }
     }
@@ -523,9 +550,8 @@ const disabledState = computed(() => {
       border-color: var(--o-color-control2);
     }
 
-    @include respond-to('phone') {
+    @include respond-to('<=pad_v') {
       background-color: var(--o-color-fill2);
-      padding-left: 0;
     }
 
     :deep(.o-form-item) {
@@ -556,7 +582,7 @@ const disabledState = computed(() => {
         display: none;
       }
       .o-form-item-main {
-        @include respond-to('phone') {
+        @include respond-to('<=pad_v') {
           margin-top: 0;
         }
       }
@@ -568,15 +594,23 @@ const disabledState = computed(() => {
     }
   }
 
-  @include respond-to('phone') {
+  @include respond-to('<=pad_v') {
     width: auto;
     .form-btns {
-      display: none;
+      justify-content: flex-start;
     }
     :deep(.o-form) {
       .o-form-item-main {
         margin-left: 0;
         margin-top: 8px;
+      }
+    }
+  }
+  @include respond-to('phone') {
+    .form-btns {
+      .o-btn {
+        height: 40px !important;
+        border-radius: var(--o-control_size-l) !important;
       }
     }
   }
@@ -588,8 +622,9 @@ const disabledState = computed(() => {
   --app-header-height: 80px;
   top: calc(var(--app-header-height) + 32px);
 
-  @include respond-to('phone') {
+  @include respond-to('<=pad_v') {
     --app-header-height: 48px;
+    top: calc(var(--app-header-height) + 12px);
   }
 }
 

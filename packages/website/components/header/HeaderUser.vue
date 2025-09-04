@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ODropdown, ODropdownItem, OIcon, ODialog, OButton, OLink } from '@opensig/opendesign';
+import { ODropdown, ODropdownItem, OIcon, ODialog, OButton, OLink, ODivider } from '@opensig/opendesign';
 
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 import IconAvatar from '~icons/app/icon-avatar-line.svg';
@@ -18,7 +18,7 @@ const DOMAIN_URL = import.meta.env.VITE_DOMAIN_URL;
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
 
-const { lePadV } = useScreen();
+const { lePadV, isPhone } = useScreen();
 
 // 注销账号
 const logoffVisible = ref(false);
@@ -64,12 +64,7 @@ const cancelAccount = () => {
     </Transition>
 
     <!-- 注销账号 -->
-    <ODialog
-      v-model:visible="logoffVisible"
-      :mask-close="false"
-      :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px', '--dlg-radius': '16px' }"
-      class="logoff-dialog"
-    >
+    <ODialog v-model:visible="logoffVisible" :mask-close="false" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="logoff-dialog">
       <template #header>注销账号</template>
       <div class="body-content">
         <div>
@@ -82,8 +77,9 @@ const cancelAccount = () => {
       </div>
       <template #footer>
         <div class="dialog-footer">
-          <OButton color="primary" variant="outline" size="large" @click="cancelAccount">继续注销</OButton>
-          <OButton color="primary" variant="solid" size="large" @click="logoffVisible = false">我再想想</OButton>
+          <OButton :color="isPhone ? 'danger' : 'primary'" :variant="isPhone ? 'text' : 'outline'" size="large" @click="cancelAccount">继续注销</OButton>
+          <ODivider v-if="isPhone" direction="v" />
+          <OButton :color="isPhone ? 'normal' : 'primary'" :variant="isPhone ? 'text' : 'solid'" size="large" @click="logoffVisible = false">我再想想</OButton>
         </div>
       </template>
     </ODialog>
@@ -252,6 +248,18 @@ const cancelAccount = () => {
     }
   }
 }
+
+@include respond-to('phone') {
+  .dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row-reverse;
+    .o-divider {
+      height: 24px;
+    }
+  }
+}
 </style>
 
 <style lang="scss">
@@ -313,6 +321,13 @@ const cancelAccount = () => {
         line-height: 18px;
       }
     }
+  }
+}
+
+.logoff-dialog {
+  --dlg-radius: 16px;
+  @include respond-to('phone') {
+    --dlg-radius: 4px;
   }
 }
 </style>

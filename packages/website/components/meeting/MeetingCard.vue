@@ -6,20 +6,24 @@ import dayjs from 'dayjs';
 import { getGroupInfosApi, getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
 import MeetingCardList from '~/components/meeting/MeetingCardList.vue';
 import EditForm from './EditForm.vue';
+import SimpleHeader from '~/components/header/SimpleHeader.vue';
 
 import IconMeet from '~icons/home/icon-meet.svg';
 import type { GroupItemT, MeetingItemT } from '~/@types/type-meeting';
 
 import { useLoginStore } from '@/stores/user';
 import { useMeetingStore } from '@/stores/meeting';
+import { useCommonStore } from '~/stores/common';
 
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 const loginStore = useLoginStore();
 const meetingStore = useMeetingStore();
+const commonStore = useCommonStore();
 
 const router = useRouter();
 const message = useMessage();
+const { lePadV } = useScreen();
 
 // 日历展示时间限制
 const limitTime = '2021 年 1 月';
@@ -178,17 +182,25 @@ const stopWatchData = watch(
 );
 
 // -------------------- 预定会议 --------------------
-const createMeetingVisible = ref(false); // 新增or编辑弹窗
+const createMeetingVisiblePc = ref(false); // 新增or编辑弹窗
+const createMeetingVisibleMb = ref(false); // 新增or编辑弹窗
 const currentRow = ref<MeetingItemT | null>(null); // 当前激活行，用于取消事件
 
 const toCreateMeeting = () => {
   currentRow.value = null;
-  createMeetingVisible.value = true;
+  if (lePadV.value) {
+    createMeetingVisibleMb.value = true;
+    commonStore.setLayout('simple');
+  } else {
+    createMeetingVisiblePc.value = true;
+    commonStore.setLayout('default');
+  }
 };
 
 // -------------------- 表单事件 --------------------
 const closeForm = () => {
-  createMeetingVisible.value = false;
+  createMeetingVisiblePc.value = false;
+  createMeetingVisibleMb.value = false;
   currentRow.value = null;
 };
 const confirmForm = () => {
@@ -205,9 +217,14 @@ const overlayClick = () => {
     content: '仅支持拥有权限的用户创建会议',
   });
 };
+
+const closePhoneCreate = () => {
+  createMeetingVisibleMb.value = false;
+  commonStore.setLayout('default');
+};
 </script>
 <template>
-  <div class="home-calendar">
+  <div v-if="!createMeetingVisibleMb" class="home-calendar">
     <div v-if="loginStore.isLogined" class="calendar-header">
       <OButton color="primary" variant="outline" size="large" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
       <div :class="{ ' button-container': true, disabled: !meetingStore.hasPerm }">
@@ -256,7 +273,7 @@ const overlayClick = () => {
       <div class="detail-list">
         <div class="current-day">
           最新日程：
-          <span>{{ dayjs(currentDay).format('YYYY/MM/DD') }}</span>
+          <span>{{ dayjs(latestDay).format('YYYY/MM/DD') }}</span>
         </div>
         <div class="right-title">
           <div class="title-list">
@@ -274,12 +291,20 @@ const overlayClick = () => {
       </div>
     </div>
   </div>
-  <ODialog v-model:visible="createMeetingVisible" :mask-close="false" class="create-meeting-dialog">
+  <!-- pc -->
+  <ODialog v-model:visible="createMeetingVisiblePc" :mask-close="false" class="create-meeting-dialog">
     <template #header>创建会议</template>
     <ElConfigProvider :locale="zhCn">
-      <EditForm v-if="createMeetingVisible" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
+      <EditForm v-if="createMeetingVisiblePc" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
     </ElConfigProvider>
   </ODialog>
+  <!-- 移动 -->
+  <div class="create-meeting" v-if="createMeetingVisibleMb">
+    <SimpleHeader :title="currentRow ? '修改会议' : '创建会议'" :backEvt="closePhoneCreate"></SimpleHeader>
+    <div class="edit-form-wrapper">
+      <EditForm :data="currentRow" ref="formRef" @confirm="confirmForm" @close="closePhoneCreate"></EditForm>
+    </div>
+  </div>
 </template>
 <style lang="scss" scoped>
 .meetings {
@@ -305,6 +330,9 @@ const overlayClick = () => {
     margin-bottom: var(--o-gap-section-5);
     @include respond-to('<=pad_v') {
       margin-top: 12px;
+      column-gap: var(--o-gap-4);
+      justify-content: flex-end;
+      flex-direction: row-reverse;
     }
 
     .button-container {
@@ -320,12 +348,20 @@ const overlayClick = () => {
       height: 100%;
       background-color: transparent;
       display: none; /* 默认隐藏 */
-      cursor: not-allowed;
+      cursor: pointer;
     }
 
     /* 当按钮被禁用时，显示覆盖层 */
     .button-container.disabled .disabled-overlay {
       display: block;
+    }
+
+    .o-btn {
+      --btn-min-width: 112px;
+      @include respond-to('phone') {
+        height: 40px !important;
+        border-radius: var(--o-control_size-l) !important;
+      }
     }
   }
 
@@ -618,7 +654,7 @@ const overlayClick = () => {
                 height: 24px;
                 width: 40px;
                 background-color: var(--o-color-primary1);
-                border-radius: var(--o-radius-l);
+                border-radius: 12px;
                 z-index: -1;
               }
             }
@@ -665,7 +701,7 @@ const overlayClick = () => {
               height: 24px;
               width: 40px;
               background-color: var(--o-color-control1-light);
-              border-radius: var(--o-radius-l);
+              border-radius: 12px;
               z-index: -1;
             }
           }
@@ -721,11 +757,14 @@ const overlayClick = () => {
           justify-content: space-between;
           padding: 0 16px;
           gap: 24px;
-          height: 32px;
+          height: auto;
           align-items: flex-start;
           .o-select {
             display: inline-flex;
             max-width: 100%;
+          }
+          &::after {
+            display: none;
           }
         }
       }
@@ -749,6 +788,10 @@ const overlayClick = () => {
       }
     }
   }
+}
+
+.edit-form-wrapper {
+  padding: 24px 16px;
 }
 </style>
 

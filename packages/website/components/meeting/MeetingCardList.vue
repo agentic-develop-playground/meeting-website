@@ -5,14 +5,14 @@ import { ref, watch } from 'vue';
 
 import IconCopy from '~icons/meeting/icon-copy.svg';
 import type { MeetingItemT } from '~/@types/type-meeting';
-import { storeToRefs } from 'pinia';
-import { useThemeStore } from '~/stores/common';
 import emptyBg from '@/assets/category/common/empty.svg';
 
 import IconEvent from '~icons/home/icon-event.svg';
 import IconSummit from '~icons/home/icon-summit.svg';
 import IconMeet from '~icons/home/icon-meet.svg';
 import IconChevronRight from '~icons/app/icon-chevron-right.svg';
+
+const { lePadV } = useScreen();
 
 const props = defineProps<{ list: MeetingItemT[] }>();
 const detailListRef = ref([]);
@@ -36,8 +36,6 @@ watch(
     }
   }
 );
-const themeStore = useThemeStore();
-const { isDark } = storeToRefs(themeStore);
 const resolveDate = (date: string) => {
   return date?.replaceAll?.('-', '/');
 };
@@ -85,7 +83,7 @@ const i18n = {
               <OIcon><IconChevronRight /> </OIcon>
             </template>
           </OLink>
-          <OIcon @click.stop="() => copyInfo(index)" class="copy-icon" v-else>
+          <OIcon @click.stop="() => copyInfo(index)" class="copy-icon" v-if="item.type === 'meetings' && !lePadV">
             <IconCopy></IconCopy>
           </OIcon>
         </template>

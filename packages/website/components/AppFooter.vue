@@ -32,9 +32,11 @@ const { lePadV } = useScreen();
           <OLink href="https://www.huawei.com/cn/contact-us" target="_blank" color="normal" variant="text">联系我们</OLink>
         </div>
         <div v-if="lePadV" class="footer-bottom">
-          <p>版权所有 © 华为技术有限公司 {{ getYearByOffset() }} 保留一切权利</p>
-          <div class="filing">
+          <div class="footer-top">
+            <span>版权所有 © 华为技术有限公司 {{ getYearByOffset() }} 保留一切权利</span>
             <OLink href="https://beian.miit.gov.cn/" target="_blank" color="normal" variant="text" class="text">粤A2-20044005号</OLink>
+          </div>
+          <div class="filing">
             <img :src="police" class="filing-img" />
             <p>粤公网安备 32011402010008号</p>
           </div>
@@ -52,6 +54,9 @@ const { lePadV } = useScreen();
   @include tip2;
   @include respond-to('<=pad_v') {
     @include tip1;
+  }
+  @include respond-to('phone') {
+    @include tip2;
   }
 }
 
@@ -119,19 +124,23 @@ const { lePadV } = useScreen();
 @include respond-to('<=pad_v') {
   .footer-right {
     .o-link + .o-link {
-      margin-left: 8px;
+      margin-left: 12px;
     }
+  }
+  .footer-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
   }
   .footer-bottom {
     text-align: center;
-    margin-top: 8px;
+    margin-top: 12px;
   }
   .app-footer-wrap .filing {
     margin-left: 0;
-    margin-top: 8px;
-  }
-  .filing-img {
-    margin-left: 8px;
+    margin-top: 12px;
+    justify-content: center;
   }
 }
 </style>

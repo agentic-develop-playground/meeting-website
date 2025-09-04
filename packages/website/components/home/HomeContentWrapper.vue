@@ -40,7 +40,19 @@ defineProps({
 }
 @include respond-to('<=pad_v') {
   .home-content-wrapper {
-    --padding-y: 40px;
+    --padding-y: 24px 0 32px;
+    .title {
+      @include display2;
+      justify-content: flex-start;
+    }
+  }
+  .custom-layout-simple {
+    .home-content-wrapper {
+      --padding-y: 0;
+      .title {
+        display: none;
+      }
+    }
   }
 }
 </style>
@@ -90,7 +102,7 @@ defineProps({
   .home-content-wrapper {
     .title {
       text-align: center;
-      padding: 0 24px;
+      padding: 0;
       margin-bottom: 12px;
       &.has-sub {
         margin-bottom: 8px;
