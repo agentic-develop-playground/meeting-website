@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, computed } from 'vue';
-import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog } from '@opensig/opendesign';
+import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog, useMessage } from '@opensig/opendesign';
 import dayjs from 'dayjs';
 
 import { getGroupInfosApi, getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
@@ -19,6 +19,7 @@ const loginStore = useLoginStore();
 const meetingStore = useMeetingStore();
 
 const router = useRouter();
+const message = useMessage();
 
 // 日历展示时间限制
 const limitTime = '2021 年 1 月';
@@ -198,12 +199,21 @@ const confirmForm = () => {
 const toMeetingList = () => {
   router.push('/cann/meeting');
 };
+
+const overlayClick = () => {
+  message.info({
+    content: '仅支持拥有权限的用户创建会议',
+  });
+};
 </script>
 <template>
   <div class="home-calendar">
     <div v-if="loginStore.isLogined" class="calendar-header">
       <OButton color="primary" variant="outline" size="large" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
-      <OButton color="primary" variant="solid" size="large" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
+      <div :class="{ ' button-container': true, disabled: !meetingStore.hasPerm }">
+        <OButton color="primary" variant="solid" size="large" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
+        <div class="disabled-overlay" @click="overlayClick"></div>
+      </div>
     </div>
     <div class="calendar-body">
       <el-calendar ref="calendar" class="calender">
@@ -295,6 +305,27 @@ const toMeetingList = () => {
     margin-bottom: var(--o-gap-section-5);
     @include respond-to('<=pad_v') {
       margin-top: 12px;
+    }
+
+    .button-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .disabled-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: transparent;
+      display: none; /* 默认隐藏 */
+      cursor: not-allowed;
+    }
+
+    /* 当按钮被禁用时，显示覆盖层 */
+    .button-container.disabled .disabled-overlay {
+      display: block;
     }
   }
 
