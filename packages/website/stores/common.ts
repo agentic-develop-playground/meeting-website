@@ -76,8 +76,17 @@ export const useCommonStore = defineStore('common', () => {
     searchHeaderVisible.value = val;
   };
 
+  // -------------------- 切换布局 --------------------
+  const layout = ref(null);
+
+  const setLayout = (val: any) => {
+    layout.value = val;
+  };
+
   return {
     searchHeaderVisible,
     setSearchHeaderVisible,
+    layout,
+    setLayout,
   };
 });

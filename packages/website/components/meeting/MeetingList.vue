@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag, ODivider, OLink } from '@opensig/opendesign';
+import { ref, computed } from 'vue';
+import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag, ODivider, OLink, OCollapse, OCollapseItem, OIcon } from '@opensig/opendesign';
 
 import MeetingDetail from './MeetingDetail.vue';
 import EditForm from './EditForm.vue';
@@ -12,10 +12,13 @@ import { getMyMeetingListApi, deleteMeetingApi } from '~/api/api-meeting';
 import type { MeetingItemT } from '~/@types/type-meeting';
 
 import noData from '@/assets/category/common/empty.svg';
+import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 
 import { useLoginStore } from '@/stores/user';
 
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+
+const { isLaptop, lePad, lePadV, isPhone } = useScreen();
 
 const loginStore = useLoginStore();
 const message = useMessage();
@@ -106,15 +109,32 @@ const onPaginationChange = (val: { page: number; pageSize: number }) => {
 const resolveDate = (date: string) => {
   return date?.replaceAll?.('-', '/');
 };
+
+const gap = computed(() => {
+  if (isLaptop.value) {
+    return '24px 24px';
+  } else if (lePad.value) {
+    return '16px 16px';
+  } else if (isPhone.value) {
+    return '0 12px';
+  }
+  return '32px 24px';
+});
+
+const collapseNames = ref([]);
+
+const joinMeeting = (href: string) => {
+  window.open(href);
+};
 </script>
 
 <template>
   <div class="meeting">
-    <p class="title">我创建的会议</p>
+    <p v-if="!lePadV" class="title">我创建的会议</p>
     <div v-if="loginStore.isLogined" class="meeting-box" :class="{ 'meeting-box-empty': !loading && !meetingList.length }">
-      <ORow v-if="!loading && meetingList.length" gap="32px 24px" wrap="wrap">
-        <OCol v-for="item in meetingList" :key="item.id" flex="0 0 50%">
-          <div class="item-card">
+      <ORow v-if="!loading && meetingList.length" :gap="gap" wrap="wrap">
+        <OCol v-for="item in meetingList" :key="item.id" :flex="lePadV ? '0 0 100%' : '0 0 50%'">
+          <div v-if="!lePadV" class="item-card">
             <div class="card-header">
               <div class="card-top">
                 <div class="title-box">
@@ -143,6 +163,39 @@ const resolveDate = (date: string) => {
               <MeetingDetail :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
             </div>
           </div>
+          <OCollapse v-model="collapseNames" :style="{ '--collapse-padding': '0' }">
+            <OCollapseItem :value="item.id">
+              <template #title>
+                <div class="title-box">
+                  <span class="topic">{{ item.topic }}</span>
+                  <OTag variant="solid" v-if="!item.isEnd && item.is_delete" class="cancel-tag">已取消</OTag>
+                  <OTag variant="solid" v-if="item.isEnd" class="end-tag">已结束</OTag>
+                </div>
+                <div class="meet-info">
+                  <span class="start-time">
+                    <span v-if="item.start">{{ item.date }} {{ item.start }} - {{ item.end }}</span>
+                    <span v-else>{{ resolveDate(item.start_date) }}-{{ resolveDate(item.end_date || '') }}</span>
+                  </span>
+                  <ODivider direction="v" />
+                  <div v-if="item.group_name">SIG组: {{ item.group_name }}</div>
+                </div>
+                <div class="btn-bottom">
+                  <OButton color="primary" variant="outline" size="small" @click.stop="joinMeeting(item.join_url)">加入会议</OButton>
+                  <OIcon class="icon" :class="{ 'icon-active': collapseNames.includes(item.id) }">
+                    <IconChevronDown />
+                  </OIcon>
+                </div>
+              </template>
+              <div class="calendar-info">
+                <MeetingDetail :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
+                <ODivider />
+                <div v-if="!item.is_delete && !item.isEnd" class="operate-btn">
+                  <OLink color="normal" @click="modifyMeeting(item)">修改会议</OLink>
+                  <OLink color="normal" @click="cancelMeeting(item)">取消会议</OLink>
+                </div>
+              </div>
+            </OCollapseItem>
+          </OCollapse>
         </OCol>
       </ORow>
       <AppEmpty v-if="!loading && !meetingList.length" :src="noData">
@@ -184,6 +237,9 @@ const resolveDate = (date: string) => {
 .meeting {
   margin-top: 16px;
   height: calc(100% - 70px);
+  @include respond-to('<=pad_v') {
+    margin-top: 0;
+  }
 }
 .title-box {
   display: flex;
@@ -209,6 +265,12 @@ const resolveDate = (date: string) => {
   background-color: var(--o-color-fill2);
   margin-top: 24px;
   padding: 24px 32px 32px;
+  @include respond-to('<=pad_v') {
+    margin-top: 0;
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
 }
 .meeting-box-empty {
   display: flex;
@@ -253,9 +315,6 @@ const resolveDate = (date: string) => {
   color: var(--o-color-info3);
   text-decoration: none;
   @include tip1;
-  @include respond-to('<=pad_v') {
-    margin-left: 32px;
-  }
 
   .o-divider {
     @include tip1;
@@ -273,6 +332,65 @@ const resolveDate = (date: string) => {
     .label {
       width: 110px;
     }
+  }
+}
+
+:deep(.o-collapse) {
+  --collapse-radius: 16px;
+  border: 1px solid rgba(var(--o-mixedgray-14), 0.2);
+  .o-collapse-item-header {
+    flex-direction: column-reverse;
+    padding: 12px 16px;
+
+    .o-collapse-item-icon {
+      display: none;
+    }
+  }
+  .o-collapse-item {
+    --collapse-item-gap: 0;
+  }
+  .topic {
+    @include h4;
+  }
+  .meet-info {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    color: var(--o-color-info3);
+    text-decoration: none;
+    @include tip1;
+
+    .o-divider {
+      @include tip1;
+    }
+  }
+  .btn-bottom {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .o-icon {
+      --icon-size: 24px;
+    }
+    .icon-active {
+      transform: rotate(180deg);
+    }
+  }
+  .calendar-info {
+    background-color: #f4f6fa;
+    padding: 12px 16px;
+    border-radius: 0 0 16px 16px;
+    .label-item {
+      color: var(--o-color-info3);
+      @include tip1;
+
+      .label {
+        width: 90px;
+      }
+    }
+  }
+  .operate-btn {
+    text-align: right;
   }
 }
 

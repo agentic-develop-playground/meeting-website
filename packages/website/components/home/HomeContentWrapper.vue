@@ -40,7 +40,11 @@ defineProps({
 }
 @include respond-to('<=pad_v') {
   .home-content-wrapper {
-    --padding-y: 40px;
+    --padding-y: 24px 0 32px;
+    .title {
+      justify-content: flex-start;
+      padding: 0 16px;
+    }
   }
 }
 </style>
@@ -90,7 +94,7 @@ defineProps({
   .home-content-wrapper {
     .title {
       text-align: center;
-      padding: 0 24px;
+      padding: 0 16px;
       margin-bottom: 12px;
       &.has-sub {
         margin-bottom: 8px;
