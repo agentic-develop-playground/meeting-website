@@ -486,6 +486,14 @@ const disabledState = computed(() => {
           font-size: 24px;
         }
       }
+
+      @include respond-to('phone') {
+        .switch-text {
+          .o-icon {
+            font-size: 16px;
+          }
+        }
+      }
     }
 
     .label-wrapper {
@@ -598,6 +606,14 @@ const disabledState = computed(() => {
       }
     }
   }
+  @include respond-to('phone') {
+    .form-btns {
+      .o-btn {
+        height: 40px !important;
+        border-radius: var(--o-control_size-l) !important;
+      }
+    }
+  }
 }
 </style>
 
@@ -608,6 +624,7 @@ const disabledState = computed(() => {
 
   @include respond-to('<=pad_v') {
     --app-header-height: 48px;
+    top: calc(var(--app-header-height) + 12px);
   }
 }
 

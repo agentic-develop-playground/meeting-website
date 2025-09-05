@@ -331,7 +331,8 @@ const closePhoneCreate = () => {
     @include respond-to('<=pad_v') {
       margin-top: 12px;
       column-gap: var(--o-gap-4);
-      justify-content: flex-start;
+      justify-content: flex-end;
+      flex-direction: row-reverse;
     }
 
     .button-container {
@@ -353,6 +354,14 @@ const closePhoneCreate = () => {
     /* 当按钮被禁用时，显示覆盖层 */
     .button-container.disabled .disabled-overlay {
       display: block;
+    }
+
+    .o-btn {
+      --btn-min-width: 112px;
+      @include respond-to('phone') {
+        height: 40px !important;
+        border-radius: var(--o-control_size-l) !important;
+      }
     }
   }
 

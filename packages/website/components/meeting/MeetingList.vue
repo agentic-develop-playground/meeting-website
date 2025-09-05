@@ -251,8 +251,13 @@ const closePhoneCreate = () => {
     <div class="dialog-content">是否确认要取消“{{ currentRow.topic }}”会议？</div>
     <template #footer>
       <div class="dialog-footer">
-        <OButton color="primary" variant="solid" size="large" @click="confirmCancel" :loading="cancelLoading">确认</OButton>
-        <OButton color="primary" variant="outline" size="large" @click="cancelMeetingVisible = false">取消</OButton>
+        <OButton :color="isPhone ? 'danger' : 'primary'" :variant="isPhone ? 'text' : 'solid'" size="large" @click="confirmCancel" :loading="cancelLoading">{{
+          isPhone ? '确认取消' : '确认'
+        }}</OButton>
+        <ODivider v-if="isPhone" direction="v" />
+        <OButton :color="isPhone ? 'normal' : 'primary'" :variant="isPhone ? 'text' : 'outline'" size="large" @click="cancelMeetingVisible = false"
+          >取消</OButton
+        >
       </div>
     </template>
   </ODialog>
@@ -456,8 +461,24 @@ const closePhoneCreate = () => {
 
   .dialog-footer {
     display: flex;
+    align-items: center;
     justify-content: center;
     margin-top: 16px;
+  }
+
+  @include respond-to('phone') {
+    width: 100%;
+    --dlg-radius: 4px;
+    .dialog-content {
+      width: 100%;
+    }
+    .o-btn-text {
+      background-color: transparent !important;
+    }
+    .dialog-footer {
+      margin-top: 4px;
+      flex-direction: row-reverse;
+    }
   }
 }
 </style>

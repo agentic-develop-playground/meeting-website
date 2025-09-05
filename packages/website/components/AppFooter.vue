@@ -131,6 +131,7 @@ const { lePadV } = useScreen();
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
   }
   .footer-bottom {
     text-align: center;
