@@ -55,6 +55,9 @@ const { lePadV } = useScreen();
   @include respond-to('<=pad_v') {
     @include tip1;
   }
+  @include respond-to('phone') {
+    @include tip2;
+  }
 }
 
 .o-link {

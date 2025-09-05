@@ -589,7 +589,7 @@ const disabledState = computed(() => {
   @include respond-to('<=pad_v') {
     width: auto;
     .form-btns {
-      display: none;
+      justify-content: flex-start;
     }
     :deep(.o-form) {
       .o-form-item-main {

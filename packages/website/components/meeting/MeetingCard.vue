@@ -222,10 +222,6 @@ const closePhoneCreate = () => {
   createMeetingVisibleMb.value = false;
   commonStore.setLayout('default');
 };
-const formRef = ref(null);
-const confirmPhoneForm = () => {
-  formRef.value?.confirm();
-};
 </script>
 <template>
   <div v-if="!createMeetingVisibleMb" class="home-calendar">
@@ -304,11 +300,7 @@ const confirmPhoneForm = () => {
   </ODialog>
   <!-- 移动 -->
   <div class="create-meeting" v-if="createMeetingVisibleMb">
-    <SimpleHeader :title="currentRow ? '编辑会议' : '创建会议'" :backEvt="closePhoneCreate">
-      <template #right>
-        <div class="confirm-text" @click="confirmPhoneForm">确定</div>
-      </template>
-    </SimpleHeader>
+    <SimpleHeader :title="currentRow ? '修改会议' : '创建会议'" :backEvt="closePhoneCreate"></SimpleHeader>
     <div class="edit-form-wrapper">
       <EditForm :data="currentRow" ref="formRef" @confirm="confirmForm" @close="closePhoneCreate"></EditForm>
     </div>
@@ -338,6 +330,7 @@ const confirmPhoneForm = () => {
     margin-bottom: var(--o-gap-section-5);
     @include respond-to('<=pad_v') {
       margin-top: 12px;
+      column-gap: var(--o-gap-4);
       justify-content: flex-start;
     }
 
@@ -789,7 +782,7 @@ const confirmPhoneForm = () => {
 }
 
 .edit-form-wrapper {
-  padding: 16px;
+  padding: 24px 16px;
 }
 </style>
 

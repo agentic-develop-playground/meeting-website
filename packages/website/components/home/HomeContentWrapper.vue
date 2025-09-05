@@ -42,8 +42,16 @@ defineProps({
   .home-content-wrapper {
     --padding-y: 24px 0 32px;
     .title {
+      @include display2;
       justify-content: flex-start;
-      padding: 0 16px;
+    }
+  }
+  .custom-layout-simple {
+    .home-content-wrapper {
+      --padding-y: 0;
+      .title {
+        display: none;
+      }
     }
   }
 }
@@ -94,7 +102,7 @@ defineProps({
   .home-content-wrapper {
     .title {
       text-align: center;
-      padding: 0 16px;
+      padding: 0;
       margin-bottom: 12px;
       &.has-sub {
         margin-bottom: 8px;

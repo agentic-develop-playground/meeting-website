@@ -4,6 +4,7 @@ import { ORow, OCol, OButton, useMessage, OPagination, ODialog, OTag, ODivider, 
 
 import MeetingDetail from './MeetingDetail.vue';
 import EditForm from './EditForm.vue';
+import SimpleHeader from '~/components/header/SimpleHeader.vue';
 
 import dayjs from 'dayjs';
 
@@ -15,10 +16,12 @@ import noData from '@/assets/category/common/empty.svg';
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 
 import { useLoginStore } from '@/stores/user';
+import { useCommonStore } from '@/stores/common';
 
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 const { isLaptop, lePad, lePadV, isPhone } = useScreen();
+const commonStore = useCommonStore();
 
 const loginStore = useLoginStore();
 const message = useMessage();
@@ -35,6 +38,8 @@ const queryData = ref({
   size: 16,
 });
 
+const collapseNames = ref([]);
+
 const getMeeting = () => {
   getMyMeetingListApi(queryData.value)
     .then((res) => {
@@ -47,6 +52,7 @@ const getMeeting = () => {
           isEnd: dayjs(`${v.date} ${v.end}`).isBefore(dayjs()),
         };
       });
+      collapseNames.value = [res.data[0]?.id];
     })
     .finally(() => {
       loading.value = false;
@@ -79,15 +85,23 @@ const confirmCancel = async () => {
 };
 
 // -------------------- 修改会议 --------------------
-const modifyMeetingVisible = ref(false); // 修改弹窗
+const createMeetingVisiblePc = ref(false); // 修改弹窗
+const createMeetingVisibleMb = ref(false); // 修改弹窗
 const modifyMeeting = (val: MeetingItemT) => {
   currentRow.value = val;
-  modifyMeetingVisible.value = true;
+  if (lePadV.value) {
+    createMeetingVisibleMb.value = true;
+    commonStore.setLayout('simple');
+  } else {
+    createMeetingVisiblePc.value = true;
+    commonStore.setLayout('default');
+  }
 };
 
 // -------------------- 表单事件 --------------------
 const closeForm = () => {
-  modifyMeetingVisible.value = false;
+  createMeetingVisiblePc.value = false;
+  createMeetingVisibleMb.value = false;
   currentRow.value = null;
 };
 const confirmForm = () => {
@@ -121,15 +135,18 @@ const gap = computed(() => {
   return '32px 24px';
 });
 
-const collapseNames = ref([]);
-
 const joinMeeting = (href: string) => {
   window.open(href);
+};
+
+const closePhoneCreate = () => {
+  createMeetingVisibleMb.value = false;
+  commonStore.setLayout('default');
 };
 </script>
 
 <template>
-  <div class="meeting">
+  <div v-if="!createMeetingVisibleMb" class="meeting">
     <p v-if="!lePadV" class="title">我创建的会议</p>
     <div v-if="loginStore.isLogined" class="meeting-box" :class="{ 'meeting-box-empty': !loading && !meetingList.length }">
       <ORow v-if="!loading && meetingList.length" :gap="gap" wrap="wrap">
@@ -163,7 +180,7 @@ const joinMeeting = (href: string) => {
               <MeetingDetail :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
             </div>
           </div>
-          <OCollapse v-model="collapseNames" :style="{ '--collapse-padding': '0' }">
+          <OCollapse v-else v-model="collapseNames" :style="{ '--collapse-padding': '0' }">
             <OCollapseItem :value="item.id">
               <template #title>
                 <div class="title-box">
@@ -188,7 +205,7 @@ const joinMeeting = (href: string) => {
               </template>
               <div class="calendar-info">
                 <MeetingDetail :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
-                <ODivider />
+                <ODivider v-if="!item.is_delete && !item.isEnd" />
                 <div v-if="!item.is_delete && !item.isEnd" class="operate-btn">
                   <OLink color="normal" @click="modifyMeeting(item)">修改会议</OLink>
                   <OLink color="normal" @click="cancelMeeting(item)">取消会议</OLink>
@@ -215,12 +232,20 @@ const joinMeeting = (href: string) => {
       </div>
     </div>
   </div>
-  <ODialog v-model:visible="modifyMeetingVisible" :mask-close="false" class="edit-meeting-dialog">
+  <!-- pc -->
+  <ODialog v-model:visible="createMeetingVisiblePc" :mask-close="false" class="edit-meeting-dialog">
     <template #header>修改会议</template>
     <ElConfigProvider :locale="zhCn">
-      <EditForm v-if="modifyMeetingVisible" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
+      <EditForm v-if="createMeetingVisiblePc" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
     </ElConfigProvider>
   </ODialog>
+  <!-- 移动 -->
+  <div class="create-meeting" v-if="createMeetingVisibleMb">
+    <SimpleHeader :title="currentRow ? '修改会议' : '创建会议'" :backEvt="closePhoneCreate"></SimpleHeader>
+    <div class="edit-form-wrapper">
+      <EditForm :data="currentRow" ref="formRef" @confirm="confirmForm" @close="closePhoneCreate"></EditForm>
+    </div>
+  </div>
   <ODialog v-model:visible="cancelMeetingVisible" main-class="cancel-dialog">
     <template #header>确定取消</template>
     <div class="dialog-content">是否确认要取消“{{ currentRow.topic }}”会议？</div>
@@ -298,6 +323,9 @@ const joinMeeting = (href: string) => {
   .o-link {
     padding: 0;
     @include tip1;
+    @include respond-to('<=pad_v') {
+      @include text1;
+    }
   }
   .o-link + .o-link {
     margin-left: 24px;
@@ -399,6 +427,10 @@ const joinMeeting = (href: string) => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+.edit-form-wrapper {
+  padding: 16px;
 }
 </style>
 
