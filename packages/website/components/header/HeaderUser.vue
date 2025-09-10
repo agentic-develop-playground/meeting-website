@@ -23,9 +23,13 @@ const { lePadV, isPhone } = useScreen();
 // 注销账号
 const logoffVisible = ref(false);
 const cancelAccount = () => {
-  deleteUser(DOMAIN_URL).then(() => {
-    window.location.href = `${HWCLOUDTEST}/AMW/logout?service=${DOMAIN_URL}`;
-  });
+  deleteUser(DOMAIN_URL)
+    .then(() => {
+      window.location.href = `${HWCLOUDTEST}/AMW/logout?service=${DOMAIN_URL}`;
+    })
+    .catch(() => {
+      doLogin();
+    });
   logoffVisible.value = false;
 };
 </script>
