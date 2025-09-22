@@ -1,3 +1,3 @@
 export default {
-  calendarTitle: 'CANN开放项目会议日历',
+  calendarTitle: 'CANN开源社区会议日历',
 };

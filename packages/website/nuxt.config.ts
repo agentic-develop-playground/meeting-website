@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     rootId: 'cann-portal',
     buildAssetsDir: 'assets',
     head: {
-      title: '会议日历 | CANN开放项目',
+      title: '会议日历 | CANN开源社区',
       htmlAttrs: {
         lang: 'zh',
       },
