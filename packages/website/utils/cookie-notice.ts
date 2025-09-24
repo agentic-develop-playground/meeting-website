@@ -28,7 +28,7 @@ export function removeCookie(key: string) {
 }
 
 // cookie的key
-export const COOKIE_KEY = 'agreed-cann-cookiepolicy';
+export const COOKIE_KEY = 'agreed-cookiepolicy';
 
 // -------------------- cookie状态 --------------------
 export const COOKIE_AGREED_STATUS = {
