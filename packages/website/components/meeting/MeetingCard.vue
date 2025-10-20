@@ -15,6 +15,8 @@ import { useLoginStore } from '@/stores/user';
 import { useMeetingStore } from '@/stores/meeting';
 import { useCommonStore } from '~/stores/common';
 
+import { communityMap } from '@/config/community';
+
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 const loginStore = useLoginStore();
@@ -22,6 +24,7 @@ const meetingStore = useMeetingStore();
 const commonStore = useCommonStore();
 
 const router = useRouter();
+const route = useRoute();
 const message = useMessage();
 const { lePadV } = useScreen();
 
@@ -61,7 +64,7 @@ const latestDay = ref(new Date()); // 截止当天最新的活动日期
 
 const getTableData = async (day?: string) => {
   const date = dayjs(day).format('YYYY-MM-DD');
-  const dateList = await getMeetingDateListApi(date);
+  const dateList = await getMeetingDateListApi(date, route?.params?.id as string);
   tableData.value = [...new Set([...dateList])];
   const allTableData = tableData.value.sort((a, b) => dayjs(a).unix() - dayjs(b).unix());
   if (!tableData.value.length) {
@@ -80,7 +83,7 @@ const renderData = ref([]);
 const currentDay = ref(undefined);
 
 const paramGetDaysData = async (params: { date: string }) => {
-  getMeetingListApi(params.date, sig.value).then((res) => {
+  getMeetingListApi(params.date, sig.value, route?.params?.id as string).then((res) => {
     renderData.value = res.map((v) => {
       return {
         ...v,
@@ -209,7 +212,7 @@ const confirmForm = () => {
 };
 
 const toMeetingList = () => {
-  router.push('/cann/meeting');
+  router.push(`/${communityMap.get(route?.params?.id as string)?.id}/meeting`);
 };
 
 const overlayClick = () => {

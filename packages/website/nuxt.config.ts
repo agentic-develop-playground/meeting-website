@@ -96,7 +96,4 @@ export default defineNuxtConfig({
   build: {
     transpile: ['jsencrypt'],
   },
-  routeRules: {
-    '/': { redirect: '/cann' },
-  },
 });

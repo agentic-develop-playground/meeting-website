@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import logoCann from '@/assets/category/common/logo.png';
+import { communityMap } from '@/config/community';
 
-const { isZh } = useLocale();
+const route = useRoute();
 
 const props = defineProps({
   mbPosition: {
@@ -12,8 +12,8 @@ const props = defineProps({
 </script>
 
 <template>
-  <NuxtLink :to="isZh ? '/' : '/en'" class="header-logo" :class="{ 'mb-center': props.mbPosition === 'center' }">
-    <img class="logo" :src="logoCann" />
+  <NuxtLink :to="`/${route?.params?.id}`" class="header-logo" :class="{ 'mb-center': props.mbPosition === 'center' }">
+    <img class="logo" :src="communityMap.get(route?.params?.id as string)?.logo" />
   </NuxtLink>
 </template>
 

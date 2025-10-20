@@ -12,6 +12,8 @@ import { getMyMeetingListApi, deleteMeetingApi } from '~/api/api-meeting';
 
 import type { MeetingItemT } from '~/@types/type-meeting';
 
+import { communityMap } from '@/config/community';
+
 import noData from '@/assets/category/common/empty.svg';
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 
@@ -19,6 +21,9 @@ import { useLoginStore } from '@/stores/user';
 import { useCommonStore } from '@/stores/common';
 
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+
+const router = useRouter();
+const route = useRoute();
 
 const { isLaptop, lePad, lePadV, isPhone } = useScreen();
 const commonStore = useCommonStore();
@@ -53,6 +58,11 @@ const getMeeting = () => {
         };
       });
       collapseNames.value = [res.data[0]?.id];
+    })
+    .catch((err) => {
+      if (err.code === 403) {
+        router.push(`/${communityMap.get(route?.params?.id as string)?.id}`);
+      }
     })
     .finally(() => {
       loading.value = false;

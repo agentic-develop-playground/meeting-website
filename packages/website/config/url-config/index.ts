@@ -6,6 +6,4 @@ const HIKUNPENG_URL = 'https://www.hikunpeng.com/';
 const HUAWEICLOUD_URL = 'https://www.huaweicloud.com/';
 const OPENI_URL = 'https://www.openi.org.cn/';
 
-const HWCLOUDTEST = 'https://id1.cloud.huawei.com';
-
-export { HIASCEND_URL, MINDSPORE_URL, HUAWEI_URL, EHUAWEI_URL, HIKUNPENG_URL, HUAWEICLOUD_URL, OPENI_URL, HWCLOUDTEST };
+export { HIASCEND_URL, MINDSPORE_URL, HUAWEI_URL, EHUAWEI_URL, HIKUNPENG_URL, HUAWEICLOUD_URL, OPENI_URL };
