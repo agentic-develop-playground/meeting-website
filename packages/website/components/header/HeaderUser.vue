@@ -11,9 +11,8 @@ import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
 import { doLogin, doLogout } from '@/utils/login';
 
-import { HWCLOUDTEST } from '@/config/url-config';
-
 const DOMAIN_URL = import.meta.env.VITE_DOMAIN_URL;
+const HWCLOUD_URL = import.meta.env.VITE_HWCLOUD_URL;
 
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
@@ -25,7 +24,7 @@ const logoffVisible = ref(false);
 const cancelAccount = () => {
   deleteUser(DOMAIN_URL)
     .then(() => {
-      window.location.href = `${HWCLOUDTEST}/AMW/logout?service=${DOMAIN_URL}`;
+      window.location.href = `${HWCLOUD_URL}/AMW/logout?service=${DOMAIN_URL}`;
     })
     .catch(() => {
       doLogin();
