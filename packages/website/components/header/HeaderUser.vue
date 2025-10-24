@@ -14,6 +14,8 @@ import { doLogin, doLogout } from '@/utils/login';
 const DOMAIN_URL = import.meta.env.VITE_DOMAIN_URL;
 const HWCLOUD_URL = import.meta.env.VITE_HWCLOUD_URL;
 
+const route = useRoute();
+
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
 
@@ -24,7 +26,7 @@ const logoffVisible = ref(false);
 const cancelAccount = () => {
   deleteUser(DOMAIN_URL)
     .then(() => {
-      window.location.href = `${HWCLOUD_URL}/AMW/logout?service=${DOMAIN_URL}`;
+      window.location.href = `${HWCLOUD_URL}/AMW/logout?service=${DOMAIN_URL}${route?.params?.id}`;
     })
     .catch(() => {
       doLogin();
