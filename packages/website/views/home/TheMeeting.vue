@@ -3,13 +3,15 @@ import { OBreadcrumb, OBreadcrumbItem } from '@opensig/opendesign';
 
 import MeetingList from '~/components/meeting/MeetingList.vue';
 
+const route = useRoute();
+
 const { lePadV } = useScreen();
 </script>
 
 <template>
   <ContentWrapper class="meeting-list-wrapper">
     <OBreadcrumb v-if="!lePadV" class="breadcrumb">
-      <OBreadcrumbItem href="/">主页</OBreadcrumbItem>
+      <OBreadcrumbItem :href="`/${route?.params?.id}`">主页</OBreadcrumbItem>
       <OBreadcrumbItem>我创建的会议</OBreadcrumbItem>
     </OBreadcrumb>
     <MeetingList />
