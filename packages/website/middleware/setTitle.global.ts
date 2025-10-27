@@ -20,7 +20,7 @@ export default defineNuxtRouteMiddleware((to) => {
       title: `会议日历 | ${communityMap.get(to?.params?.id as string)?.name}开源社区`,
     });
   } else if (ROUTE.includes(path)) {
-    return navigateTo(to.path);
+    return true;
   } else {
     useHead({
       title: 'error',
