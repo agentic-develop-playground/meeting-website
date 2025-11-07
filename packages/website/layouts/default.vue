@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { i18n } from '@/plugins/i18n';
-import { OConfigProvider } from '@opensig/opendesign';
+import { OConfigProvider, OScroller } from '@opensig/opendesign';
 import zhCN from '@opensig/opendesign/es/locale/lang/zh-cn';
 import enUS from '@opensig/opendesign/es/locale/lang/en-us';
 import AppHeader from '@/components/header/AppHeader.vue';
@@ -12,13 +12,6 @@ import { tryLogin } from '@/utils/login';
 
 const { locale, isZh } = useLocale();
 
-const isLite = ref(false);
-const isLoaded = ref(false);
-onMounted(() => {
-  isLoaded.value = true;
-  isLite.value = route.name?.toString().includes('lite') ?? false;
-});
-
 const route = useRoute();
 watch(
   () => route.path,
@@ -26,6 +19,10 @@ watch(
     const lang = /\/en\/?$/g.test(v) ? 'en' : 'zh';
     locale.value = lang;
     i18n.global.locale.value = lang;
+
+    if (route?.params?.id) {
+      localStorage.setItem('community', route?.params?.id as string);
+    }
   },
   {
     immediate: true,
@@ -38,22 +35,22 @@ tryLogin();
 
 <template>
   <OConfigProvider :locale="isZh ? zhCN : enUS">
-    <div class="ly-default" :class="{ 'page-loaded': isLoaded, 'page-lite': isLite }">
-      <AppHeader class="ly-header" />
+    <AppHeader class="ly-header" />
+    <OScroller show-type="hover">
       <main class="ly-main">
         <LayoutSimple>
           <slot></slot>
         </LayoutSimple>
       </main>
-      <CookieNotice />
       <AppFooter />
-    </div>
+    </OScroller>
+    <CookieNotice />
   </OConfigProvider>
 </template>
 
 <style lang="scss">
-.ly-default {
-  --layout-header-height: 80px;
+#cann-portal {
+  --layout-header-height: 72px;
   --layout-header-zIndex: 20;
   --layout-header-max-width: 1920px;
   --layout-header-padding: 64px;
@@ -105,29 +102,23 @@ tryLogin();
 </style>
 
 <style lang="scss" scoped>
-.ly-default {
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.15s;
-  &.page-loaded {
-    visibility: visible;
-    opacity: 1;
-  }
-  &.page-lite {
-    :deep(.app-header-wrap) {
-      &::before {
-        display: none;
-      }
-    }
-  }
-}
-
 .ly-header {
   position: fixed;
   top: 0;
   width: 100%;
   height: var(--layout-header-height);
   z-index: var(--layout-header-zIndex);
+}
+
+.o-scroller {
+  --scrollbar-height: calc(100vh - var(--layout-header-height) * 2 - 10px);
+
+  height: 100vh;
+  background-color: var(--o-color-fill1);
+
+  :deep(.o-scroller-container) {
+    scroll-padding-top: var(--layout-header-height);
+  }
 }
 
 .ly-main {

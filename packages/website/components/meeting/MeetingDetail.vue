@@ -56,7 +56,7 @@ defineExpose({ copyInfo });
 <template>
   <div ref="domRef" class="label-item" :class="`label-item_${data.id} type_${data.type}`" v-for="(info, infoIdx) in columns" :key="infoIdx">
     <span class="label">{{ info.label }}：</span>
-    <OLink v-if="info.isLink" target="_blank" class="value hover-underline" color="primary" :href="data[info.key]">
+    <OLink v-if="info.isLink" target="_blank" class="value" color="primary" hover-underline :href="data[info.key]">
       {{ data[info.key] }}
     </OLink>
     <span v-else class="value">

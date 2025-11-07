@@ -64,7 +64,7 @@ const latestDay = ref(new Date()); // 截止当天最新的活动日期
 
 const getTableData = async (day?: string) => {
   const date = dayjs(day).format('YYYY-MM-DD');
-  const dateList = await getMeetingDateListApi(date, route?.params?.id as string);
+  const dateList = (await getMeetingDateListApi(date, route?.params?.id as string)) || [];
   tableData.value = [...new Set([...dateList])];
   const allTableData = tableData.value.sort((a, b) => dayjs(a).unix() - dayjs(b).unix());
   if (!tableData.value.length) {

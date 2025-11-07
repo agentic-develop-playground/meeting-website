@@ -7,6 +7,7 @@ import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
 const LOGIN_URL = import.meta.env.VITE_LOGIN_ORIGIN;
 const COOKIE_DOMAIN = import.meta.env.VITE_COOKIE_DOMAIN;
+const DOMAIN_URL = import.meta.env.VITE_DOMAIN_URL;
 
 // 登录状态
 export enum LOGIN_STATUS {
@@ -128,5 +129,8 @@ export async function doLogin() {
 
 // 退出登录
 export function doLogout() {
-  window.location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(window?.location?.href)}`;
+  const community = window.location.href.replace(DOMAIN_URL, '').split('/')[0];
+  const redirect_uri = `${DOMAIN_URL}${community}`;
+
+  window.location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(redirect_uri)}`;
 }

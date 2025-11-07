@@ -42,8 +42,12 @@ export const useLoginStore = defineStore('login', {
 export const useUserInfoStore = defineStore('userInfo', {
   state: () => {
     return {
-      userId: '', // id
-      username: '', // 账号
+      email: '',
+      userId: '',
+      identities: [], // 绑定的三方账号信息
+      phone: '',
+      photo: '',
+      username: '',
     };
   },
 });

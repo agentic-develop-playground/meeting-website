@@ -9,11 +9,13 @@ const props = defineProps({
     default: 'left',
   },
 });
+
+const community = localStorage.getItem('community');
 </script>
 
 <template>
   <NuxtLink :to="`/${route?.params?.id}`" class="header-logo" :class="{ 'mb-center': props.mbPosition === 'center' }">
-    <img class="logo" :src="communityMap.get(route?.params?.id as string)?.logo" />
+    <img class="logo" :src="communityMap.get((route?.params?.id || community) as string)?.logo" />
   </NuxtLink>
 </template>
 
