@@ -184,6 +184,13 @@ const i18n = {
           }
         }
       }
+
+      .o-collapse-item-title {
+        width: 88%;
+        @include respond-to('pad_v-laptop') {
+          width: 80%;
+        }
+      }
     }
 
     .o-collapse-item-body {

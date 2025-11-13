@@ -47,5 +47,8 @@ const md = new Markdown({
       margin: 24px 0 12px;
     }
   }
+  ol {
+    list-style: auto;
+  }
 }
 </style>

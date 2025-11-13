@@ -9,17 +9,18 @@ export default defineNuxtRouteMiddleware((to) => {
     communityArr.value.push(item.id);
   });
 
-  const path = to.path.replace('/', '');
-
   if (to.path === '/') {
     return navigateTo('/cann');
   }
 
-  if (communityArr.value.includes(to?.params?.id as string)) {
+  const path = to.path.replace('/', '');
+
+  const community = localStorage.getItem('community');
+
+  if (communityArr.value.includes(to?.params?.id as string) || ROUTE.includes(path) || path.includes('/')) {
     useHead({
-      title: `会议日历 | ${communityMap.get(to?.params?.id as string)?.name}开源社区`,
+      title: `会议日历 | ${communityMap.get((to?.params?.id || community) as string)?.name}开源社区`,
     });
-  } else if (ROUTE.includes(path)) {
     return true;
   } else {
     useHead({

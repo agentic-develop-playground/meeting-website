@@ -332,9 +332,11 @@ const closePhoneCreate = () => {
 .topic {
   font-weight: 500;
   color: var(--o-color-info1);
+  margin-right: 16px;
   @include text2;
 }
 .operate-btn {
+  flex-shrink: 0;
   .o-link {
     padding: 0;
     @include tip1;

@@ -1,37 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ODropdown, ODropdownItem, OIcon, ODialog, OButton, OLink, ODivider } from '@opensig/opendesign';
+import { ODropdown, ODropdownItem, OIcon } from '@opensig/opendesign';
 
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 import IconAvatar from '~icons/app/icon-avatar-line.svg';
-
-import { deleteUser } from '@/api/api-user';
 
 import { useLoginStore, useUserInfoStore } from '@/stores/user';
 
 import { doLogin, doLogout } from '@/utils/login';
 
-const DOMAIN_URL = import.meta.env.VITE_DOMAIN_URL;
-const HWCLOUD_URL = import.meta.env.VITE_HWCLOUD_URL;
-
-const route = useRoute();
-
 const loginStore = useLoginStore();
 const userInfoStore = useUserInfoStore();
 
-const { lePadV, isPhone } = useScreen();
+const { lePadV } = useScreen();
+const router = useRouter();
+const route = useRoute();
 
-// 注销账号
-const logoffVisible = ref(false);
-const cancelAccount = () => {
-  deleteUser(DOMAIN_URL)
-    .then(() => {
-      window.location.href = `${HWCLOUD_URL}/AMW/logout?service=${DOMAIN_URL}${route?.params?.id}`;
-    })
-    .catch(() => {
-      doLogin();
-    });
-  logoffVisible.value = false;
+const jumpToPage = () => {
+  router.push(`/${route?.params?.id}/personal`);
 };
 </script>
 
@@ -57,37 +42,16 @@ const cancelAccount = () => {
           </div>
 
           <template #dropdown>
+            <ODropdownItem @click="jumpToPage">
+              <div>个人中心</div>
+            </ODropdownItem>
             <ODropdownItem @click="doLogout">
               <div>退出登录</div>
-            </ODropdownItem>
-            <ODropdownItem @click="logoffVisible = true">
-              <div class="logoff">注销账号</div>
             </ODropdownItem>
           </template>
         </ODropdown>
       </div>
     </Transition>
-
-    <!-- 注销账号 -->
-    <ODialog v-model:visible="logoffVisible" :mask-close="false" :style="{ '--dlg-width': '728px', '--dlg-inner-gap': '16px' }" class="logoff-dialog">
-      <template #header>注销账号</template>
-      <div class="body-content">
-        <div>
-          您即将注销账号，并撤销您签署的
-          <OLink color="primary" href="/legal" target="_blank" class="legal-link hover-underline">《法律声明》</OLink>
-          和
-          <OLink color="primary" href="/privacy" target="_blank" class="privacy-link hover-underline">《隐私政策》</OLink>
-          条款，注销成功后，您的账号将无法使用，并且该账号下的所有数据也将被删除且无法恢复，请确认是否继续注销？
-        </div>
-      </div>
-      <template #footer>
-        <div class="dialog-footer">
-          <OButton :color="isPhone ? 'danger' : 'primary'" :variant="isPhone ? 'text' : 'outline'" size="large" @click="cancelAccount">继续注销</OButton>
-          <ODivider v-if="isPhone" direction="v" />
-          <OButton :color="isPhone ? 'normal' : 'primary'" :variant="isPhone ? 'text' : 'solid'" size="large" @click="logoffVisible = false">我再想想</OButton>
-        </div>
-      </template>
-    </ODialog>
   </div>
 </template>
 
@@ -159,8 +123,9 @@ const cancelAccount = () => {
   min-width: 128px;
   white-space: nowrap;
   --dropdown-item-color: var(--o-color-info1);
-  --dropdown-item-color-hover: var(--o-color-info1);
+  --dropdown-item-color-hover: var(--o-color-primary1);
   --dropdown-item-justify: center;
+  --dropdown-item-bg-color-hover: var(--o-color-control2-light);
 
   .o-icon {
     color: var(--o-color-info3);
@@ -179,10 +144,6 @@ const cancelAccount = () => {
     :deep(.o-badge-content) {
       right: 14px;
     }
-  }
-
-  .logoff {
-    color: var(--o-color-danger1);
   }
 }
 
@@ -207,26 +168,17 @@ const cancelAccount = () => {
 }
 
 .user-account {
-  @include tip1;
   color: var(--o-color-info1);
   max-width: 90px;
   font-weight: 500;
   margin-left: 8px;
   @include text-truncate(1);
-}
-
-.dialog-footer {
-  text-align: center;
-  margin-top: 8px;
+  @include text1;
 }
 
 @include respond-to('<=pad_v') {
   .header-user {
     min-width: auto;
-
-    .o-btn + .o-btn {
-      margin-left: 8px;
-    }
 
     .user-info {
       min-width: 24px;
@@ -250,18 +202,6 @@ const cancelAccount = () => {
           display: none;
         }
       }
-    }
-  }
-}
-
-@include respond-to('phone') {
-  .dialog-footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: row-reverse;
-    .o-divider {
-      height: 24px;
     }
   }
 }
@@ -326,13 +266,6 @@ const cancelAccount = () => {
         line-height: 18px;
       }
     }
-  }
-}
-
-.logoff-dialog {
-  --dlg-radius: 16px;
-  @include respond-to('phone') {
-    --dlg-radius: 4px;
   }
 }
 </style>
