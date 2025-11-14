@@ -15,8 +15,6 @@ import { useLoginStore } from '@/stores/user';
 import { useMeetingStore } from '@/stores/meeting';
 import { useCommonStore } from '~/stores/common';
 
-import { communityMap } from '@/config/community';
-
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 const loginStore = useLoginStore();
@@ -64,7 +62,7 @@ const latestDay = ref(new Date()); // 截止当天最新的活动日期
 
 const getTableData = async (day?: string) => {
   const date = dayjs(day).format('YYYY-MM-DD');
-  const dateList = (await getMeetingDateListApi(date, route?.params?.id as string)) || [];
+  const dateList = (await getMeetingDateListApi(date)) || [];
   tableData.value = [...new Set([...dateList])];
   const allTableData = tableData.value.sort((a, b) => dayjs(a).unix() - dayjs(b).unix());
   if (!tableData.value.length) {
@@ -83,7 +81,7 @@ const renderData = ref([]);
 const currentDay = ref(undefined);
 
 const paramGetDaysData = async (params: { date: string }) => {
-  getMeetingListApi(params.date, sig.value, route?.params?.id as string).then((res) => {
+  getMeetingListApi(params.date, sig.value).then((res) => {
     renderData.value = res.map((v) => {
       return {
         ...v,
@@ -212,7 +210,7 @@ const confirmForm = () => {
 };
 
 const toMeetingList = () => {
-  router.push(`/${communityMap.get(route?.params?.id as string)?.id}/meeting`);
+  router.push('/meeting');
 };
 
 const overlayClick = () => {
@@ -382,7 +380,7 @@ const closePhoneCreate = () => {
 
   .calendar-body {
     display: flex;
-    border-radius: var(--o-radius-xs);
+    border-radius: 16px;
     background-color: var(--o-color-fill2);
     overflow: hidden;
     @include respond-to('<=pad_v') {

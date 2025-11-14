@@ -50,7 +50,7 @@ const toManage = () => {
 // -------------------- 获取角色 --------------------
 const roles = ref<string[]>([]);
 const getUserRoles = () => {
-  getRoles(route?.params?.id as string).then((res) => {
+  getRoles('ascend').then((res) => {
     res.data.forEach((item) => {
       roles.value.push(...item.roles);
     });
@@ -123,7 +123,7 @@ const logoffVisible = ref(false);
 const cancelAccount = () => {
   deleteUser(DOMAIN_URL)
     .then(() => {
-      window.location.href = `${HWCLOUD_URL}/AMW/logout?service=${DOMAIN_URL}${route?.params?.id}`;
+      window.location.href = `${HWCLOUD_URL}/AMW/logout?service=${DOMAIN_URL}`;
     })
     .catch(() => {
       doLogin();
@@ -152,9 +152,7 @@ const cancelAccount = () => {
               <OPopover position="right">
                 <div class="popover-content-tips">
                   <div v-for="item in rolesList" :key="item.id" class="item-tips">
-                    <OLink color="primary" variant="text" :href="item?.[route?.params?.id]" target="_blank" class="blob" hover-underline>{{
-                      item.name + '：'
-                    }}</OLink>
+                    <OLink color="primary" variant="text" :href="item?.['ascend']" target="_blank" class="blob" hover-underline>{{ item.name + '：' }}</OLink>
                     {{ item.desc }}
                   </div>
                 </div>

@@ -1,0 +1,44 @@
+<svg viewBox="0 0 45 30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="45.000000" height="30.000000" fill="none">
+	<defs>
+		<g id="pixso_custom_effect_0">
+			<effect x="-2.000000" y="4.000000" visibility="visible" fill="rgb(255,255,255)" fill-opacity="0.400000006" effectType="innerShadow" stdDeviation="4" radius="0" />
+			<effect visibility="visible" effectType="backgroundBlur" saturation="0" stdDeviation="20" />
+		</g>
+		<filter id="filter_0" width="26.000000" height="26.000000" x="17.000000" y="2.000000" filterUnits="userSpaceOnUse" customEffect="url(#pixso_custom_effect_0)" color-interpolation-filters="sRGB">
+			<feFlood flood-opacity="0" result="BackgroundImageFix" />
+			<feBlend result="shape" in="SourceGraphic" in2="BackgroundImageFix" mode="normal" />
+			<feColorMatrix result="hardAlpha" in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.53659 0 " />
+			<feOffset dx="-2.000000" dy="4.000000" in="hardAlpha" />
+			<feGaussianBlur stdDeviation="1.33333337" />
+			<feComposite k2="-1" k3="1" in2="hardAlpha" operator="arithmetic" />
+			<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.4 0 " />
+			<feBlend result="effect_innerShadow_1" in2="shape" mode="normal" />
+		</filter>
+		<clipPath id="outline_mask_0" transform="matrix(1,0,0,1,-17,-2)">
+			<path d="M30 2C37.1797 2 43 7.8203 43 15C43 22.1797 37.1797 28 30 28C22.8203 28 17 22.1797 17 15C17 7.8203 22.8203 2 30 2Z" fill="rgb(255,255,255)" fill-rule="evenodd" />
+		</clipPath>
+		<radialGradient id="paint_radial_0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(8.0289,10.9498,-13.338,9.78002,32.7609,12.78)">
+			<stop stop-color="rgb(184.295,220.895,255)" offset="0.00781012606" stop-opacity="1" />
+			<stop stop-color="rgb(86,168,255)" offset="0.52704531" stop-opacity="0.819607854" />
+			<stop stop-color="rgb(0,124.231,255)" offset="0.817550123" stop-opacity="0.706896544" />
+			<stop stop-color="rgb(107.164,223.858,248.17)" offset="1" stop-opacity="1" />
+		</radialGradient>
+		<linearGradient id="paint_linear_0" x1="12.9999981" x2="12.9999981" y1="4" y2="26" gradientUnits="userSpaceOnUse">
+			<stop stop-color="rgb(130,179,255)" offset="0" stop-opacity="1" />
+			<stop stop-color="rgb(202.815,223.271,255)" offset="0.707489669" stop-opacity="0.417482078" />
+			<stop stop-color="rgb(255,255,255)" offset="1" stop-opacity="0" />
+		</linearGradient>
+	</defs>
+	<rect id="圆圈" width="45.000000" height="30.000000" x="0.000000" y="0.000000" />
+	<g id="组合 9426">
+		<g data-pixso-skip-parse="true">
+			<foreignObject width="26.000000" height="26.000000" x="17.000000" y="2.000000">
+				<div xmlns="http://www.w3.org/1999/xhtml" style="clip-path:url(#outline_mask_0);height:100%;backdrop-filter:blur(10.000000px);width:100%;-webkit-backdrop-filter:blur(10.000000px);" />
+			</foreignObject>
+		</g>
+		<g filter="url(#filter_0)">
+			<circle id="椭圆 41" cx="30" cy="15" r="13" fill="url(#paint_radial_0)" fill-opacity="0.400000006" />
+		</g>
+		<circle id="椭圆 43" cx="13" cy="15" r="11" fill="url(#paint_linear_0)" />
+	</g>
+</svg>

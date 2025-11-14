@@ -13,10 +13,9 @@ const userInfoStore = useUserInfoStore();
 
 const { lePadV } = useScreen();
 const router = useRouter();
-const route = useRoute();
 
 const jumpToPage = () => {
-  router.push(`/${route?.params?.id}/personal`);
+  router.push('/personal');
 };
 </script>
 

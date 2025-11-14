@@ -11,7 +11,7 @@ const { lePadV } = useScreen();
 <template>
   <ContentWrapper class="meeting-list-wrapper">
     <OBreadcrumb v-if="!lePadV" class="breadcrumb">
-      <OBreadcrumbItem :href="`/${route?.params?.id}`">主页</OBreadcrumbItem>
+      <OBreadcrumbItem href="/">主页</OBreadcrumbItem>
       <OBreadcrumbItem>我创建的会议</OBreadcrumbItem>
     </OBreadcrumb>
     <MeetingList />

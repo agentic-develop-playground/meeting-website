@@ -25,7 +25,7 @@ export const rolesMap = new Map([
       id: 'creator',
       name: '会议管理员',
       desc: '拥有创造会议的权限',
-      cann: 'https://gitcode.com/cann/infrastructure/blob/main/meeting/cann/README.md',
+      cann: 'https://gitcode.com/cann/infrastructure/blob/main/meeting/cann/CANN社区会议指南.md',
       ascend: 'https://gitcode.com/Ascend/infrastructure/blob/master/meeting/Ascend社区会议指南.md',
     },
   ],

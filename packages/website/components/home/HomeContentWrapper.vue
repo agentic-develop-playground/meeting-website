@@ -15,7 +15,7 @@ defineProps({
 
 <style lang="scss" scoped>
 .home-content-wrapper {
-  --padding-y: 72px;
+  padding: 0 0 72px;
   .title {
     @include display3;
     color: var(--o-color-info1);
@@ -40,7 +40,6 @@ defineProps({
 }
 @include respond-to('<=pad_v') {
   .home-content-wrapper {
-    --padding-y: 24px 0 32px;
     .title {
       @include display2;
       justify-content: flex-start;

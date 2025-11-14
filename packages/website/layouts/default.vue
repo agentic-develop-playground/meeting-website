@@ -19,10 +19,6 @@ watch(
     const lang = /\/en\/?$/g.test(v) ? 'en' : 'zh';
     locale.value = lang;
     i18n.global.locale.value = lang;
-
-    if (route?.params?.id) {
-      localStorage.setItem('community', route?.params?.id as string);
-    }
   },
   {
     immediate: true,
@@ -49,7 +45,7 @@ tryLogin();
 </template>
 
 <style lang="scss">
-#cann-portal {
+#ascend-portal {
   --layout-header-height: 72px;
   --layout-header-zIndex: 20;
   --layout-header-max-width: 1920px;

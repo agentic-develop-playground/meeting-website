@@ -1,21 +1,17 @@
 <script setup lang="ts">
 import { communityMap } from '@/config/community';
 
-const route = useRoute();
-
 const props = defineProps({
   mbPosition: {
     type: String as PropType<'left' | 'center'>,
     default: 'left',
   },
 });
-
-const community = localStorage.getItem('community');
 </script>
 
 <template>
-  <NuxtLink :to="`/${route?.params?.id}`" class="header-logo" :class="{ 'mb-center': props.mbPosition === 'center' }">
-    <img class="logo" :src="communityMap.get((route?.params?.id || community) as string)?.logo" />
+  <NuxtLink to="/" class="header-logo" :class="{ 'mb-center': props.mbPosition === 'center' }">
+    <img class="logo" :src="communityMap.get('ascend')?.logo" />
   </NuxtLink>
 </template>
 

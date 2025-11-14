@@ -9,10 +9,10 @@ export default defineNuxtConfig({
   runtimeConfig: {},
   css: ['@/assets/style/theme/index.scss', '@/assets/style/theme/element-plus.scss', '@/assets/style/markdown.scss'],
   app: {
-    rootId: 'cann-portal',
+    rootId: 'ascend-portal',
     buildAssetsDir: 'assets',
     head: {
-      title: '会议日历 | CANN开源社区',
+      title: '会议日历 | Ascend开源社区',
       htmlAttrs: {
         lang: 'zh',
       },
@@ -37,6 +37,7 @@ export default defineNuxtConfig({
           home: FileSystemIconLoader(path.resolve(__dirname, './assets/category/home/svg-icons')),
           meeting: FileSystemIconLoader(path.resolve(__dirname, './assets/category/meeting/svg-icons')),
           footer: FileSystemIconLoader(path.resolve(__dirname, './assets/category/footer/svg-icons')),
+          guide: FileSystemIconLoader(path.resolve(__dirname, './assets/category/guide/svg-icons')),
         },
       }),
       vueJsx(),

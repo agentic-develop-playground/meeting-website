@@ -20,7 +20,7 @@ const route = useRoute();
  */
 export const getPlatformsApi = async (): Promise<string[]> => {
   const token = getUserAuth();
-  const res = await request.get(`/${route?.params?.id}-meeting/platform/`, { headers: { token } });
+  const res = await request.get(`/ascend-meeting/platform/`, { headers: { token } });
   return res.data?.data || [];
 };
 
@@ -30,7 +30,7 @@ export const getPlatformsApi = async (): Promise<string[]> => {
  */
 export const getGroupInfosApi = async (): Promise<GroupItemT[]> => {
   const token = getUserAuth();
-  const res = await request.get(`/${route?.params?.id}-meeting/group_info/`, { headers: { token }, skipAuth: true, showError: false });
+  const res = await request.get(`/ascend-meeting/group_info/`, { headers: { token }, skipAuth: true, showError: false });
   return res.data?.data || [];
 };
 
@@ -41,7 +41,7 @@ export const getGroupInfosApi = async (): Promise<GroupItemT[]> => {
  */
 export const creatMeetingApi = async (data: MeetingPostT) => {
   const token = getUserAuth();
-  return request.post(`/${route?.params?.id}-meeting/`, data, { headers: { token } });
+  return request.post(`/ascend-meeting/`, data, { headers: { token } });
 };
 
 /**
@@ -51,7 +51,7 @@ export const creatMeetingApi = async (data: MeetingPostT) => {
  */
 export const getMyMeetingListApi = async (params: PageParamsT): Promise<MeetingItemT[]> => {
   const token = getUserAuth();
-  const res = await request.get(`/${route?.params?.id}-meeting/`, { params, headers: { token } });
+  const res = await request.get(`/ascend-meeting/`, { params, headers: { token } });
   return res.data;
 };
 
@@ -62,7 +62,7 @@ export const getMyMeetingListApi = async (params: PageParamsT): Promise<MeetingI
  */
 export const editMeetingApi = async (id: number, data: MeetingPostT) => {
   const token = getUserAuth();
-  return request.put(`/${route?.params?.id}-meeting/${id}/`, data, { headers: { token } });
+  return request.put(`/ascend-meeting/${id}/`, data, { headers: { token } });
 };
 
 /**
@@ -72,7 +72,7 @@ export const editMeetingApi = async (id: number, data: MeetingPostT) => {
  */
 export const deleteMeetingApi = async (id: number): Promise<AxiosResponse> => {
   const token = getUserAuth();
-  return await request.delete(`/${route?.params?.id}-meeting/${id}/`, { headers: { token } });
+  return await request.delete(`/ascend-meeting/${id}/`, { headers: { token } });
 };
 
 /**
@@ -80,9 +80,9 @@ export const deleteMeetingApi = async (id: number): Promise<AxiosResponse> => {
  * @param {string} date 该天的日期
  * @returns {Promise<string[]>} 会议日期列表
  */
-export const getMeetingDateListApi = async (date: string, id: string): Promise<string[]> => {
+export const getMeetingDateListApi = async (date: string): Promise<string[]> => {
   const token = getUserAuth();
-  const res = await request.get(`/${id}-meeting/meeting_date/?date=${date}`, { headers: { token } });
+  const res = await request.get(`/ascend-meeting/meeting_date/?date=${date}`, { headers: { token } });
   return res.data.data;
 };
 
@@ -91,8 +91,8 @@ export const getMeetingDateListApi = async (date: string, id: string): Promise<s
  * @param {string} date 该天的日期
  * @returns {Promise<MeetingItemT[]>} 会议列表
  */
-export const getMeetingListApi = async (date: string, group_name: string, id: string): Promise<MeetingItemT[]> => {
+export const getMeetingListApi = async (date: string, group_name: string): Promise<MeetingItemT[]> => {
   const token = getUserAuth();
-  const res = await request.get(`/${id}-meeting/meeting/?date=${date}&group_name=${group_name}`, { headers: { token } });
+  const res = await request.get(`/ascend-meeting/meeting/?date=${date}&group_name=${group_name}`, { headers: { token } });
   return res.data.data;
 };

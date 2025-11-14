@@ -61,7 +61,7 @@ const getMeeting = () => {
     })
     .catch((err) => {
       if (err.code === 403) {
-        router.push(`/${communityMap.get(route?.params?.id as string)?.id}`);
+        router.push('/');
       }
     })
     .finally(() => {
