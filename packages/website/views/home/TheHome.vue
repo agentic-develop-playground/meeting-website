@@ -24,9 +24,9 @@ const list = [
   {
     icon: IconAssistant,
     title: '社区助手',
-    desc: '欢迎关注社区小助手，了解更多社区的活动并与我们交流',
+    desc: '欢迎关注社区微信小助手，了解更多社区的活动并与我们交流',
     url: '',
-    text: '社区小助手：ascendosc',
+    text: '社区微信小助手：ascendosc',
   },
 ];
 </script>

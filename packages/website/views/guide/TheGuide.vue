@@ -58,9 +58,9 @@ const list = [
             target="_blank"
             rel="noopener noreferrer"
           >
-            Ascend社区会议指南。
-            <OIcon><IconOutlink /></OIcon>
-          </OLink>
+            Ascend社区会议指南
+            <OIcon><IconOutlink /></OIcon> </OLink
+          >。
         </div>
       </div>
       <p class="section-title">组织会议</p>
