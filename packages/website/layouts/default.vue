@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
+
 import { i18n } from '@/plugins/i18n';
 import { OConfigProvider, OScroller } from '@opensig/opendesign';
 import zhCN from '@opensig/opendesign/es/locale/lang/zh-cn';
@@ -8,9 +10,14 @@ import CookieNotice from '@/components/CookieNotice.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import LayoutSimple from './simple.vue';
 
+import { getGroupInfosApi } from '~/api/api-meeting';
+
 import { tryLogin } from '@/utils/login';
 
+import { useMeetingStore } from '@/stores/meeting';
+
 const { locale, isZh } = useLocale();
+const meetingStore = useMeetingStore();
 
 const route = useRoute();
 watch(
@@ -24,6 +31,27 @@ watch(
     immediate: true,
   }
 );
+
+// -------------------- 获取权限 --------------------
+const getPermission = () => {
+  getGroupInfosApi()
+    .then((res) => {
+      meetingStore.$patch({
+        hasPerm: res.length > 0,
+        loaded: true,
+      });
+    })
+    .catch(() => {
+      meetingStore.$patch({
+        hasPerm: false,
+        loaded: true,
+      });
+    });
+};
+
+onMounted(() => {
+  getPermission();
+});
 
 // -------------------- 登录 --------------------
 tryLogin();
@@ -57,6 +85,8 @@ tryLogin();
   --layout-footer-height: 56px;
 
   --layout-content-height: calc(100vh - var(--layout-footer-height));
+
+  --layout-left-height: 954px;
 
   .content-width {
     width: var(--grid-content-width);

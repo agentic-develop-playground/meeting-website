@@ -264,11 +264,4 @@ const currentBg = computed(() => {
     align-items: center;
   }
 }
-@include in-dark {
-  .dark-filter {
-    .bg-wrapper {
-      @include img-in-dark;
-    }
-  }
-}
 </style>

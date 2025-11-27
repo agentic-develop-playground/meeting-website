@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import { OCollapse, OCollapseItem, ODivider, OIcon, OLink, useMessage } from '@opensig/opendesign';
+import { OCollapse, OCollapseItem, ODivider, OIcon, OLink, OTag, useMessage } from '@opensig/opendesign';
 import MeetingDetail from './MeetingDetail.vue';
 import { ref, watch } from 'vue';
 
-import IconCopy from '~icons/meeting/icon-copy.svg';
 import type { MeetingItemT } from '~/@types/type-meeting';
-import emptyBg from '@/assets/category/common/empty.svg';
 
 import IconEvent from '~icons/home/icon-event.svg';
 import IconSummit from '~icons/home/icon-summit.svg';
 import IconMeet from '~icons/home/icon-meet.svg';
 import IconChevronRight from '~icons/app/icon-chevron-right.svg';
+import IconCopy from '~icons/meeting/icon-copy.svg';
+import { CYCLE_TYPE_OPTIONS } from '@/config/meeting';
 
-const { lePadV } = useScreen();
+import { findLabelFromOptions, formatDate } from '@/utils/common';
+import { getPointStr } from '@/utils/meeting';
 
-const props = defineProps<{ list: MeetingItemT[] }>();
+const props = withDefaults(defineProps<{ list: MeetingItemT[] }>(), {
+  list: () => [],
+});
 const detailListRef = ref([]);
 const message = useMessage();
 const copyInfo = async (idx) => {
@@ -26,6 +29,32 @@ const copyInfo = async (idx) => {
 };
 
 const collapseNames = ref([]);
+
+const i18n = {
+  SIG_GROUP: 'SIG组:',
+  NEW_DATE: '最新日程：',
+  EMPTY_TEXT: '当日没有活动，敬请期待',
+  LEARN_MORE: '查看更多',
+};
+
+const getCurrentIcon = (item) => {
+  if (item.type === 'summit') return IconSummit;
+  if (item.type === 'activity') return IconEvent;
+  return IconMeet;
+};
+
+// -------------------- 监听尺寸变化 --------------------
+const meetInfoRef = ref();
+const resizeObserver = new ResizeObserver((entries) => {
+  for (let entry of entries) {
+    const { height } = entry.contentRect;
+    entry.target.classList.remove('hidden-divider');
+    if (height >= 30) {
+      entry.target.classList.add('hidden-divider');
+    }
+  }
+});
+
 watch(
   () => props.list,
   () => {
@@ -34,61 +63,91 @@ watch(
     } else {
       collapseNames.value = [];
     }
+    nextTick(() => {
+      meetInfoRef.value?.forEach((targetDiv) => {
+        resizeObserver.observe(targetDiv);
+      });
+    });
   }
 );
-const resolveDate = (date: string) => {
-  return date?.replaceAll?.('-', '/');
-};
-const i18n = {
-  SIG_GROUP: 'SIG组:',
-  NEW_DATE: '最新日程：',
-  EMPTY_TEXT: '当日没有活动，敬请期待',
-  LEARN_MORE: '查看详情',
-};
+
+const computedList = computed(() => {
+  return props.list.map((v) => {
+    const { is_cycle, date, start, end, cycle_start_date, cycle_end_date, cycle_start, cycle_end, cycle_type, cycle_interval, cycle_point, type } = v;
+    let dateRange = `${formatDate(date)} ${start} - ${end}`;
+    if (['activity', 'summit'].includes(type)) {
+      dateRange = `${formatDate(v.start_date, 'YYYY/MM/DD HH:mm')} ${formatDate(v.end_date, 'YYYY/MM/DD HH:mm')}`;
+    }
+    if (is_cycle) {
+      dateRange = `${formatDate(cycle_start_date)} - ${formatDate(cycle_end_date)}`;
+    }
+
+    let timeRange = `${start}-${end}`;
+    let replay_url = null;
+    let hasObsData = false;
+    const obsData = v.obs_data?.filter((v) => v.text_video_url) || [];
+
+    if (is_cycle) {
+      timeRange = `每${cycle_interval > 1 ? cycle_interval : ''}${findLabelFromOptions(cycle_type, CYCLE_TYPE_OPTIONS)}${getPointStr(cycle_type, cycle_point)} ${cycle_start} 到 ${cycle_end} (UTC+08:00)Beijing 有效期从${formatDate(cycle_start_date)} 至 ${formatDate(cycle_end_date)}`;
+      hasObsData = obsData.some((t) => t.sub_id === v.cycle_sub.find((z) => z.date === date)?.sub_id);
+    } else {
+      hasObsData = obsData.length > 0;
+    }
+    if (hasObsData) {
+      replay_url = `${location.origin}/video/${v.group_name}/${v.mid}/${date}`;
+    }
+
+    return {
+      ...v,
+      dateRange,
+      timeRange,
+      replay_url,
+    };
+  });
+});
 </script>
 
 <template>
   <div class="meeting-card-list">
-    <div v-if="!list || !list.length" class="empty-placeholder">
-      <img :src="emptyBg" alt="" />
-      <div>当日没有活动，敬请期待</div>
-    </div>
+    <AppEmpty class="empty-placeholder" v-if="!computedList?.length">
+      <template #description>{{ i18n.EMPTY_TEXT }}</template>
+    </AppEmpty>
     <OCollapse v-else v-model="collapseNames" :style="{ '--collapse-padding': '0' }">
-      <OCollapseItem v-for="(item, index) in list" :key="item.id" :value="item.id">
+      <OCollapseItem v-for="(item, index) in computedList" :key="item.id" :value="item.id">
         <template #title>
           <div class="meet-title" :title="item.name || item.title">
             <OIcon :class="item.type || 'meeting'">
-              <IconSummit v-if="item.type === 'summit'"></IconSummit>
-              <IconEvent v-else-if="item.type === 'activity'"></IconEvent>
-              <IconMeet v-else></IconMeet>
+              <component :is="getCurrentIcon(item)"></component>
             </OIcon>
             <div class="text">
               {{ item.topic || item.name || item.title }}
             </div>
-          </div>
-          <div class="meet-info">
-            <span class="start-time">
-              <span v-if="item.start">{{ item.date }} {{ item.start }} - {{ item.end }}</span>
-              <span v-else>{{ resolveDate(item.start_date) }}-{{ resolveDate(item.end_date || '') }}</span>
-            </span>
-            <ODivider direction="v" />
-            <div v-if="item.group_name">{{ i18n.SIG_GROUP }} {{ item.group_name }}</div>
-            <div v-if="item.activity_type">
-              {{ item.activity_type }}
+            <div class="tag-wrapper" v-if="item.is_cycle">
+              <OTag color="primary" variant="outline">周期</OTag>
             </div>
           </div>
-          <OLink v-if="item.type !== 'meetings'" :href="item.url" target="_blank" class="jump-detail-link">
-            查看更多
+          <div class="meet-info" ref="meetInfoRef">
+            <span class="start-time">
+              <span>{{ item.dateRange }}</span>
+            </span>
+            <ODivider direction="v" />
+            <div>
+              <template v-if="item.group_name">{{ i18n.SIG_GROUP }} {{ item.group_name }}</template>
+              <template v-if="item.activity_type">{{ item.activity_type }}</template>
+            </div>
+          </div>
+          <OLink v-if="item.type !== 'meetings' && item.url" :href="item.url" target="_blank" class="jump-detail-link">
+            <span>{{ i18n.LEARN_MORE }}</span>
             <template #suffix>
               <OIcon><IconChevronRight /> </OIcon>
             </template>
           </OLink>
-          <OIcon @click.stop="() => copyInfo(index)" class="copy-icon" v-if="item.type === 'meetings' && !lePadV">
+          <OIcon @click.stop="() => copyInfo(index)" class="copy-icon" v-else>
             <IconCopy></IconCopy>
           </OIcon>
         </template>
         <div class="calendar-info">
-          <MeetingDetail :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
+          <MeetingDetail :show="collapseNames.includes(item.id)" :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
         </div>
       </OCollapseItem>
     </OCollapse>
@@ -97,7 +156,8 @@ const i18n = {
 
 <style scoped lang="scss">
 .meeting-card-list {
-  .meetings {
+  .meetings,
+  .meeting {
     background-color: #007af0;
     z-index: 3;
   }
@@ -113,8 +173,8 @@ const i18n = {
   }
 
   .jump-detail-link {
-    @include text1;
     padding-left: 36px;
+    @include text1;
   }
 
   .empty-placeholder {
@@ -173,6 +233,9 @@ const i18n = {
       align-items: center;
       padding: 16px 24px;
       position: relative;
+      .o-collapse-item-title {
+        flex-grow: 1;
+      }
       @include respond-to('<=pad_v') {
         padding: 12px 16px;
       }
@@ -184,17 +247,10 @@ const i18n = {
           }
         }
       }
-
-      .o-collapse-item-title {
-        width: 88%;
-        @include respond-to('pad_v-laptop') {
-          width: 80%;
-        }
-      }
     }
 
     .o-collapse-item-body {
-      background-color: #f4f6fa;
+      background-color: #f7f9fd;
       margin-bottom: 0;
 
       a {
@@ -206,9 +262,17 @@ const i18n = {
   .meet-title {
     display: flex;
     align-items: center;
+    width: calc(100% - 48px);
     color: var(--o-color-info1);
+    --cell-bg: rgba(235, 241, 250);
     @include text2;
-
+    .tag-wrapper {
+      margin-left: var(--o-gap-2);
+      .o-tag {
+        background-color: var(--cell-bg);
+        border: none;
+      }
+    }
     .o-icon {
       flex-shrink: 0;
       padding: 2px;
@@ -227,9 +291,8 @@ const i18n = {
     }
 
     .text {
-      @include text-truncate(1);
       display: block;
-      width: 100%;
+      @include text-truncate(1);
     }
   }
 
@@ -237,16 +300,26 @@ const i18n = {
     margin-left: 36px;
     margin-top: 8px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    @include tip1;
     color: var(--o-color-info3);
     text-decoration: none;
+    @include tip1;
     @include respond-to('<=pad_v') {
       margin-left: 32px;
     }
 
     .o-divider {
       @include tip1;
+    }
+
+    &.hidden-divider {
+      .start-time {
+        padding-right: 24px;
+      }
+      .o-divider {
+        display: none;
+      }
     }
   }
 
@@ -261,18 +334,22 @@ const i18n = {
       color: var(--o-color-ubmc-hover);
     }
 
-    @include respond-to('<=pad_v') {
+    @include respond-to('pad_v') {
       right: 60px;
+    }
+    @include respond-to('phone') {
+      display: none;
     }
   }
 
   .calendar-info {
     display: flex;
-    @include tip1;
     color: var(--o-color-info3);
     flex-direction: column;
-    padding: 16px 60px;
-    @include respond-to('<=pad_v') {
+    padding: 16px;
+    padding-left: 60px;
+    @include tip1;
+    @include respond-to('phone') {
       padding: 12px 16px;
     }
 
@@ -287,16 +364,6 @@ const i18n = {
 
     .info-item:first-child {
       margin-top: 0;
-    }
-  }
-}
-
-@include in-dark {
-  .meeting-card-list {
-    :deep(.o-collapse) {
-      .o-collapse-item-body {
-        background-color: #f4f6fa;
-      }
     }
   }
 }

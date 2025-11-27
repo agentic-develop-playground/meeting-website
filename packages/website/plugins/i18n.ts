@@ -4,12 +4,16 @@ import { defineNuxtPlugin } from 'nuxt/app';
 import common from '@/locales/common';
 import home from '@/locales/home';
 import response from '@/locales/response';
+import my from '@/locales/my';
+import footer from '@/locales/footer';
 
 const messages = {
   zh: {
     common: common.zh,
     home: home.zh,
     response: response.zh,
+    my: my.zh,
+    footer: footer.zh,
   },
 };
 

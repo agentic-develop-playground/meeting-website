@@ -5,17 +5,21 @@ import { OLink } from '@opensig/opendesign';
 const props = defineProps<{
   data: MeetingItemT;
   from?: string;
+  show: boolean;
 }>();
 // 会议详情配置
-const infoList = ref([
-  { label: '会议详情', key: 'agenda' },
-  { label: '发起人', key: 'sponsor' },
-  { label: '会议时间', key: 'time', extra: 'date' },
-  { label: '会议平台', key: 'platform' },
-  { label: '会议ID', key: 'mid' },
-  { label: '会议链接', key: 'join_url', isLink: true },
-  { label: 'Etherpad链接', key: 'etherpad', isLink: true },
-]);
+const infoList = computed(() =>
+  [
+    { label: '会议详情', key: 'agenda', ellipsis: true },
+    { label: '发起人', key: 'sponsor' },
+    { label: '会议时间', key: 'timeRange', extra: 'date' },
+    { label: '会议平台', key: 'platform' },
+    { label: '会议ID', key: 'mid' },
+    { label: '会议链接', key: 'join_url', isLink: true },
+    { label: 'Etherpad链接', key: 'etherpad', isLink: true },
+    { label: '智能回放', key: 'replay_url', isLink: true },
+  ].slice(0, props.from === 'my' ? 7 : 8)
+);
 
 const activityInfoList = ref([
   {
@@ -55,27 +59,50 @@ defineExpose({ copyInfo });
 
 <template>
   <div ref="domRef" class="label-item" :class="`label-item_${data.id} type_${data.type}`" v-for="(info, infoIdx) in columns" :key="infoIdx">
-    <span class="label">{{ info.label }}：</span>
-    <OLink v-if="info.isLink" target="_blank" class="value" color="primary" hover-underline :href="data[info.key]">
-      {{ data[info.key] }}
-    </OLink>
-    <span v-else class="value">
-      <i v-if="info.extra" class="extra">{{ data[info.extra] }}</i>
-      {{ data[info.key] || '-' }}
-    </span>
+    <template v-if="data[info.key]">
+      <span class="label">{{ info.label }}：</span>
+      <MoreText :show="show" v-if="info.ellipsis" :text="data[info.key] || '-'"></MoreText>
+      <OLink
+        v-else-if="info.isLink"
+        target="_blank"
+        class="value"
+        color="primary"
+        hover-underline
+        :href="data[info.key]"
+        v-analytics.bubble="{
+          target: info.label,
+          detail: data[info.key],
+          level3: data.topic || data.name || data.title,
+        }"
+      >
+        {{ data[info.key] }}
+      </OLink>
+      <span v-else class="value">
+        <i v-if="info.extra" class="extra">{{ data[info.extra] }}</i>
+        {{ data[info.key] || '-' }}
+      </span>
+    </template>
   </div>
 </template>
 
 <style scoped lang="scss">
 .label-item {
-  color: var(--o-color-info2);
+  color: var(--o-color-info3);
   display: flex;
   align-items: flex-start;
-  @include tip1;
+  font-size: 14px;
+  gap: var(--o-gap-section-5);
+  @include respond-to('phone') {
+    font-size: 12px;
+    gap: var(--o-gap-1);
+  }
 
   .label {
-    width: 125px;
+    width: 104px;
     flex-shrink: 0;
+    @include respond-to('phone') {
+      width: 88px;
+    }
   }
 
   &.type_activity {

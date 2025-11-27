@@ -1,30 +1,24 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, computed } from 'vue';
-import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OOption, OSelect, OButton, ODialog, useMessage } from '@opensig/opendesign';
+import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OButton, useMessage, ODropdown, ODropdownItem, OInput } from '@opensig/opendesign';
 import dayjs from 'dayjs';
 
-import { getGroupInfosApi, getMeetingDateListApi, getMeetingListApi } from '~/api/api-meeting';
+import { getMeetingDateListApi, getMeetingListApi, getSigAll } from '~/api/api-meeting';
 import MeetingCardList from '~/components/meeting/MeetingCardList.vue';
-import EditForm from './EditForm.vue';
-import SimpleHeader from '~/components/header/SimpleHeader.vue';
 
 import IconMeet from '~icons/home/icon-meet.svg';
-import type { GroupItemT, MeetingItemT } from '~/@types/type-meeting';
+import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 
 import { useLoginStore } from '@/stores/user';
 import { useMeetingStore } from '@/stores/meeting';
-import { useCommonStore } from '~/stores/common';
-
-import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 const loginStore = useLoginStore();
 const meetingStore = useMeetingStore();
-const commonStore = useCommonStore();
-
-const router = useRouter();
-const route = useRoute();
-const message = useMessage();
 const { lePadV } = useScreen();
+
+const route = useRoute();
+const router = useRouter();
+const message = useMessage();
 
 // 日历展示时间限制
 const limitTime = '2021 年 1 月';
@@ -32,26 +26,36 @@ const activityType = ['线下', '线上', '线上 + 线下'];
 
 // -------------------- 获取sig列表 --------------------
 const sig = ref('');
-const sigOptions = ref<GroupItemT[]>([]);
-const getSigList = () => {
-  getGroupInfosApi()
-    .then((res) => {
-      meetingStore.$patch({
-        hasPerm: res.length > 0,
-      });
-      sigOptions.value = res || [];
-    })
-    .catch(() => {
-      meetingStore.$patch({
-        hasPerm: false,
-      });
-    });
+const sigValue = ref('');
+const sigOptions = ref<string[]>([]);
+const sigFilterList = ref<string[]>([]);
+
+const getSigGroup = () => {
+  getSigAll().then((res) => {
+    sigOptions.value = res;
+    sigFilterList.value = res;
+  });
 };
+
+const selectDropdown = (val) => {
+  sigValue.value = val;
+  onSigChange(val);
+};
+const clearInput = () => {
+  sigValue.value = '';
+  onSigChange();
+};
+
 watch(
-  () => loginStore.isLogined,
+  () => sigValue.value,
   (val) => {
     if (val) {
-      getSigList();
+      sigFilterList.value = sigOptions.value.filter((item) => item.toLowerCase().includes(val.toLowerCase()));
+    } else {
+      sigFilterList.value = sigOptions.value;
+    }
+    if (!val && lePadV) {
+      onSigChange();
     }
   }
 );
@@ -62,7 +66,7 @@ const latestDay = ref(new Date()); // 截止当天最新的活动日期
 
 const getTableData = async (day?: string) => {
   const date = dayjs(day).format('YYYY-MM-DD');
-  const dateList = (await getMeetingDateListApi(date)) || [];
+  const dateList = (await getMeetingDateListApi(date, sig.value)) || [];
   tableData.value = [...new Set([...dateList])];
   const allTableData = tableData.value.sort((a, b) => dayjs(a).unix() - dayjs(b).unix());
   if (!tableData.value.length) {
@@ -102,10 +106,6 @@ const paramGetDaysData = async (params: { date: string }) => {
         item2.activity_type = activityType[Number(item2.activity_type) - 1];
       }
     });
-    sigOptions.value = [...new Set(renderData.value.map((v) => v.group_name))].map((v) => ({ group_name: v }));
-    if (!sigOptions.value.find((v) => v.group_name === sig.value)) {
-      sig.value = '';
-    }
   });
 };
 
@@ -113,8 +113,8 @@ const calendar = ref();
 const calendarHeight = ref<string>('407px');
 const isLimit = ref(false);
 
-function setMeetingDay(day: string, event?: Event) {
-  getTableData(day);
+const setMeetingDay = async (day: string, event?: Event) => {
+  await getTableData(day);
   if (new Date(day).getTime() / 1000 < 1610380800) {
     event?.stopPropagation();
     return;
@@ -127,7 +127,7 @@ function setMeetingDay(day: string, event?: Event) {
     renderData.value = [];
   }
   currentDay.value = day;
-}
+};
 
 const meetingList = computed(() => {
   return renderData.value.filter((v) => !sig.value || v.group_name === sig.value);
@@ -158,7 +158,35 @@ const watchChange = (element: HTMLElement) => {
   });
 };
 
+const onSigChange = (val?: string) => {
+  sig.value = val || '';
+  if (!val) {
+    const activeBoxs = document.querySelector('.is-today .out-box') as HTMLElement;
+    if (activeBoxs) {
+      activeBoxs.click();
+    }
+  } else {
+    getTableData();
+  }
+
+  router.push({ query: { sig: val } });
+};
+
+watch(
+  () => route.query,
+  (val) => {
+    if (val) {
+      sig.value = val?.sig || '';
+      sigValue.value = sig.value;
+    }
+  },
+  {
+    immediate: true,
+  }
+);
+
 onMounted(() => {
+  getSigGroup();
   // 设置右侧 日程列表高度
   const tbody = document.querySelector('.calendar-body .el-calendar__body') as HTMLElement;
   if (tbody) {
@@ -183,49 +211,22 @@ const stopWatchData = watch(
 );
 
 // -------------------- 预定会议 --------------------
-const createMeetingVisiblePc = ref(false); // 新增or编辑弹窗
-const createMeetingVisibleMb = ref(false); // 新增or编辑弹窗
-const currentRow = ref<MeetingItemT | null>(null); // 当前激活行，用于取消事件
-
 const toCreateMeeting = () => {
-  currentRow.value = null;
-  if (lePadV.value) {
-    createMeetingVisibleMb.value = true;
-    commonStore.setLayout('simple');
-  } else {
-    createMeetingVisiblePc.value = true;
-    commonStore.setLayout('default');
-  }
-};
-
-// -------------------- 表单事件 --------------------
-const closeForm = () => {
-  createMeetingVisiblePc.value = false;
-  createMeetingVisibleMb.value = false;
-  currentRow.value = null;
-};
-const confirmForm = () => {
-  getTableData();
-  closeForm();
+  router.push('/my/create-meeting');
 };
 
 const toMeetingList = () => {
-  router.push('/meeting');
+  router.push('/my/meeting');
 };
 
 const overlayClick = () => {
   message.info({
-    content: '仅支持拥有权限的用户创建会议',
+    content: '请先绑定GitCode账号。Committer/Maintainer身份将在1小时内自动开通会议创建权限。',
   });
-};
-
-const closePhoneCreate = () => {
-  createMeetingVisibleMb.value = false;
-  commonStore.setLayout('default');
 };
 </script>
 <template>
-  <div v-if="!createMeetingVisibleMb" class="home-calendar">
+  <div class="home-calendar">
     <div v-if="loginStore.isLogined" class="calendar-header">
       <OButton color="primary" variant="outline" size="large" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
       <div :class="{ ' button-container': true, disabled: !meetingStore.hasPerm }">
@@ -246,9 +247,23 @@ const closePhoneCreate = () => {
                 <OIconChevronRight></OIconChevronRight>
               </OIcon>
             </div>
-            <OSelect v-model="sig" placeholder="全部SIG组" clearable>
-              <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
-            </OSelect>
+            <div class="filter-select-box">
+              <ODropdown trigger="click" optionPosition="bottom" option-wrap-class="select-dropdown">
+                <OInput size="medium" placeholder="全部SIG组" clearable v-model="sigValue" @clear="clearInput">
+                  <template #suffix>
+                    <OIcon><IconChevronDown /></OIcon>
+                  </template>
+                </OInput>
+
+                <template #dropdown>
+                  <OScroller showType="always" size="small">
+                    <ODropdownItem v-for="t in sigFilterList" :key="t" @click="selectDropdown(t)">
+                      <div>{{ t }}</div>
+                    </ODropdownItem>
+                  </OScroller>
+                </template>
+              </ODropdown>
+            </div>
           </div>
 
           <div class="right-title">
@@ -278,9 +293,23 @@ const closePhoneCreate = () => {
         </div>
         <div class="right-title">
           <div class="title-list">
-            <OSelect v-model="sig" placeholder="全部SIG组" clearable>
-              <OOption v-for="t in sigOptions" :value="t.group_name" :key="t.group_name">{{ t.group_name }}</OOption>
-            </OSelect>
+            <div class="filter-select-box">
+              <ODropdown trigger="click" optionPosition="bottom" option-wrap-class="select-dropdown">
+                <OInput size="medium" placeholder="全部SIG组" v-model="sigValue">
+                  <template #suffix>
+                    <OIcon><IconChevronDown /></OIcon>
+                  </template>
+                </OInput>
+
+                <template #dropdown>
+                  <OScroller showType="always" size="small">
+                    <ODropdownItem v-for="t in sigFilterList" :key="t" @click="selectDropdown(t)">
+                      <div>{{ t }}</div>
+                    </ODropdownItem>
+                  </OScroller>
+                </template>
+              </ODropdown>
+            </div>
           </div>
         </div>
 
@@ -290,20 +319,6 @@ const closePhoneCreate = () => {
           </OScroller>
         </div>
       </div>
-    </div>
-  </div>
-  <!-- pc -->
-  <ODialog v-model:visible="createMeetingVisiblePc" :mask-close="false" class="create-meeting-dialog">
-    <template #header>创建会议</template>
-    <ElConfigProvider :locale="zhCn">
-      <EditForm v-if="createMeetingVisiblePc" :data="currentRow" @confirm="confirmForm" @close="closeForm"></EditForm>
-    </ElConfigProvider>
-  </ODialog>
-  <!-- 移动 -->
-  <div class="create-meeting" v-if="createMeetingVisibleMb">
-    <SimpleHeader :title="currentRow ? '修改会议' : '创建会议'" :backEvt="closePhoneCreate"></SimpleHeader>
-    <div class="edit-form-wrapper">
-      <EditForm :data="currentRow" ref="formRef" @confirm="confirmForm" @close="closePhoneCreate"></EditForm>
     </div>
   </div>
 </template>
@@ -334,6 +349,7 @@ const closePhoneCreate = () => {
       column-gap: var(--o-gap-4);
       justify-content: flex-end;
       flex-direction: row-reverse;
+      margin-bottom: 12px;
     }
 
     .button-container {
@@ -360,8 +376,8 @@ const closePhoneCreate = () => {
     .o-btn {
       --btn-min-width: 112px;
       @include respond-to('phone') {
-        height: 40px !important;
         border-radius: var(--o-control_size-l) !important;
+        --btn-padding: 0 7px;
       }
     }
   }
@@ -386,6 +402,7 @@ const closePhoneCreate = () => {
     @include respond-to('<=pad_v') {
       background-color: transparent;
       flex-direction: column;
+      border-radius: 8px;
     }
 
     :deep(.calender) {
@@ -396,7 +413,7 @@ const closePhoneCreate = () => {
         width: 100%;
         flex-direction: column;
         background-color: var(--o-color-fill2);
-        border-radius: var(--o-radius-xs);
+        border-radius: 8px;
       }
 
       .el-calendar__header {
@@ -421,7 +438,7 @@ const closePhoneCreate = () => {
           flex-grow: 1;
           @include respond-to('<=pad_v') {
             justify-content: center;
-            .o-select {
+            .filter-select-box {
               display: none;
             }
           }
@@ -716,7 +733,7 @@ const closePhoneCreate = () => {
         margin-top: 12px;
         background-color: var(--o-color-fill2);
         width: 100%;
-        border-radius: var(--o-radius-xs);
+        border-radius: 8px;
       }
       @include respond-to('>pad_v') {
         .current-day {
@@ -751,7 +768,7 @@ const closePhoneCreate = () => {
           height: 1px;
           background-color: var(--o-color-control4);
         }
-        .o-select {
+        .filter-select-box {
           display: none;
         }
         @include respond-to('<=pad_v') {
@@ -760,9 +777,17 @@ const closePhoneCreate = () => {
           gap: 24px;
           height: auto;
           align-items: flex-start;
-          .o-select {
+          .filter-select-box {
             display: inline-flex;
             max-width: 100%;
+            width: 100%;
+            .o-dropdown,
+            .o-input {
+              width: 100%;
+            }
+            .o-input {
+              --_box-height: 32px;
+            }
           }
           &::after {
             display: none;
@@ -791,19 +816,31 @@ const closePhoneCreate = () => {
   }
 }
 
-.edit-form-wrapper {
-  padding: 24px 16px;
+.filter-select-box {
+  .o-input {
+    --_box-radius: 40px;
+  }
 }
-</style>
+.select-dropdown {
+  .o-scroller {
+    max-height: 160px;
+  }
+  .o-dropdown-item {
+    --dropdown-item-padding: 7px 12px;
+    justify-content: flex-start;
+    @include text1;
 
-<style lang="scss">
-.create-meeting-dialog {
-  --dlg-radius: 16px;
-  .o-dlg-body {
-    padding: 0 22px;
-    @include respond-to('pad') {
-      padding: 0 16px;
+    .o-icon {
+      color: var(--o-color-info3);
+      --icon-size: 24px;
     }
+  }
+}
+
+@include respond-to('<=laptop') {
+  .o-btn {
+    --btn-padding: 0 15px;
+    --btn-height: 36px;
   }
 }
 </style>

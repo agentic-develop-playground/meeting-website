@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     rootId: 'ascend-portal',
     buildAssetsDir: 'assets',
     head: {
-      title: '会议日历 | Ascend开源社区',
+      title: 'Ascend开源社区',
       htmlAttrs: {
         lang: 'zh',
       },
@@ -38,6 +38,8 @@ export default defineNuxtConfig({
           meeting: FileSystemIconLoader(path.resolve(__dirname, './assets/category/meeting/svg-icons')),
           footer: FileSystemIconLoader(path.resolve(__dirname, './assets/category/footer/svg-icons')),
           guide: FileSystemIconLoader(path.resolve(__dirname, './assets/category/guide/svg-icons')),
+          my: FileSystemIconLoader(path.resolve(__dirname, './assets/category/my/svg-icons')),
+          video: FileSystemIconLoader(path.resolve(__dirname, './assets/category/video/svg-icons')),
         },
       }),
       vueJsx(),
