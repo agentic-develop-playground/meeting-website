@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import errorImg from '@/assets/category/common/404.svg';
+
 const props = defineProps({
   error: {
     type: Object,
@@ -20,7 +22,7 @@ if (props.error?.statusCode !== 404) {
   <NuxtLayout>
     <ClientOnly>
       <div class="error">
-        <AppEmpty>
+        <AppEmpty :src="errorImg">
           <template #description>
             <p>找不到页面</p>
           </template>

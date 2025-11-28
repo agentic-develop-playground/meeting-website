@@ -63,7 +63,7 @@ const list = [
           >。
         </div>
       </div>
-      <p class="section-title">组织会议</p>
+      <p class="section-title organize">组织会议</p>
       <div v-for="(item, i) in list" :key="i" class="item-list">
         <div class="title-box">
           <OFigure :src="titleImg" />
@@ -157,6 +157,7 @@ const list = [
   align-items: center;
   .title {
     margin-left: 8px;
+    font-weight: 500;
   }
 }
 :deep(.item-markdown) {
@@ -192,6 +193,27 @@ const list = [
     left: -33px;
     border-radius: var(--o-radius-xs);
     background-image: linear-gradient(0deg, rgba(119, 161, 241, 0.6) 0%, rgba(164, 197, 255, 0.6) 100%);
+  }
+}
+
+@include respond-to('<=pad_v') {
+  .guide {
+    padding: 24px 0 32px;
+  }
+  .section-title {
+    margin-top: 16px;
+  }
+  .organize {
+    margin-top: 32px;
+  }
+  .meeting-type {
+    margin-top: 12px;
+  }
+  .item-list {
+    margin-top: 12px;
+  }
+  .item-list + .item-list {
+    margin-top: 12px;
   }
 }
 </style>

@@ -16,15 +16,33 @@ import {
   OIconTime,
   useMessage,
 } from '@opensig/opendesign';
+import CalendarSelector from '~/components/meeting/CalendarSelector.vue';
+
 import IconHelp from '~icons/meeting/icon-help.svg';
 import IconTip from '~icons/meeting/icon-tip.svg';
-import type { MeetingItemT, MeetingPostT, OptionItemT } from '~/@types/type-meeting';
-import { creatMeetingApi, editMeetingApi, getGroupInfosApi, getPlatformsApi } from '~/api/api-meeting';
+import type { MeetingItemT, MeetingPostT, OptionItemT, PlatformT } from '~/@types/type-meeting';
+import { creatMeetingApi, editMeetingApi, getGroupInfosApi, getPlatformsApi, editSubMeetingApi } from '~/api/api-meeting';
 import dayjs from 'dayjs';
 import showMsg from '~/utils/showMsg';
+import { findLabelFromOptions, formatDateNumber, getDateNumber } from '~/utils/common';
+import { EMAIL_REGEX, INTERVAL_DAY, INTERVAL_MONTH, CYCLE_TYPE_OPTIONS, INTERVAL_WEEK, INTERVAL_WEEK_OPTIONS } from '~/config/meeting';
 
-const props = defineProps<{ data?: MeetingItemT }>();
 const message = useMessage();
+const { isPhone, lePadV } = useScreen();
+
+const props = withDefaults(defineProps<{ data?: MeetingItemT; isSub?: boolean; isEdit?: boolean; subId?: string }>(), {
+  isSub: false,
+  isEdit: false,
+});
+
+const cycleTypeOptions = ref(CYCLE_TYPE_OPTIONS);
+
+const weekOptions = ref(INTERVAL_WEEK_OPTIONS);
+
+const intervalTypeMax = computed(() => {
+  return findLabelFromOptions(form.value.cycle_type, cycleTypeOptions.value, 'max');
+});
+
 const form = ref<MeetingPostT>({
   is_record: false,
   agenda: '',
@@ -34,11 +52,17 @@ const form = ref<MeetingPostT>({
   group_name: '',
   etherpad: '',
   date: '',
+  date_range: [],
   start: '',
   end: '',
   time: '',
+  is_cycle: false,
+  cycle_interval: 1,
+  cycle_type: INTERVAL_DAY,
+  cycle_point: [],
+  is_notify: true,
 } as unknown as MeetingPostT); // 表单数据
-const formRef = ref(null); // 表单实例
+const formRef = ref(); // 表单实例
 const loading = ref(false); // 提交状态
 // 表单校验规则
 const rules = ref({
@@ -74,6 +98,70 @@ const rules = ref({
     { required: true, message: '请选择时间' },
     {
       validator: (value: string) => {
+        const { is_cycle, cycle_type, cycle_interval, cycle_point, date, date_range } = form.value;
+        if (is_cycle) {
+          const msg = {
+            type: 'danger',
+            message: '请完善会议配置',
+          };
+          if (cycle_type === INTERVAL_DAY) {
+            if (!cycle_interval) return msg;
+          }
+          if (cycle_type === INTERVAL_WEEK) {
+            if (!cycle_interval || !cycle_point?.length) return msg;
+          }
+          if (cycle_type === INTERVAL_MONTH) {
+            if (!cycle_interval || !cycle_point?.length) return msg;
+          }
+          if (!date_range?.length) {
+            return {
+              type: 'danger',
+              message: '请选择会议日期',
+            };
+          }
+          const NONE_MSG = '所选时间段内无时间可创建会议';
+          let start = date_range[0];
+          const end = date_range[1];
+          if (cycle_type === INTERVAL_WEEK) {
+            const weeks = new Set();
+            while (dayjs(start).isSameOrBefore(dayjs(end))) {
+              weeks.add(dayjs(start).day());
+              start = dayjs(start).add(1, 'day');
+            }
+            if (cycle_point.every((point) => !weeks.has(point))) {
+              return {
+                type: 'danger',
+                message: NONE_MSG,
+              };
+            }
+          }
+          if (cycle_type === INTERVAL_MONTH) {
+            const days = new Set();
+            while (dayjs(start).isSameOrBefore(dayjs(end))) {
+              days.add(dayjs(start).date());
+              start = dayjs(start).add(1, 'day');
+            }
+            if (cycle_point.every((point) => !days.has(point))) {
+              return {
+                type: 'danger',
+                message: NONE_MSG,
+              };
+            }
+          }
+        } else {
+          if (!date) {
+            return {
+              type: 'danger',
+              message: '请选择会议日期',
+            };
+          }
+        }
+        if (!value?.trim()?.length) {
+          return {
+            type: 'danger',
+            message: '请选择会议时间',
+          };
+        }
         const arr = value.split('-').map((v) => v.split(':').map(Number));
         if (arr[0][0] > arr[1][0] || (arr[0][0] === arr[1][0] && arr[0][1] >= arr[1][1])) {
           return {
@@ -81,7 +169,7 @@ const rules = ref({
             message: '结束时间必须大于开始时间',
           };
         }
-        if (form.value.date && form.value.start) {
+        if (!form.value.is_cycle && form.value.date && form.value.start) {
           const start = dayjs(`${form.value.date} ${form.value.start}`);
           if (new Date(start).getTime() < new Date().getTime()) {
             return {
@@ -98,34 +186,13 @@ const rules = ref({
   email_list: [
     {
       validator: (value: string) => {
-        if (props.data) {
-          return {};
-        }
         const str = value.replaceAll(' ', '') || '';
         if (str.length) {
-          if (str.length > 1020) {
-            return {
-              type: 'danger',
-              message: '邮箱地址不能超过1020个字符',
-            };
-          }
           const list = str.split(';') || [];
-          if (list.some((v) => !/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(v))) {
+          if (list.some((v) => !EMAIL_REGEX.test(v))) {
             return {
               type: 'danger',
               message: '请输入正确的邮箱地址',
-            };
-          }
-          if (list.some((v) => v.length > 50)) {
-            return {
-              type: 'danger',
-              message: '每个邮箱地址不能超过50个字符',
-            };
-          }
-          if (list.length > 20) {
-            return {
-              type: 'danger',
-              message: '最多添加20个邮箱地址',
             };
           }
         }
@@ -149,55 +216,177 @@ const getPlatformOptions = async () => {
   const res = await getPlatformsApi();
   typeOptions.value = res.map((v) => ({ label: v, value: v }));
   if (!props.data) {
-    form.value.platform = typeOptions.value[0].value;
+    form.value.platform = typeOptions.value[0].value as PlatformT;
   }
 };
+
+// 发送会议通知
+const notifyList = [
+  {
+    value: true,
+    label: '是',
+  },
+  {
+    value: false,
+    label: '否',
+  },
+];
 
 const emits = defineEmits(['confirm', 'close']);
 watch(
   () => props.data,
   (data) => {
     if (data) {
-      Object.assign(form.value, data);
+      const sub = data?.cycle_sub?.find((v) => v.sub_id === props.subId) || {};
+      const { mid, date, start, end, sub_id } = sub;
+      Object.assign(
+        form.value,
+        data,
+        props.isSub
+          ? {
+              is_cycle: false,
+              mid,
+              date,
+              start,
+              end,
+              sub_id,
+            }
+          : {}
+      );
+    } else {
+      const today = dayjs().format('YYYY-MM-DD');
+      const now = dayjs().format('HH:mm');
+
+      let start = '';
+      let end = '';
+      const nowNum = getDateNumber(now);
+      if (nowNum <= getDateNumber('08:00')) {
+        start = '08:00';
+        end = '09:00';
+      } else if (getDateNumber('22:15') <= nowNum) {
+        start = '08:00';
+        end = '09:00';
+      } else {
+        let [h, m] = now.split(':').map(Number);
+        if (m >= 45) {
+          h++;
+          m = 0;
+        } else {
+          m = (Math.floor(m / 15) + 1) * 15;
+        }
+        start = formatDateNumber(h * 60 + m).slice(3);
+        end = formatDateNumber(h * 60 + m + 60).slice(3);
+      }
+      const date_range = [dayjs().format('YYYY-MM-DD'), dayjs().add(1, 'month').format('YYYY-MM-DD')];
+
+      Object.assign(form.value, {
+        date: today,
+        start,
+        end,
+        time: `${start}-${end}`,
+        date_range,
+      });
     }
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 const close = () => {
-  form.value = {};
+  form.value = {} as MeetingPostT;
   emits('close');
 };
-const { lePadV } = useScreen();
+
+const changeIntervalType = () => {
+  form.value.cycle_point = [];
+  form.value.cycle_interval = 1;
+};
+
+const changeIsCycle = () => {
+  form.value.platform = typeOptions.value[0].value as PlatformT;
+};
+
 const confirm = async () => {
-  let type = props.data ? '修改' : '创建';
+  let type = props.isEdit ? '修改' : '预定';
   try {
     loading.value = true;
-    const valid = await formRef.value.validate();
+    const valid = await formRef.value?.validate();
     if (valid.some((v) => !!v)) {
       return;
     }
-    if (props.data) {
-      const { id, topic, etherpad, date, start, end, agenda, is_record } = {
-        ...props.data,
-        ...form.value,
+    const {
+      topic,
+      etherpad,
+      group_name,
+      platform,
+      date,
+      start,
+      end,
+      agenda,
+      is_record,
+      is_cycle,
+      date_range,
+      cycle_type,
+      cycle_interval,
+      cycle_point,
+      is_notify,
+      email_list,
+    } = form.value;
+    let params = {
+      topic,
+      etherpad,
+      agenda,
+      is_record,
+      group_name,
+      platform,
+      is_cycle,
+      is_notify,
+      email_list,
+    } as MeetingPostT;
+    if (is_cycle) {
+      params = {
+        ...params,
+        cycle_interval,
+        cycle_type,
+        cycle_start_date: date_range?.[0] || '',
+        cycle_end_date: date_range?.[1] || '',
+        cycle_start: start,
+        cycle_end: end,
       };
-      await editMeetingApi(id, {
-        topic,
-        etherpad,
-        date: date.split(' ')[0],
+      if (cycle_type !== INTERVAL_DAY) {
+        params = {
+          ...params,
+          cycle_point: cycle_point.join(','),
+        };
+      }
+    } else {
+      params = {
+        ...params,
+        date: date?.split(' ')[0] || '',
         start,
         end,
-        agenda,
-        is_record,
-      });
+      };
+    }
+    if (props.isEdit) {
+      if (props.isSub) {
+        const { mid, sub_id } = form.value;
+        const { date, start, end } = params;
+        await editSubMeetingApi(sub_id, {
+          mid,
+          date,
+          start,
+          end,
+        });
+      } else {
+        const { platform, group_name, etherpad, ...data } = params;
+        await editMeetingApi(props.data.id, data);
+      }
     } else {
       await creatMeetingApi({
-        ...form.value,
+        ...params,
         email_list: form.value.email_list.replaceAll(' ', ''),
       });
     }
     const msg = `“${form.value.topic}”会议${type}成功`;
-    if (lePadV.value) {
+    if (isPhone.value) {
       showMsg(msg);
     } else {
       message.success({
@@ -237,20 +426,16 @@ const changeTime = () => {
 defineExpose({
   confirm,
 });
-
-const disabledState = computed(() => {
-  return !form.value.topic || !form.value.group_name || !form.value.date || !form.value.start || !form.value.end;
-});
 </script>
 
 <template>
   <div class="edit-form blue-theme">
-    <OForm :model="form" ref="formRef" has-required :layout="lePadV ? 'v' : 'h'">
+    <OForm :model="form" ref="formRef" has-required :layout="lePadV ? 'v' : 'h'" class="form-wrapper">
       <OFormItem :rules="rules.topic" label="会议名称" field="topic">
-        <OInput size="large" placeholder="请输入会议名称" style="width: 100%" v-model="form.topic"></OInput>
+        <OInput :disabled="isSub" size="large" placeholder="请输入会议名称" style="width: 100%" v-model="form.topic"></OInput>
       </OFormItem>
       <OFormItem :rules="rules.group_name" label="所属SIG" field="group_name">
-        <OSelect :disabled="!!data" placeholder="请选择所属SIG" size="large" style="width: 100%" v-model="form.group_name" @change="changeSig">
+        <OSelect :disabled="isEdit" placeholder="请选择所属SIG" size="large" style="width: 100%" v-model="form.group_name" @change="changeSig">
           <OOption v-for="t in sigOptions" :key="t.value" :value="t.value">{{ t.label }}</OOption>
         </OSelect>
       </OFormItem>
@@ -268,58 +453,119 @@ const disabledState = computed(() => {
             </OPopover>
           </div>
         </template>
-        <OInput size="large" :disabled="true" placeholder="请输入Etherpad" style="width: 100%" v-model="form.etherpad"></OInput>
+        <OInput size="large" :disabled="isEdit" placeholder="请输入Etherpad" style="width: 100%" v-model="form.etherpad"></OInput>
       </OFormItem>
-      <OFormItem label="会议时间" field="date" :rules="rules.date" class="date-form-item">
-        <ElDatePicker
-          size="large"
-          v-model="form.date"
-          placeholder="请选择日期"
-          style="width: 100%"
-          value-format="YYYY-MM-DD"
-          :disabled-date="disabledDate"
-          :clearable="false"
-        >
-          <template #prev-month></template>
-        </ElDatePicker>
-      </OFormItem>
-      <OFormItem field="time" :rules="rules.time" class="time-form-item">
-        <div class="time-select-wrapper">
-          <OFormItem field="start">
-            <ElTimeSelect
-              step="00:15"
-              start="08:00"
-              end="22:45"
-              placeholder="开始时间"
-              v-model="form.start"
-              size="large"
-              :clearable="false"
-              @change="changeTime"
-            ></ElTimeSelect>
+      <OFormItem label="会议时间" field="time" :rules="rules.time" class="repeat-row center-label" required>
+        <div class="repeat-config-wrapper">
+          <OFormItem field="repeat" class="repeat-item" v-if="!isSub">
+            <ORadioGroup v-model="form.is_cycle" @change="changeIsCycle" :disabled="isEdit">
+              <ORadio :value="false">不重复</ORadio>
+              <ORadio :value="true">重复</ORadio>
+            </ORadioGroup>
           </OFormItem>
-          <span>-</span>
-          <OFormItem field="end">
-            <ElTimeSelect
-              step="00:15"
-              start="08:00"
-              end="22:45"
-              placeholder="结束时间"
-              v-model="form.end"
-              size="large"
-              :clearable="false"
-              @change="changeTime"
-            ></ElTimeSelect>
-          </OFormItem>
-          <OIconTime></OIconTime>
+          <div class="repeat-config">
+            <template v-if="form.is_cycle">
+              <OFormItem label="每" class="full-width-item">
+                <div class="repeat-config-item">
+                  <OFormItem v-if="form.cycle_type !== INTERVAL_MONTH">
+                    <ElInputNumber size="large" v-model="form.cycle_interval" :min="1" :max="intervalTypeMax"></ElInputNumber>
+                  </OFormItem>
+                  <OFormItem>
+                    <OSelect
+                      size="large"
+                      v-model="form.cycle_type"
+                      class="interval-select"
+                      optionWrapClass="interval-select-options"
+                      @change="changeIntervalType"
+                    >
+                      <OOption v-for="o in cycleTypeOptions" :key="o.value" :value="o.value" :label="o.label"></OOption>
+                    </OSelect>
+                  </OFormItem>
+                </div>
+              </OFormItem>
+              <OFormItem label="在" field="cycle_point" class="point-item" v-if="form.cycle_type !== INTERVAL_DAY">
+                <OSelect
+                  v-if="form.cycle_type === INTERVAL_WEEK"
+                  size="large"
+                  multiple
+                  v-model="form.cycle_point"
+                  placeholder="请选择重复日期"
+                  :max-tag-count="2"
+                >
+                  <OOption v-for="o in weekOptions" :key="o.value" :value="o.value" :label="o.label"></OOption>
+                </OSelect>
+                <CalendarSelector v-if="form.cycle_type === INTERVAL_MONTH" v-model="form.cycle_point"></CalendarSelector>
+              </OFormItem>
+              <OFormItem label="时间段" field="date_range">
+                <ElDatePicker
+                  size="large"
+                  v-model="form.date_range"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  style="width: 100%"
+                  value-format="YYYY-MM-DD"
+                  :disabled-date="disabledDate"
+                  :clearable="false"
+                  type="daterange"
+                >
+                </ElDatePicker>
+              </OFormItem>
+            </template>
+            <template v-else>
+              <OFormItem label="会议日期" field="date">
+                <ElDatePicker
+                  size="large"
+                  v-model="form.date"
+                  placeholder="请选择日期"
+                  style="width: 100%"
+                  value-format="YYYY-MM-DD"
+                  :disabled-date="disabledDate"
+                  :clearable="false"
+                >
+                </ElDatePicker>
+              </OFormItem>
+            </template>
+
+            <OFormItem label="会议时间">
+              <div class="time-select-wrapper">
+                <OFormItem field="start">
+                  <ElTimeSelect
+                    step="00:15"
+                    start="08:00"
+                    end="22:45"
+                    placeholder="开始时间"
+                    v-model="form.start"
+                    size="large"
+                    :clearable="false"
+                    @change="changeTime"
+                  ></ElTimeSelect>
+                </OFormItem>
+                <span>-</span>
+                <OFormItem field="end">
+                  <ElTimeSelect
+                    step="00:15"
+                    start="08:00"
+                    end="22:45"
+                    placeholder="结束时间"
+                    v-model="form.end"
+                    size="large"
+                    :clearable="false"
+                    @change="changeTime"
+                  ></ElTimeSelect>
+                </OFormItem>
+                <OIconTime></OIconTime>
+              </div>
+            </OFormItem>
+          </div>
         </div>
       </OFormItem>
-      <OFormItem label="会议平台" field="platform" :rules="rules.platform">
-        <ORadioGroup v-model="form.platform" v-if="!data">
+      <OFormItem label="会议平台" field="platform" :rules="rules.platform" class="center-label">
+        <ORadioGroup v-model="form.platform" v-if="!isEdit" :disabled="form.is_cycle">
           <ORadio v-for="item in typeOptions" :key="item.value" :value="item.value">{{ item.label }}</ORadio>
         </ORadioGroup>
         <span v-else>{{ form.platform }}</span>
       </OFormItem>
-      <OFormItem field="agenda" label="会议内容" :rules="rules.genda">
+      <OFormItem field="agenda" label="会议内容" :rules="rules.agenda">
         <OTextarea
           size="large"
           placeholder="请输入会议内容"
@@ -328,37 +574,42 @@ const disabledState = computed(() => {
           resize="none"
           :max-length="100"
           :input-on-outlimit="false"
+          :disabled="isSub"
           v-model="form.agenda"
         ></OTextarea>
       </OFormItem>
-      <OFormItem label="会议录制" field="is_record">
+      <OFormItem label="会议录制" field="is_record" class="record-item full-width-item center-label">
         <div class="switch-wrapper">
-          <OSwitch v-model="form.is_record"></OSwitch>
+          <OSwitch v-model="form.is_record" :disabled="isSub"></OSwitch>
           <div class="switch-text">
             <OIcon>
               <IconTip />
             </OIcon>
-            <span>开启后将自动录屏，本服务由{{ form.platform }}会议提供</span>
+            <span>开启后将自动录屏，本服务由{{ form.platform }}会议提供。并将在1个工作日内自动上传会议AI版本的链接回放。</span>
           </div>
         </div>
       </OFormItem>
+      <OFormItem v-if="isEdit" label="立即发送通知" class="center-label">
+        <ORadioGroup v-model="form.is_notify">
+          <ORadio v-for="item in notifyList" :key="item.label" :value="item.value">{{ item.label }}</ORadio>
+        </ORadioGroup>
+      </OFormItem>
       <OFormItem field="email_list" label="邮件地址" :rules="rules.email_list">
         <OTextarea
-          :disabled="!!data"
           size="large"
-          placeholder="请输入电子邮件地址，多个邮件地址以“;”间隔，最多20个邮件"
+          :disabled="isSub"
+          placeholder="请输入电子邮件地址，多个邮件地址以“;”间隔"
           style="width: 100%"
           :rows="4"
           resize="none"
-          :max-length="1000"
           :input-on-outlimit="false"
           v-model="form.email_list"
         ></OTextarea>
       </OFormItem>
     </OForm>
     <div class="form-btns">
-      <OButton color="primary" variant="solid" size="large" @click="confirm" :loading="loading" :disabled="disabledState">
-        {{ data ? '修改' : '立即创建' }}
+      <OButton color="primary" variant="solid" size="large" @click="confirm" :loading="loading">
+        {{ isEdit ? '保存' : '预定' }}
       </OButton>
       <OButton color="primary" variant="outline" size="large" @click="close">取消</OButton>
     </div>
@@ -367,133 +618,101 @@ const disabledState = computed(() => {
 
 <style scoped lang="scss">
 .edit-form {
-  width: 590px;
-
-  @include respond-to('pad_v') {
-    width: 490px;
+  :deep(.form-wrapper) {
+    & > .o-form-item {
+      max-width: 592px;
+    }
+    .repeat-row,
+    .full-width-item {
+      width: 100%;
+    }
   }
 
   :deep(.o-form) {
     --o-input-color: var(--o-color-info2);
     --o-placeholder-color: var(--o-color-info4);
-    --form-label-gap-top: 8px;
 
-    @include respond-to('laptop') {
-      --form-label-gap-top: 7px;
+    &.o-form-layout-v {
+      .o-form-item-label {
+        margin-bottom: var(--o-gap-2);
+      }
+      .o-form-item-main {
+        margin-left: 0;
+      }
     }
 
-    .o-form-item-main-wrap {
-      min-height: 40px;
-      @include respond-to('laptop') {
-        min-height: 36px;
-      }
+    .o-input {
+      --_box-radius: 100px;
+    }
+    .o-select {
+      --select-radius: 100px;
+    }
+    .o-textarea {
+      --_box-radius: 16px;
     }
 
     input,
     textarea {
       color: var(--o-input-color);
+      @include text1;
 
       &::placeholder {
         color: var(--o-placeholder-color);
       }
     }
-    .o-input {
-      --_box-radius: 100px;
-      @include text1;
-    }
-    .o-textarea {
-      --_box-radius: 16px;
-      height: 126px;
-      @include text1;
 
-      @include respond-to('<=pad') {
-        height: 116px;
-      }
+    .o-form-item {
+      --form-item-align: baseline;
     }
-    .o-select {
-      --select-radius: 100px;
-    }
-    .el-input {
-      --el-input-height: 40px;
-      width: 320px !important;
-      @include respond-to('laptop') {
-        --el-input-height: 38px;
-      }
 
-      .el-input__wrapper {
-        border-radius: 100px;
-        .el-input__inner {
-          @include text1;
-        }
-      }
-
-      @include respond-to('<=pad_v') {
-        width: 100% !important;
-      }
-    }
-    .time-select-wrapper {
-      width: 320px;
-      border-radius: 100px;
-      .o-form-item-main {
-        margin-left: 0;
-      }
-
-      @include respond-to('<=pad_v') {
-        width: 100%;
+    .center-label {
+      --form-item-align: flex-start;
+      .o-form-item-label {
+        padding: 1px 0;
       }
     }
 
     .o-form-item-label {
-      flex: 0 0 100px;
+      flex: 0 0 110px;
     }
 
     .o-form-item-main {
       margin-left: var(--o-gap-3);
     }
-
-    .date-form-item {
-      @include respond-to('<=pad_v') {
-        margin-bottom: 0;
-      }
-    }
-
-    .time-form-item {
+    .record-item {
       .o-form-item-label {
-        .o-form-require-symbol {
-          display: none;
-        }
-      }
-      @include respond-to('<=pad_v') {
-        .o-form-item-main {
-          margin-top: 0;
-        }
+        margin: 0;
       }
     }
 
     .switch-wrapper {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       column-gap: var(--o-gap-4);
+      row-gap: var(--o-gap-2);
+
+      @include respond-to('phone') {
+        flex-direction: column;
+        align-items: flex-start;
+      }
 
       .switch-text {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         column-gap: var(--o-gap-1);
-        @include text1;
         color: var(--o-color-info3);
+        @include tip1;
 
         .o-icon {
-          font-size: 24px;
+          font-size: 16px;
+          position: relative;
+          top: 2px;
         }
       }
+    }
 
-      @include respond-to('phone') {
-        .switch-text {
-          .o-icon {
-            font-size: 16px;
-          }
-        }
-      }
+    input::placeholder {
+      @include text1;
     }
 
     .label-wrapper {
@@ -508,18 +727,39 @@ const disabledState = computed(() => {
     .el-input__prefix {
       order: 1;
       font-size: 16px;
+    }
 
+    .el-date-editor--daterange {
+      padding: 0 13px 0 15px;
+    }
+    .el-date-editor {
+      --el-input-border-radius: 100px;
+      input {
+        text-align: left;
+        @include text1;
+      }
+      .el-select__wrapper {
+        gap: 0;
+      }
       .el-input__icon {
+        height: 100%;
+        order: 1;
+        font-size: 24px;
         margin-right: 2px;
-        font-size: 20px;
-        color: var(--o-color-info2);
+        color: var(--o-color-info1);
+        background-color: var(--o-color-info2);
+        mask: url('@/assets/svg-icons/icon-calendar.svg') no-repeat center;
+        background-size: 24px;
+        background-repeat: no-repeat;
+        background-position: center center;
+        svg {
+          display: none;
+        }
       }
     }
 
-    .el-range__icon {
-      order: 1;
-      font-size: 16px;
-      margin-right: 2px;
+    .calendar-selector {
+      --el-border-radius-base: 100px;
     }
 
     .el-date-editor--timerange {
@@ -531,10 +771,12 @@ const disabledState = computed(() => {
     margin-top: var(--o-gap-5);
     display: flex;
     align-items: center;
-    justify-content: center;
     column-gap: var(--o-gap-4);
     .o-btn {
-      width: 112px;
+      height: 40px !important;
+      font-size: 16px !important;
+      line-height: 24px !important;
+      border-radius: 20px !important;
     }
   }
 
@@ -543,20 +785,25 @@ const disabledState = computed(() => {
     display: flex;
     align-items: center;
     border: 1px solid var(--o-color-control1);
-    border-radius: var(--o-radius_control-s);
+    border-radius: 100px;
     padding: 0 15px;
+    background-color: var(--o-color-fill2);
+    & > span {
+      padding: 0 var(--o-gap-2);
+    }
 
     &:hover {
       border-color: var(--o-color-control2);
     }
 
-    @include respond-to('<=pad_v') {
+    @include respond-to('phone') {
       background-color: var(--o-color-fill2);
     }
 
     :deep(.o-form-item) {
       margin-bottom: 0;
       flex-grow: 1;
+      --o-input-color: var(--o-color-info1);
 
       .o-form-item-label {
         display: none;
@@ -564,53 +811,106 @@ const disabledState = computed(() => {
 
       .el-select__wrapper {
         box-shadow: none;
-        padding: 0;
-        min-height: 38px;
-        @include respond-to('laptop') {
-          min-height: 34px;
-        }
-        .el-select__selection {
-          @include text1;
-        }
+        padding: calc((var(--o-control_size-l) - 24px) / 2) 0;
+        min-height: var(--o-control_size-l);
+        gap: 0;
       }
-      .el-select__placeholder.is-transparent {
-        color: var(--o-placeholder-color);
+      .el-select__placeholder {
+        @include text1;
       }
 
       .el-select__caret,
       .el-input__prefix-icon {
         display: none;
       }
-      .o-form-item-main {
-        @include respond-to('<=pad_v') {
+      div.o-form-item-main {
+        margin-left: 0;
+        @include respond-to('phone') {
           margin-top: 0;
         }
       }
     }
 
     :deep(.o-svg-icon) {
+      flex-shrink: 0;
       font-size: 24px;
       color: var(--o-color-info2);
     }
   }
 
-  @include respond-to('<=pad_v') {
+  @include respond-to('phone') {
     width: auto;
-    .form-btns {
-      justify-content: flex-start;
-    }
     :deep(.o-form) {
       .o-form-item-main {
         margin-left: 0;
-        margin-top: 8px;
       }
     }
   }
-  @include respond-to('phone') {
-    .form-btns {
-      .o-btn {
-        height: 40px !important;
-        border-radius: var(--o-control_size-l) !important;
+  :deep(.repeat-config-wrapper) {
+    width: 100%;
+    .repeat-item {
+      .o-form-item-label {
+        display: none;
+      }
+      .o-form-item-main {
+        margin-left: 0;
+      }
+      @include respond-to('<=pad_v') {
+        margin-bottom: var(--o-gap-section-4);
+      }
+    }
+    .repeat-config {
+      background-color: rgba(var(--o-ubmc-color), 0.05);
+      padding: var(--o-gap-section-5) var(--o-gap-section-7) var(--o-gap-section-5);
+      border-radius: var(--o-radius-s);
+      @include respond-to('<=pad_v') {
+        padding: var(--o-gap-section-4);
+      }
+      .o-form-item {
+        align-items: center;
+      }
+      .o-form-item-label {
+        flex: 0 0 80px;
+      }
+      .o-form-item-main {
+        margin-left: var(--o-gap-section-6);
+        @include respond-to('<=pad_v') {
+          margin-left: 0;
+        }
+        @include respond-to('phone') {
+          max-width: 100%;
+        }
+      }
+      .full-width-item {
+        .o-form-item-main {
+          max-width: 100%;
+        }
+      }
+
+      .repeat-config-item {
+        width: 100%;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: var(--o-gap-4);
+        .o-form-item {
+          margin-bottom: 0;
+          width: calc(50% - var(--o-gap-4) / 2);
+          .o-form-item-label {
+            display: none;
+          }
+          .o-form-item-main {
+            margin-left: 0;
+          }
+        }
+      }
+      .point-item {
+        .o-select {
+          width: 100%;
+        }
+      }
+      .el-input-number {
+        --el-border-radius-base: 100px;
       }
     }
   }
@@ -640,6 +940,12 @@ const disabledState = computed(() => {
   .link-text {
     color: var(--o-color-primary1);
     cursor: pointer;
+  }
+}
+
+.interval-select-options {
+  .o-option-item {
+    justify-content: center;
   }
 }
 </style>

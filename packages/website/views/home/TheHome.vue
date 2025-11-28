@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ORow, OCol, OIcon, OLink } from '@opensig/opendesign';
+import { ORow, OCol, OIcon, OLink, ODivider } from '@opensig/opendesign';
 
 import bannerBg from '@/assets/category/home/home-banner.jpg';
 
 import IconGuide from '~icons/home/icon-guide.svg';
 import IconAssistant from '~icons/home/icon-assistant.svg';
+import IconChevronRight from '~icons/app/icon-chevron-right.svg';
 
 const { lePadV } = useScreen();
 
@@ -46,7 +47,18 @@ const list = [
               <p class="title">{{ item.title }}</p>
             </div>
             <p class="desc">{{ item.desc }}</p>
-            <OLink v-if="item.url" color="primary" hover-underline :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.text }}</OLink>
+            <ODivider v-if="item.url && lePadV" />
+            <OLink
+              v-if="item.url"
+              :color="lePadV ? 'normal' : 'primary'"
+              :hover-underline="lePadV ? false : true"
+              :href="item.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ item.text }}
+              <OIcon v-if="lePadV" class="right-icon"><IconChevronRight /></OIcon>
+            </OLink>
             <p v-else class="text">{{ item.text }}</p>
           </div>
         </OCol>
@@ -59,7 +71,7 @@ const list = [
 <style lang="scss" scoped>
 .mo-banner {
   @include respond-to('<=pad_v') {
-    padding: 32px 24px 0;
+    padding: 24px 32px 0;
     .mo-title {
       font-weight: 500;
       @include display2;
@@ -111,10 +123,47 @@ const list = [
   @include text1;
 }
 
+@include respond-to('laptop') {
+  .card {
+    padding: 24px;
+  }
+}
+
+@include respond-to('pad_h') {
+  .card {
+    padding: 16px 24px;
+  }
+}
+
 @include respond-to('<=pad_v') {
+  .card {
+    height: auto;
+    padding: 16px;
+    border-radius: 8px;
+  }
+  .o-divider {
+    --o-divider-gap: 8px;
+  }
+  .o-link {
+    :deep(.o-link-main) {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .o-icon {
+      --icon-size: 24px;
+    }
+  }
+  .text {
+    margin-top: 8px;
+  }
   .meeting-list-wrapper {
     padding-top: 24px;
     padding-bottom: 32px;
+  }
+  .meeting-tools {
+    padding: 16px 0;
   }
 }
 </style>

@@ -57,3 +57,6 @@
   }
 }
 
+@mixin gradient-tb {
+  background: linear-gradient(180deg, rgba(var(--gradient-bg-color), 0), rgba(var(--gradient-bg-color), 0.3) 25%,rgba(var(--gradient-bg-color), 1) 100%,);
+}

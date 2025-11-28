@@ -38,7 +38,7 @@ withDefaults(
   padding: var(--padding-y) 0;
   &.phone-full {
     @include respond-to('phone') {
-      width: var(--grid-layout-width);
+      width: var(--grid-layout-width) !important;
     }
   }
   .content-title {

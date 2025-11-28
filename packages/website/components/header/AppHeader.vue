@@ -6,15 +6,28 @@ import { useLocale } from '~/composables/useLocale';
 import type { LocaleT } from '~/@types/type-locale';
 
 const route = useRoute();
+const router = useRouter();
 const { locale } = useLocale();
 const { lePadV } = useScreen();
 
-const back = () => {
-  history.go(-1);
-};
-
 // 返回箭头
 const isSimpleHeader = computed(() => route.meta.simpleHeader);
+const backUrl = computed(() => route.meta.backUrl);
+const rightConfig = computed(() => route.meta.right);
+
+const back = () => {
+  if (backUrl.value) {
+    router.push(backUrl.value);
+  } else {
+    history.go(-1);
+  }
+};
+
+const clickRight = () => {
+  if (rightConfig.value?.url) {
+    router.push(rightConfig.value?.url);
+  }
+};
 
 // 获取页面标题
 const pageTitle = computed(() => {
@@ -33,11 +46,18 @@ const pageTitle = computed(() => {
     <div class="app-header-wrap">
       <div class="header-content content-width">
         <div v-if="lePadV && isSimpleHeader" class="simple-header">
-          <OIcon @click="back">
-            <OIconArrowLeft />
-          </OIcon>
-          <div v-if="pageTitle" class="header-title">
-            {{ pageTitle }}
+          <div class="simple-header-left">
+            <OIcon @click="back">
+              <OIconArrowLeft />
+            </OIcon>
+            <div v-if="pageTitle" class="header-title">
+              {{ pageTitle }}
+            </div>
+          </div>
+          <div class="simple-header-right" v-if="rightConfig" @click="clickRight">
+            <OIcon>
+              <component :is="rightConfig.icon"></component>
+            </OIcon>
           </div>
         </div>
         <template v-else>
@@ -72,21 +92,34 @@ const pageTitle = computed(() => {
   }
 }
 .simple-header {
+  width: 100%;
   display: flex;
-  gap: 16px;
-  color: var(--o-color-info1);
-  overflow: hidden;
+  align-items: center;
+  justify-content: space-between;
   .o-icon {
     font-size: 24px;
+    cursor: pointer;
   }
-  .header-title {
+  .simple-header-left {
+    display: flex;
+    gap: 16px;
+    color: var(--o-color-info1);
+    overflow: hidden;
+    flex-grow: 1;
+    .header-title {
+      color: var(--o-color-info1);
+      font-weight: 500;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      @include h1;
+    }
+  }
+  .simple-header-right {
+    flex-shrink: 0;
     color: var(--o-color-info1);
     font-weight: 500;
-    font-size: 16px;
-    line-height: 24px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    @include text1;
   }
 }
 .app-header-wrap {

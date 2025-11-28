@@ -61,7 +61,14 @@ const getAvatarStyle = computed(() => {
 </script>
 
 <template>
-  <img v-if="avatar && !avatar.includes('gitcode')" :src="avatar" class="img-avatar" :class="variant" :style="getAvatarStyle" alt="" />
+  <img
+    v-if="avatar && !avatar.includes('gitcode') && !avatar.includes('null')"
+    :src="avatar"
+    class="img-avatar"
+    :class="variant"
+    :style="getAvatarStyle"
+    alt=""
+  />
   <div v-else class="word-avatar" :class="variant" :style="getAvatarStyle">
     {{ avatarText }}
   </div>

@@ -41,8 +41,7 @@ defineProps({
 @include respond-to('<=pad_v') {
   .home-content-wrapper {
     .title {
-      @include display2;
-      justify-content: flex-start;
+      @include display3;
     }
   }
   .custom-layout-simple {
