@@ -948,4 +948,30 @@ defineExpose({
     justify-content: center;
   }
 }
+
+@include respond-to('phone') {
+  .el-picker-panel__sidebar {
+    width: 100%;
+  }
+  .el-picker-panel {
+    width: 400px!important;
+  }
+  .el-picker-panel__content {
+    width: 100%;
+  }
+  .el-picker-panel__body{
+    margin-left: 0!important;
+    display: flex;
+    flex-direction: column;
+    min-width: auto!important;
+  }
+  .el-picker-panel__sidebar {
+    position: relative;
+  }
+  .el-picker-panel__body-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
 </style>
