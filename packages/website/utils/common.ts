@@ -47,6 +47,18 @@ export function maskPhone(value: string, isMask: boolean = false) {
   return value;
 }
 
+/**
+ * 邮箱进行脱敏
+ * @param value 邮箱
+ * @param isMask 是否脱敏
+ */
+export function maskEmail(value: string, isMask: boolean = false) {
+  if (isMask && value) {
+    return value.replace(/^(.{1}).*?(@.*)$/, '$1****$2');
+  }
+  return value;
+}
+
 type TO_STRING_TYPE = 'String' | 'Boolean' | 'String' | 'Number' | 'Function' | 'Undefined' | 'Null' | 'RegExp' | 'Object' | 'Array';
 export function _toString(val: any): TO_STRING_TYPE {
   return Object.prototype.toString.call(val).slice(8, -1) as TO_STRING_TYPE;

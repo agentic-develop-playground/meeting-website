@@ -6,7 +6,7 @@ import IconEye from '~icons/app/icon-eye.svg';
 import IconEyeOff from '~icons/app/icon-eye-off.svg';
 import IconTips from '~icons/app/icon-tips.svg';
 
-import { maskPhone, openWindow } from '@/utils/common';
+import { maskEmail, maskPhone, openWindow } from '@/utils/common';
 
 import { getRoles } from '@/api/api-setting';
 
@@ -33,8 +33,9 @@ rolesMap.forEach((item) => {
   rolesList.value.push(item);
 });
 
-// -------------------- 手机号显示 --------------------
+// -------------------- 邮箱/手机号显示 --------------------
 const isMaskPhone = ref(true);
+const isMaskEmail = ref(true);
 
 // -------------------- 获取角色 --------------------
 const roles = ref<string[]>([]);
@@ -63,9 +64,13 @@ onMounted(() => {
     <ODivider />
     <OForm label-width="104px" label-position="left" label-align="center">
       <OFormItem :label="t('my.account')">
-        <div class="text-mask">
+        <div v-if="userInfoStore.phone && !userInfoStore.phone.includes('null')" class="text-mask">
           <p class="account">{{ maskPhone(userInfoStore.phone, isMaskPhone) }}</p>
           <OIcon @click="isMaskPhone = !isMaskPhone" class="icon-eye"><IconEyeOff v-if="isMaskPhone" /><IconEye v-else /></OIcon>
+        </div>
+        <div v-else-if="userInfoStore.email" class="text-mask">
+          <p class="account">{{ maskEmail(userInfoStore.email, isMaskEmail) }}</p>
+          <OIcon @click="isMaskEmail = !isMaskEmail" class="icon-eye"><IconEyeOff v-if="isMaskEmail" /><IconEye v-else /></OIcon>
         </div>
       </OFormItem>
       <OFormItem :label="t('my.accountName')">
