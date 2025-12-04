@@ -5,5 +5,6 @@ const EHUAWEI_URL = 'https://e.huawei.com/cn/solutions/computing';
 const HIKUNPENG_URL = 'https://www.hikunpeng.com/';
 const HUAWEICLOUD_URL = 'https://www.huaweicloud.com/';
 const OPENI_URL = 'https://www.openi.org.cn/';
+const GITCODE_URL = 'https://gitcode.com/';
 
-export { HIASCEND_URL, MINDSPORE_URL, HUAWEI_URL, EHUAWEI_URL, HIKUNPENG_URL, HUAWEICLOUD_URL, OPENI_URL };
+export { HIASCEND_URL, MINDSPORE_URL, HUAWEI_URL, EHUAWEI_URL, HIKUNPENG_URL, HUAWEICLOUD_URL, OPENI_URL, GITCODE_URL };

@@ -2,6 +2,8 @@
 import type { MeetingItemT } from '~/@types/type-meeting';
 import { OLink } from '@opensig/opendesign';
 
+import { GITCODE_URL } from '@/config/url-config';
+
 const props = defineProps<{
   data: MeetingItemT;
   from?: string;
@@ -11,7 +13,7 @@ const props = defineProps<{
 const infoList = computed(() =>
   [
     { label: '会议详情', key: 'agenda', ellipsis: true },
-    { label: '发起人', key: 'sponsor' },
+    { label: '发起人', key: 'sponsor', user: 'user_id', userId: true },
     { label: '会议时间', key: 'timeRange', extra: 'date' },
     { label: '会议平台', key: 'platform' },
     { label: '会议ID', key: 'mid' },
@@ -77,6 +79,12 @@ defineExpose({ copyInfo });
       >
         {{ data[info.key] }}
       </OLink>
+      <span v-else-if="info.userId" class="value">
+        <OLink v-if="data[info.user]" target="_blank" class="value" color="primary" hover-underline :href="`${GITCODE_URL}${data[info.user]}`">
+          {{ data[info.user] }}
+        </OLink>
+        <span v-else>{{ data[info.key] || '-' }}</span>
+      </span>
       <span v-else class="value">
         <i v-if="info.extra" class="extra">{{ data[info.extra] }}</i>
         {{ data[info.key] || '-' }}

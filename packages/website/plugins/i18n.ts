@@ -6,6 +6,7 @@ import home from '@/locales/home';
 import response from '@/locales/response';
 import my from '@/locales/my';
 import footer from '@/locales/footer';
+import route from '@/locales/route';
 
 const messages = {
   zh: {
@@ -14,6 +15,7 @@ const messages = {
     response: response.zh,
     my: my.zh,
     footer: footer.zh,
+    route: route.zh,
   },
 };
 
