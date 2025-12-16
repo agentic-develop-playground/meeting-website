@@ -29,4 +29,7 @@ export default {
   delete: '删除',
   continueLogoff: '继续注销',
   againThink: '我再想想',
+  activity: '我的活动',
+  create: '我的创建',
+  approval: '我的审批',
 };

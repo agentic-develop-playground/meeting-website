@@ -4,7 +4,8 @@
 
 import { request } from '@/utils/axios';
 import type { AxiosResponse } from '@/utils/axios';
-import type { GroupItemT, MeetingItemT, MeetingPostT, PageParamsT } from '~/@types/type-meeting';
+import type { MeetingItemT, MeetingPostT, PageParamsT } from '~/@types/type-meeting';
+import type { SigItemT } from '~/@types/type-common';
 import Cookies from 'js-cookie';
 
 const getUserAuth = () => {
@@ -26,9 +27,9 @@ export const getPlatformsApi = async (): Promise<string[]> => {
 
 /**
  * 获取sig组信息
- * @returns {Promise<GroupItemT[]>} sig组信息列表
+ * @returns {Promise<SigItemT[]>} sig组信息列表
  */
-export const getGroupInfosApi = async (): Promise<GroupItemT[]> => {
+export const getGroupInfosApi = async (): Promise<SigItemT[]> => {
   const token = getUserAuth();
   if (!token) return [];
   const res = await request.get(`/ascend-meeting/group_info/`, { headers: { token }, skipAuth: true, showError: false, ignoreDuplicates: true });

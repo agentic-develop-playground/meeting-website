@@ -1,19 +1,37 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, computed } from 'vue';
-import { isClient, OIcon, OScroller, OIconChevronRight, OIconChevronLeft, OButton, useMessage, ODropdown, ODropdownItem, OInput } from '@opensig/opendesign';
+import {
+  isClient,
+  OIcon,
+  OScroller,
+  OIconChevronRight,
+  OIconChevronLeft,
+  OButton,
+  useMessage,
+  ODropdown,
+  ODropdownItem,
+  OInput,
+  OTab,
+  OTabPane,
+} from '@opensig/opendesign';
 import dayjs from 'dayjs';
 
-import { getMeetingDateListApi, getMeetingListApi, getSigAll } from '~/api/api-meeting';
 import MeetingCardList from '~/components/meeting/MeetingCardList.vue';
 
+import { getMeetingDateListApi, getMeetingListApi, getSigAll } from '~/api/api-meeting';
+import { getActivityDate, getActivityListAll } from '~/api/api-activity';
+
 import IconMeet from '~icons/home/icon-meet.svg';
+import IconEvent from '~icons/home/icon-event.svg';
 import IconChevronDown from '~icons/app/icon-chevron-down.svg';
 
+import { MEETING_TABS } from '@/config/common';
+
 import { useLoginStore } from '@/stores/user';
-import { useMeetingStore } from '@/stores/meeting';
+import { useRolesStore } from '@/stores/roles';
 
 const loginStore = useLoginStore();
-const meetingStore = useMeetingStore();
+const rolesStore = useRolesStore();
 const { lePadV } = useScreen();
 
 const route = useRoute();
@@ -23,6 +41,8 @@ const message = useMessage();
 // 日历展示时间限制
 const limitTime = '2021 年 1 月';
 const activityType = ['线下', '线上', '线上 + 线下'];
+
+const tabType = ref(MEETING_TABS[0].value);
 
 // 添加动画相关状态
 const calendarTransition = ref('');
@@ -67,12 +87,15 @@ watch(
 
 // -------------------- 获取存在会议的日期列表 --------------------
 const tableData = ref([]);
+const meetingDate = ref([]);
+const activityDate = ref([]);
 const latestDay = ref(new Date()); // 截止当天最新的活动日期
 
 const getTableData = async (day?: string) => {
   const date = dayjs(day).format('YYYY-MM-DD');
-  const dateList = (await getMeetingDateListApi(date, sig.value)) || [];
-  tableData.value = [...new Set([...dateList])];
+  meetingDate.value = (await getMeetingDateListApi(date, sig.value)) || [];
+  activityDate.value = (await getActivityDate(date)) || [];
+  tableData.value = [...new Set([...meetingDate.value]), ...new Set([...activityDate.value])];
   const allTableData = tableData.value.sort((a, b) => dayjs(a).unix() - dayjs(b).unix());
   if (!tableData.value.length) {
     latestDay.value = new Date();
@@ -89,15 +112,44 @@ const getTableData = async (day?: string) => {
 const renderData = ref([]);
 const currentDay = ref(undefined);
 
-const paramGetDaysData = async (params: { date: string }) => {
-  getMeetingListApi(params.date, sig.value).then((res) => {
-    renderData.value = res.map((v) => {
+const activityParams = ref({
+  page: 1,
+  size: 100,
+  activity: '',
+  search: '',
+  start_date: '',
+});
+
+const paramGetDaysData = async (params: { date: string; type: string }) => {
+  if (!params.date) return;
+  activityParams.value.start_date = params.date;
+  try {
+    const resMeeting = await getMeetingListApi(params.date, sig.value);
+    const resActivity = await getActivityListAll(activityParams.value);
+    const meetingData = resMeeting.map((v) => {
       return {
         ...v,
         time: `${v.start}-${v.end}`,
         type: 'meetings',
+        date: v.date || params.date,
       };
     });
+    const activityData = resActivity.data?.map((v) => {
+      return {
+        ...v,
+        time: `${v.start_date}-${v.end}`,
+        start_date_time: `${v.start_date} ${v.start}`,
+        end_date_time: `${v.end_date} ${v.end}`,
+        type: 'activity',
+        dateRange: `${v.start_date} ${v.start}-${v.end_date} ${v.end}`,
+      };
+    });
+    const dataMap = {
+      all: [...meetingData, ...activityData],
+      meetings: meetingData,
+      activity: activityData,
+    };
+    renderData.value = dataMap[params.type];
 
     // 会议时间排序
     renderData.value.sort((a: any, b: any) => {
@@ -110,6 +162,17 @@ const paramGetDaysData = async (params: { date: string }) => {
       if (item2?.activity_type && !item2.dates) {
         item2.activity_type = activityType[Number(item2.activity_type) - 1];
       }
+    });
+  } catch {
+    renderData.value = [];
+  }
+};
+
+const selectTab = () => {
+  nextTick(() => {
+    paramGetDaysData({
+      date: currentDay.value,
+      type: tabType.value,
     });
   });
 };
@@ -154,6 +217,7 @@ const setMeetingDay = async (day: string, event?: Event) => {
       if (tableData.value?.includes(day)) {
         paramGetDaysData({
           date: day,
+          type: tabType.value,
         });
       } else {
         renderData.value = [];
@@ -172,6 +236,7 @@ const setMeetingDay = async (day: string, event?: Event) => {
     if (tableData.value?.includes(day)) {
       paramGetDaysData({
         date: day,
+        type: tabType.value,
       });
     } else {
       renderData.value = [];
@@ -181,7 +246,14 @@ const setMeetingDay = async (day: string, event?: Event) => {
 };
 
 const meetingList = computed(() => {
-  return renderData.value.filter((v) => !sig.value || v.group_name === sig.value);
+  return renderData.value
+    .filter((v) => !sig.value || v.group_name === sig.value)
+    .filter((v) => {
+      if (tabType.value === 'all') {
+        return true;
+      }
+      return v.type === tabType.value;
+    });
 });
 
 const selectDate = async (val: string, date: string) => {
@@ -284,13 +356,9 @@ const stopWatchData = watch(
   }
 );
 
-// -------------------- 预定会议 --------------------
-const toCreateMeeting = () => {
-  router.push('/my/create-meeting');
-};
-
-const toMeetingList = () => {
-  router.push('/my/meeting');
+// -------------------- 操作 --------------------
+const operateBtn = (val: string) => {
+  router.push(`${val}`);
 };
 
 const overlayClick = () => {
@@ -302,11 +370,45 @@ const overlayClick = () => {
 <template>
   <div class="home-calendar">
     <div v-if="loginStore.isLogined" class="calendar-header">
-      <OButton color="primary" variant="outline" size="large" :disabled="!meetingStore.hasPerm" @click="toMeetingList">我创建的会议</OButton>
-      <div :class="{ ' button-container': true, disabled: !meetingStore.hasPerm }">
-        <OButton color="primary" variant="solid" size="large" :disabled="!meetingStore.hasPerm" @click="toCreateMeeting">创建会议</OButton>
-        <div class="disabled-overlay" @click="overlayClick"></div>
-      </div>
+      <template v-if="rolesStore.hasPermMeeting && rolesStore.hasPermActivity">
+        <ODropdown :trigger="lePadV ? 'click' : 'hover'" option-wrap-class="my-create-dropdown">
+          <OButton class="my-create" size="large" variant="outline" color="primary">
+            我的创建
+            <template #suffix>
+              <OIcon><IconChevronDown /></OIcon>
+            </template>
+          </OButton>
+          <template #dropdown>
+            <ODropdownItem @click="operateBtn('/my/meeting')">我的会议</ODropdownItem>
+            <ODropdownItem @click="operateBtn('/my/activity')">我的活动</ODropdownItem>
+          </template>
+        </ODropdown>
+        <ODropdown :trigger="lePadV ? 'click' : 'hover'" option-wrap-class="create-dropdown">
+          <OButton class="create" size="large" variant="solid" color="primary">
+            创建
+            <template #suffix>
+              <OIcon><IconChevronDown /></OIcon>
+            </template>
+          </OButton>
+          <template #dropdown>
+            <ODropdownItem @click="operateBtn('/my/create-meeting')">创建会议</ODropdownItem>
+            <ODropdownItem @click="operateBtn('/my/create-activity')">创建活动</ODropdownItem>
+          </template>
+        </ODropdown>
+      </template>
+      <template v-else-if="rolesStore.hasPermActivity">
+        <OButton color="primary" variant="outline" size="large" @click="operateBtn('/my/activity')">我创建的活动</OButton>
+        <OButton color="primary" variant="solid" size="large" @click="operateBtn('/my/create-activity')">创建活动</OButton>
+      </template>
+      <template v-else>
+        <OButton color="primary" variant="outline" size="large" :disabled="!rolesStore.hasPermMeeting" @click="operateBtn('/my/meeting')">我创建的会议</OButton>
+        <div :class="{ ' button-container': true, disabled: !rolesStore.hasPermMeeting }">
+          <OButton color="primary" variant="solid" size="large" :disabled="!rolesStore.hasPermMeeting" @click="operateBtn('/my/create-meeting')"
+            >创建会议</OButton
+          >
+          <div class="disabled-overlay" @click="overlayClick"></div>
+        </div>
+      </template>
     </div>
     <div class="calendar-body">
       <div class="calendar-wrapper" :class="calendarTransition">
@@ -353,8 +455,11 @@ const overlayClick = () => {
                   {{ removeLeadingZero(data.day.split('-').at(-1) || '') }}
                 </p>
                 <div class="icon-box">
-                  <OIcon class="meetings" v-if="tableData.includes(data.day)">
+                  <OIcon class="meetings" v-if="(tabType === 'all' || tabType === 'meetings') && meetingDate.includes(data.day)">
                     <IconMeet></IconMeet>
+                  </OIcon>
+                  <OIcon class="activity" v-if="(tabType === 'all' || tabType === 'activity') && activityDate.includes(data.day)">
+                    <IconEvent></IconEvent>
                   </OIcon>
                 </div>
               </div>
@@ -386,6 +491,16 @@ const overlayClick = () => {
                 </template>
               </ODropdown>
             </div>
+            <OTab v-model="tabType" @change="selectTab" :line="false">
+              <OTabPane v-for="item in MEETING_TABS" :key="item.value" :value="item.value">
+                <template #nav>
+                  <OIcon v-if="!lePadV">
+                    <component :is="item.icon"></component>
+                  </OIcon>
+                  {{ item.label }}
+                </template>
+              </OTabPane>
+            </OTab>
           </div>
         </div>
 
@@ -403,9 +518,18 @@ const overlayClick = () => {
   background-color: #007af0;
   z-index: 3;
 }
+.activity {
+  background-color: #ffa122;
+  z-index: 1;
+}
 
 .o-link {
   --link-icon-size: 16px;
+}
+
+.o-dropdown-item {
+  @include text1;
+  --dropdown-item-justify: flex-start;
 }
 
 .home-calendar {
@@ -582,11 +706,8 @@ const overlayClick = () => {
             display: flex;
             align-items: center;
             position: relative;
-            right: -24px;
-            transform: translateX(50%);
             color: var(--o-color-info2);
             word-break: keep-all;
-            margin-left: -72px;
             @include text2;
             @include respond-to('<=pad_v') {
               display: none;
@@ -865,7 +986,7 @@ const overlayClick = () => {
       .title-list {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: center;
         padding: 13px 24px;
         position: relative;
         height: 60px;

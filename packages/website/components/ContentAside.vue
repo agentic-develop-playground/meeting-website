@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { watch } from 'vue';
-import { ODivider, OMenu, OMenuItem, OIcon } from '@opensig/opendesign';
+import { watch, onMounted } from 'vue';
+import { ODivider, OMenu, OMenuItem, OIcon, OSubMenu } from '@opensig/opendesign';
 import IconRight from '~icons/app/icon-chevron-right.svg';
 
-import type { AsideItemT } from '~/@types/type-common';
+import { MY_MENUS, PERM_MENUS } from '@/config/common';
 
 import { useUserInfoStore } from '@/stores/user';
+import { useRolesStore } from '@/stores/roles';
+import { storeToRefs } from 'pinia';
 
 import { doLogin, getUserAuth } from '@/utils/login';
 
@@ -14,9 +16,28 @@ const route = useRoute();
 const router = useRouter();
 const userInfoStore = useUserInfoStore();
 
-defineProps<{
-  items?: AsideItemT[];
-}>();
+// -------------------- 会议权限判断 --------------------
+const rolesStore = useRolesStore();
+const { hasPermMeeting, hasPermActivity, hasAdminActivity } = storeToRefs(rolesStore);
+// -------------------- 菜单 --------------------
+const userItems = computed(() => {
+  let items = [];
+  items.push(...MY_MENUS);
+  if (hasPermMeeting.value) {
+    items.push(PERM_MENUS[0]);
+  }
+  if (hasPermActivity.value && hasAdminActivity.value) {
+    items.push(PERM_MENUS[3]);
+  } else if (hasPermActivity.value) {
+    items.push(PERM_MENUS[1]);
+  } else if (hasAdminActivity.value) {
+    items.push(PERM_MENUS[2]);
+  }
+  return items;
+});
+
+// 当前展开id
+const expandedArr: Ref<Array<string>> = ref([]);
 
 // -------------------- 页面跳转 --------------------
 const jumpToPage = (href: string, redirect = false) => {
@@ -27,6 +48,14 @@ const jumpToPage = (href: string, redirect = false) => {
   }
 };
 
+onMounted(() => {
+  if (route.path === '/my/activity' || route.path === '/my/approval') {
+    expandedArr.value = ['activity'];
+  } else {
+    expandedArr.value = [];
+  }
+});
+
 watch(
   () => token,
   (val) => {
@@ -35,6 +64,17 @@ watch(
     }
   },
   { immediate: true }
+);
+
+const { isPhone } = useScreen();
+const mobileRoutes = ['id-my-personal'];
+watch(
+  () => isPhone.value,
+  (val) => {
+    if (!val && mobileRoutes.includes(route.name)) {
+      jumpToPage(userItems.value?.[0]?.path, true);
+    }
+  }
 );
 </script>
 
@@ -46,9 +86,22 @@ watch(
     </div>
     <ODivider />
     <div class="menu-wrapper">
-      <OMenu @change="jumpToPage" class="sidebar-menu">
-        <template v-for="item in items" :key="item.id">
-          <OMenuItem :value="item.path" :class="[{ 'o-menu-item-selected': item.path === route.path || item.keys?.includes(route.name) }]">
+      <OMenu @change="jumpToPage" v-model:expanded="expandedArr" class="sidebar-menu">
+        <template v-for="item in userItems" :key="item.id">
+          <OSubMenu v-if="item?.children && item?.children?.length" :value="item.id">
+            <template #icon>
+              <OIcon>
+                <component :is="item.icon"></component>
+              </OIcon>
+            </template>
+            <template #title>
+              <span>{{ item.label }}</span>
+            </template>
+            <OMenuItem v-for="i in item.children" :key="i.path" :value="i.path" :class="[{ 'o-menu-item-selected': i.path === route.path }]">{{
+              i.label
+            }}</OMenuItem>
+          </OSubMenu>
+          <OMenuItem v-else :value="item.path" :class="[{ 'o-menu-item-selected': item.path === route.path }]">
             <template #icon>
               <OIcon>
                 <component :is="item.icon"></component>
@@ -102,11 +155,24 @@ watch(
     }
 
     .o-menu-item-selected {
+      --menu-item-bg-color-selected: rgba(229, 238, 254, 1);
       --menu-item-color-selected: var(--o-color-ubmc);
 
       :deep(.o-menu-item-icon) {
         height: 24px;
         color: var(--o-color-ubmc);
+      }
+    }
+    .o-menu-item {
+      --menu-item-bg-color-hover: var(--o-color-control2-light);
+    }
+    :deep(.o-sub-menu-title-content) {
+      @include text1;
+      @include respond-to('<=laptop') {
+        @include text2;
+      }
+      @include respond-to('<=pad') {
+        @include h4;
       }
     }
   }
@@ -174,6 +240,28 @@ watch(
             font-size: 24px;
             color: var(--o-color-info2);
             display: block;
+          }
+        }
+        .o-sub-menu {
+          .o-sub-menu-title {
+            padding-top: 16px;
+            padding-bottom: 16px;
+            padding-right: 24px;
+          }
+          .o-sub-menu-title-icon {
+            color: inherit;
+            margin-right: 16px;
+          }
+          .o-sub-menu-title-arrow {
+            position: relative;
+            margin-left: auto;
+            right: 0;
+          }
+        }
+        .o-sub-menu-children {
+          .o-menu-item {
+            padding-left: 48px !important;
+            border-bottom: none;
           }
         }
       }

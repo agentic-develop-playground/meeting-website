@@ -3,26 +3,8 @@ import EditForm from '@/components/meeting/EditForm.vue';
 
 import { getMyMeetingDetailApi } from '@/api/api-meeting';
 
-import { MY_MENUS, PERM_MENUS } from '@/config/common';
-
-import { useMeetingStore } from '@/stores/meeting';
-import { storeToRefs } from 'pinia';
-
 const route = useRoute();
 const router = useRouter();
-
-// -------------------- 会议权限判断 --------------------
-const meetingStore = useMeetingStore();
-const { hasPerm } = storeToRefs(meetingStore);
-// -------------------- 菜单 --------------------
-const userItems = computed(() => {
-  let items = [];
-  items.push(...MY_MENUS);
-  if (hasPerm.value) {
-    items.push(...PERM_MENUS);
-  }
-  return items;
-});
 
 const currentType = computed(() => route.params?.slug?.[0]);
 const currentId = computed(() => route.params?.slug?.[1]);
@@ -77,7 +59,7 @@ const title = computed(() => (currentId.value ? '编辑会议' : '预定会议')
 
 <template>
   <div class="create-meeting-page">
-    <AsideLayout :items="userItems">
+    <AsideLayout>
       <template #right>
         <CardContentWrapper :title="title">
           <EditForm :data="detail" @close="backToList" @confirm="backToList" :isSub="isSub" :isEdit="!!currentId" :subId="currentSubId"></EditForm>

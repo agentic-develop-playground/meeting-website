@@ -3,11 +3,13 @@ import type { MeetingItemT } from '~/@types/type-meeting';
 import { OLink } from '@opensig/opendesign';
 
 import { GITCODE_URL } from '@/config/url-config';
+import { acticityTypeMap } from '@/config/activity';
 
 const props = defineProps<{
   data: MeetingItemT;
   from?: string;
   show: boolean;
+  page?: string;
 }>();
 // 会议详情配置
 const infoList = computed(() =>
@@ -23,23 +25,34 @@ const infoList = computed(() =>
   ].slice(0, props.from === 'my' ? 7 : 8)
 );
 
-const activityInfoList = ref([
-  {
-    label: '起始日期',
-    key: 'start_date',
-  },
-  {
-    label: '结束日期',
-    key: 'end_date',
-  },
-  {
-    label: '活动地点',
-    key: 'address',
-  },
+const activityInfoList = computed(() =>
+  [
+    { label: '起始日期', key: 'start_date_time' },
+    { label: '结束日期', key: 'end_date_time' },
+    { label: '报名截止时间', key: 'register_end_date' },
+    { label: '活动地点', key: 'address' },
+    { label: '活动详情地址', key: 'content_url', isLink: true },
+    { label: '活动审批人', key: 'approver' },
+    { label: '审核备注', key: 'approve_record', isRecord: true },
+  ].slice(0, props.from === 'home' ? 4 : 7)
+);
+const activityInfoApprovalList = computed(() => [
+  { label: '活动类型', key: 'activity_type', isType: true },
+  { label: '活动地点', key: 'address' },
+  { label: '起始日期', key: 'start_date_time' },
+  { label: '结束日期', key: 'end_date_time' },
+  { label: '报名截止时间', key: 'register_end_date' },
+  { label: '报名网址', key: 'register_url', isLink: true },
+  { label: '活动详情地址', key: 'content_url', isLink: true },
+  { label: '活动审批人', key: 'approver' },
+  { label: '审核备注', key: 'approve_record', isRecord: true },
 ]);
 
 const columns = computed(() => {
   if (props.data.type === 'activity') {
+    if (props.page === 'approval') {
+      return activityInfoApprovalList.value;
+    }
     return activityInfoList.value;
   }
   return infoList.value;
@@ -61,7 +74,7 @@ defineExpose({ copyInfo });
 
 <template>
   <div ref="domRef" class="label-item" :class="`label-item_${data.id} type_${data.type}`" v-for="(info, infoIdx) in columns" :key="infoIdx">
-    <template v-if="data[info.key]">
+    <template v-if="data[info.key] && !info.isRecord">
       <span class="label">{{ info.label }}：</span>
       <MoreText :show="show" v-if="info.ellipsis" :text="data[info.key] || '-'"></MoreText>
       <OLink
@@ -85,10 +98,17 @@ defineExpose({ copyInfo });
         </OLink>
         <span v-else>{{ data[info.key] || '-' }}</span>
       </span>
+      <span v-else-if="info.isType" class="value">
+        {{ acticityTypeMap.get(data[info.key])?.label }}
+      </span>
       <span v-else class="value">
         <i v-if="info.extra" class="extra">{{ data[info.extra] }}</i>
         {{ data[info.key] || '-' }}
       </span>
+    </template>
+    <template v-if="info.isRecord && data[info.key]?.length" class="recode">
+      <span class="label">{{ info.label }}：</span>
+      <p v-for="re in data[info.key]" :key="re.create_time" class="value">{{ re.reason }} {{ re.create_time }}</p>
     </template>
   </div>
 </template>
@@ -110,12 +130,6 @@ defineExpose({ copyInfo });
     flex-shrink: 0;
     @include respond-to('phone') {
       width: 88px;
-    }
-  }
-
-  &.type_activity {
-    .label {
-      width: 80px;
     }
   }
 

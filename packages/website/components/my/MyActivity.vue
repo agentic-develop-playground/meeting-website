@@ -1,43 +1,31 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import {
-  OButton,
-  ODivider,
-  OIcon,
-  OScroller,
-  OCollapse,
-  OCollapseItem,
-  OTag,
-  OLink,
-  useMessage,
-  ODialog,
-  ORadio,
-  ORadioGroup,
-  vLoading,
-} from '@opensig/opendesign';
+import { OButton, ODivider, OIcon, OScroller, OCollapse, OCollapseItem, OLink, OTag, ODialog, vLoading, useMessage } from '@opensig/opendesign';
 
 import dayjs from 'dayjs';
 import { useDebounceFn } from '@vueuse/core';
+
+import { getSponsorActivityList, revokeActivity, deleteDraftActivity, editDraftActivity, getMySingleDraftActivity } from '~/api/api-activity';
+
+import type { ActivityItemT, ParamsItemT, PageParamsT } from '~/@types/type-activity';
+
+import { acticityTypeMap, statusMap } from '@/config/activity';
 
 import IconChevronLeft from '~icons/app/icon-chevron-left.svg';
 import IconChevronRight from '~icons/app/icon-chevron-right.svg';
 import IconArrowLeft from '~icons/app/icon-arrow-left.svg';
 import IconArrowRight from '~icons/app/icon-arrow-right.svg';
-import IconMeet from '~icons/home/icon-meet.svg';
+import IconEvent from '~icons/home/icon-event.svg';
 
-import { getMyMeetingListApi, cancelSubMeetingApi, deleteMeetingApi, sendNotify } from '~/api/api-meeting';
+import { formatDate } from '@/utils/common';
+import { useActivityStore } from '@/stores/activity';
 
-import type { MeetingItemT, PageParamsT } from '~/@types/type-meeting';
-
-import { getDateNumber, findLabelFromOptions, openWindow, formatDate } from '@/utils/common';
-import { CYCLE_TYPE_OPTIONS, WEEKDAY } from '@/config/meeting';
-import { getPointStr } from '@/utils/meeting';
-
+const message = useMessage();
 const { lePadV, isPhone } = useScreen();
 const router = useRouter();
-const message = useMessage();
+const activityStore = useActivityStore();
 
-const list = ref<MeetingItemT[]>([]); // 列表数据
+const list = ref<ActivityItemT[]>([]); // 列表数据
 const originList = ref([]); // 原始数据
 
 const tableLoading = ref(false); // 列表数据加载状态
@@ -46,7 +34,7 @@ const pageSize = ref(50); // 分页-每页数量
 const total = ref(null); // 分页-总数
 const reloadAll = ref(false); // 是否需要清空数据
 
-const expanded = ref([]); // 展开的数据， sub_id 或 id
+const expanded = ref([]); // 展开的数据，id
 
 const nextLoading = ref(false);
 const bottomReached = ref(false);
@@ -66,54 +54,27 @@ const getList = async () => {
     }
     tableLoading.value = true;
     nextLoading.value = true;
-    const res = await getMyMeetingListApi({
+    const res = await getSponsorActivityList({
       page: currentPage.value,
       size: pageSize.value,
-      order_by: 'date',
-      order_type: 'asc',
-      month: dayjs(selectedDate.value).format('YYYY-MM'),
     } as unknown as PageParamsT);
     const tempList = (res.data || [])
-      .map((item: MeetingItemT) => {
-        const { is_cycle, date, start, end, cycle_sub, cycle_start_date, cycle_end_date, cycle_start, cycle_end, cycle_type, cycle_interval, cycle_point } =
-          item;
-        if (is_cycle) {
-          const obsData = item.obs_data?.filter((v) => v.text_video_url);
-          return cycle_sub
-            .filter((v) => {
-              return (
-                !dayjs(v.date).isSameOrAfter(dayjs(selectedDate.value).add(1, 'month').format('YYYY-MM-01')) &&
-                dayjs(v.date).isSameOrAfter(dayjs(selectedDate.value).format('YYYY-MM-01'))
-              );
-            })
-            .map(({ id, ...sub }) => {
-              return {
-                ...item,
-                ...sub,
-                timeRange: `每${cycle_interval > 1 ? cycle_interval : ''}${findLabelFromOptions(cycle_type, CYCLE_TYPE_OPTIONS)}${getPointStr(cycle_type, cycle_point)} ${cycle_start} 到 ${cycle_end} (UTC+08:00)Beijing 有效期从${formatDate(cycle_start_date)} 至 ${formatDate(cycle_end_date)}`,
-                dateRange: `${sub.start}-${sub.end}`,
-                hasObsData: obsData.find((v) => v.sub_id === sub.sub_id),
-                time: `${sub.start}-${sub.end}`,
-                isExpired: dayjs(`${sub.date} ${sub.start}`).isBefore(dayjs()),
-              };
-            });
-        }
+      .map((item: ActivityItemT) => {
+        const { start_date, end_date, start, end } = item;
         return [
           {
             ...item,
-            dateRange: `${start}-${end}`,
-            timeRange: `${start}-${end}`,
-            hasObsData: item.obs_data?.filter((v) => v.text_video_url)?.length > 0,
-            time: `${start}-${end}`,
-            isExpired: dayjs(`${date} ${start}`).isBefore(dayjs()),
+            time: `${start_date}-${end}`,
+            start_date_time: `${start_date} ${start}`,
+            end_date_time: `${end_date} ${end}`,
+            type: 'activity',
+            dateRange: `${start_date} ${start}-${end_date} ${end}`,
+            isExpired: dayjs(`${start_date} ${start}`).isBefore(dayjs()),
           },
         ];
       })
       .flat()
-      .filter((v) => v.date.slice(0, 7) === formatDate(selectedDate.value, 'YYYY-MM-DD').slice(0, 7));
-    // 如果需要清空，则完全替换
-    // 如果页码为1，表示第一次加载
-    // 如果是移动端，则一直往里填充数据
+      .filter((v) => v.start_date.slice(0, 7) === formatDate(selectedDate.value, 'YYYY-MM-DD').slice(0, 7));
     if (reloadAll.value) {
       originList.value = res.data || [];
       list.value = tempList;
@@ -127,10 +88,10 @@ const getList = async () => {
       }
     }
     list.value.sort((a, b) => {
-      if (a.date === b.date) {
+      if (a.start_date === b.start_date) {
         return getDateNumber(a.start) > getDateNumber(b.start) ? 1 : -1;
       } else {
-        return dayjs(a.date).isAfter(dayjs(b.date)) ? 1 : -1;
+        return dayjs(a.start_date).isAfter(dayjs(b.start_date)) ? 1 : -1;
       }
     });
     total.value = res?.total || 0;
@@ -149,9 +110,31 @@ const getList = async () => {
   }
 };
 
-const calcIfAllDeleted = (date) => {
-  const meetingsOfDate = list.value.filter((v) => v.date === date);
-  return meetingsOfDate.length && meetingsOfDate.every((v) => v.is_delete);
+const expandList = ref<number[]>([]);
+const getActivityDetail = (val: number) => {
+  if (!expandList.value.includes(val)) {
+    expandList.value.push(val);
+    getMySingleDraftActivity(val).then((res) => {
+      list.value?.forEach((item) => {
+        if (item.id === res.id) {
+          item.approve_record = res.approve_record;
+        }
+      });
+    });
+  }
+};
+
+const change = (val: number[]) => {
+  if (val.length) {
+    val.forEach((item: number) => {
+      getActivityDetail(item);
+    });
+  }
+};
+
+const calcIfApproved = (date) => {
+  const activityOfDate = list.value.filter((v) => v.start_date === date);
+  return activityOfDate.length && activityOfDate.every((v) => v.status === 3 || v.status === 4);
 };
 
 const scrollerScroll = (el) => {
@@ -169,119 +152,13 @@ const updateScroller = () => {
   scrollerContainerEl.addEventListener('scroll', scrollerScroll);
 };
 
-const detailRefs = ref({}); // 会议详情组件实例
-const getDetailRefs = (insRef, id) => {
-  if (insRef && id) {
-    detailRefs.value[id] = insRef;
-  }
-};
-const dialogLoading = ref(false); // 弹窗按钮状态
-// 打开创建会议弹窗
-const addMeeting = () => {
-  router.push('/my/create-meeting');
-};
-
-// -------------------- 取消 --------------------
-const cancelVisible = ref(false); // 取消弹窗
-const currentRow = ref<MeetingItemT | null>(null); // 当前激活行，用于取消事件
-// 打开编辑会议弹窗
-const editMeeting = (row: MeetingItemT) => {
-  addMeeting();
-  currentRow.value = row;
-  router.push(`/my/edit-meeting/whole/${row.id}`);
-};
-// 打开取消会议弹窗
-const cancelMeeting = (row: MeetingItemT) => {
-  currentRow.value = row;
-  cancelVisible.value = true;
-};
-// 确定取消会议
-const confirmCancel = async () => {
-  try {
-    dialogLoading.value = true;
-    await deleteMeetingApi(currentRow.value.id);
-    cancelVisible.value = false;
-    message.success({
-      content: `“${currentRow.value.topic}”会议取消成功`,
-    });
-    reloadAll.value = true;
-    getList();
-  } finally {
-    dialogLoading.value = false;
-  }
-};
-const handleDialogVisible = ref(false);
-const handleDialogType = ref('');
-const handleDialogRow = ref(null);
-const handleOptions = [
-  {
-    label: '仅此会议',
-    value: 'single',
-  },
-  {
-    label: '整个周期会议',
-    value: 'whole',
-  },
-];
-const toEtherpad = (row) => {
-  openWindow(row.etherpad);
-};
-const toReplay = (row) => {
-  router.push(`/video/${row.group_name}/${row.mid}/${row.date}`);
-};
-const handleType = ref('single');
-const handleItem = (row: MeetingItemT, type: 'edit' | 'cancel') => {
-  if (row.is_cycle) {
-    handleDialogRow.value = row;
-    handleDialogType.value = type;
-    handleDialogVisible.value = true;
-  } else {
-    if (type === 'cancel') {
-      cancelMeeting(row);
-    } else {
-      editMeeting(row);
-    }
-  }
-};
-
-const cancelHandleItem = () => {
-  handleDialogVisible.value = false;
-  handleDialogRow.value = null;
-  handleDialogType.value = '';
-  handleType.value = 'single';
-};
-const confirmHandleItem = async () => {
-  const row = handleDialogRow.value;
-  if (handleDialogType.value === 'cancel') {
-    try {
-      dialogLoading.value = true;
-      if (handleType.value === 'single' && row.is_cycle) {
-        await cancelSubMeetingApi(row.sub_id);
-        message.success({
-          content: `“${row.topic}”会议取消成功`,
-        });
-      } else {
-        await deleteMeetingApi(row.id);
-      }
-      cancelHandleItem();
-      reloadAll.value = true;
-      getList();
-    } finally {
-      dialogLoading.value = false;
-    }
-  } else {
-    router.push(`/my/edit-meeting/${handleType.value}/${row.id}${row.sub_id ? `/${row.sub_id}` : ''}`);
-  }
-};
-
 // -------------------- 日历 --------------------
 const calendarRef = ref();
-const allDateList = computed<string[]>(() => [...new Set(list.value.map((v) => v.date))].sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1)));
-const dateList = computed<string[]>(() =>
-  [...new Set(list.value.filter((v) => !v.isExpired && !v.is_delete).map((v) => v.date))].sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1))
-);
 const selectedDate = ref();
-
+const allDateList = computed<string[]>(() => [...new Set(list.value.map((v) => v.start_date))].sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1)));
+const dateList = computed<string[]>(() =>
+  [...new Set(list.value.filter((v) => !v.isExpired && !v.is_delete).map((v) => v.start_date))].sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1))
+);
 const getSelectedDate = () => {
   const latest = dateList.value.find((v) => dayjs(v).isSameOrAfter(dayjs(new Date()).format('YYYY-MM-DD')));
   if (latest) {
@@ -292,9 +169,10 @@ const getSelectedDate = () => {
   calendarRef.value?.pickDay(dayjs(selectedDate.value));
   selectedDate.value = dayjs(selectedDate.value).format('YYYY-MM-DD');
   // 根据天再计算出需要展开的最近的会议
-  const needExpand = list.value.find((v) => v.date === selectedDate.value && !v.isExpired && !v.is_delete);
+  const needExpand = list.value.find((v) => v.start_date === selectedDate.value && !v.isExpired && !v.is_delete);
   if (needExpand) {
-    expanded.value = [needExpand.sub_id || needExpand.id];
+    getActivityDetail(needExpand.id);
+    expanded.value = [needExpand.id];
   }
 };
 
@@ -309,6 +187,7 @@ const changeMonth = (val: string) => {
   if (!calendarRef.value) return;
   currentPage.value = 1;
   total.value = null;
+  expandList.value = [];
   window.scrollTo({
     top: 0,
     behavior: 'smooth',
@@ -321,32 +200,27 @@ const changeMonth = (val: string) => {
   });
 };
 
-// -------------------- 发送会议通知 --------------------
-const handleNotify = (val) => {
-  sendNotify(val.id).then(() => {
-    message.success({
-      content: `发送成功`,
-    });
-  });
+const addActivity = () => {
+  router.push(`/my/create-activity`);
 };
 
-// -------------------- 列表 --------------------
-const groupList = computed(() => {
+// -------------------- 活动列表 --------------------
+const activityList = computed(() => {
   return list.value.reduce((prev, cur) => {
     if (!prev.length) {
       return [
         {
-          date: cur.date,
+          start_date: cur.start_date,
           list: [cur],
         },
       ];
     } else {
       const last = prev.at(-1);
-      if (last.date === cur.date) {
-        last.list.push(cur);
+      if (last?.start_date === cur.start_date) {
+        last?.list.push(cur);
       } else {
         prev.push({
-          date: cur.date,
+          start_date: cur.start_date,
           list: [cur],
         });
       }
@@ -355,8 +229,12 @@ const groupList = computed(() => {
   }, []);
 });
 
-const getWeekFromDate = (date) => {
-  return `星期${WEEKDAY[dayjs(date).day()]}`;
+// -------------------- 活动详情组件实例 --------------------
+const detailRefs = ref({});
+const getDetailRefs = (insRef, id) => {
+  if (insRef && id) {
+    detailRefs.value[id] = insRef;
+  }
 };
 
 // -------------------- 处理滚动事件 --------------------
@@ -395,6 +273,114 @@ const load = useDebounceFn(() => {
   getList();
 }, 200);
 
+// -------------------- 活动操作 --------------------
+const dialogLoading = ref(false); // 弹窗按钮状态
+const currentRow = ref<ActivityItemT | null>(null); // 当前活动详情
+// 撤销审核
+const revokeVisible = ref(false);
+const handleRevokeItem = (val: ActivityItemT) => {
+  currentRow.value = val;
+  revokeVisible.value = true;
+};
+const confirm = () => {
+  dialogLoading.value = true;
+  revokeActivity(currentRow.value?.id)
+    .then(() => {
+      message.success({
+        content: `“${currentRow.value.title}”活动撤销审核成功`,
+      });
+      reloadAll.value = true;
+      getList();
+    })
+    .catch(() => {
+      message.danger({
+        content: `“${currentRow.value.title}”活动撤销审核失败`,
+      });
+    })
+    .finally(() => {
+      revokeVisible.value = false;
+      dialogLoading.value = false;
+    });
+};
+const cancel = () => {
+  revokeVisible.value = false;
+};
+// 修改活动
+const handleEditItem = (val: ActivityItemT) => {
+  activityStore.$patch({
+    status: val.status,
+  });
+  router.push(`/my/edit-acrivity/${val.id}`);
+};
+// 提交审核
+const handleSubmitReviewItem = (val: ActivityItemT) => {
+  const { title, start_date, end_date, register_end_date, activity_type, synopsis, register_url, content_url, address, start, end, approver } = val;
+  let params = {
+    title,
+    start_date,
+    end_date,
+    register_end_date,
+    activity_type,
+    synopsis,
+    register_url,
+    content_url,
+    address,
+    start,
+    end,
+    approver,
+    is_publish: 'true',
+  } as ParamsItemT;
+  editDraftActivity(val.id, params)
+    .then((res) => {
+      message.success({
+        content: `“${val.title}”活动提交审核成功`,
+      });
+      reloadAll.value = true;
+      getList();
+    })
+    .catch(() => {
+      message.danger({
+        content: `“${val.title}”活动提交审核失败`,
+      });
+    });
+};
+// 删除活动
+const deleteVisible = ref(false);
+const handleDeleteItem = (val: ActivityItemT) => {
+  currentRow.value = val;
+  deleteVisible.value = true;
+};
+const confirmDelete = () => {
+  dialogLoading.value = true;
+  deleteDraftActivity(currentRow.value?.id)
+    .then(() => {
+      message.success({
+        content: `“${currentRow.value.title}”活动删除成功`,
+      });
+      reloadAll.value = true;
+      getList();
+    })
+    .catch(() => {
+      message.danger({
+        content: `“${currentRow.value.title}”活动删除失败`,
+      });
+    })
+    .finally(() => {
+      deleteVisible.value = false;
+      dialogLoading.value = false;
+    });
+};
+const cancelDelete = () => {
+  deleteVisible.value = false;
+};
+
+// -------------------- 获取header高度 --------------------
+const headerRef = ref();
+const headerHeight = ref(0);
+const getHeaderHeight = () => {
+  headerHeight.value = headerRef.value?.clientHeight || 0;
+};
+
 const handleScroll = useDebounceFn(() => {
   if (!canLoadMore.value) return;
   if (!isPhone.value) return;
@@ -412,12 +398,6 @@ const handleScroll = useDebounceFn(() => {
   }
 }, 200);
 
-const headerRef = ref();
-const headerHeight = ref(0);
-const getHeaderHeight = () => {
-  headerHeight.value = headerRef.value?.clientHeight || 0;
-};
-
 onMounted(() => {
   getList();
   // 添加滚动事件监听
@@ -427,7 +407,6 @@ onMounted(() => {
   getHeaderHeight();
   window.addEventListener('resize', getHeaderHeight);
 });
-
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('resize', handleScroll);
@@ -438,16 +417,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <ContentCard class="my-meeting">
+  <ContentCard class="my-activity">
     <div v-if="!lePadV" ref="headerRef" class="header">
       <div>
-        <div class="title">我的会议</div>
-        <div class="desc">使用会议创建功能需要SIG组Maintainer或Committer身份权限</div>
+        <div class="title">我的活动</div>
+        <div class="desc">使用活动创建功能需要活动管理员或者活动组织者的权限</div>
       </div>
-      <OButton color="primary" variant="solid" size="large" @click="addMeeting">预定会议</OButton>
+      <OButton color="primary" variant="solid" size="large" @click="addActivity">创建</OButton>
     </div>
     <ODivider v-if="!lePadV" :style="{ '--o-divider-gap': '24px' }" />
-    <div v-loading="tableLoading" class="meeting-list">
+    <div v-loading="tableLoading" class="activity-list">
       <div v-if="isPhone" class="list-calendar-mb">
         <span>{{ (selectedDate ? dayjs(new Date(selectedDate)) : dayjs()).format('YYYY MM月') }}</span>
         <span>
@@ -472,8 +451,7 @@ onUnmounted(() => {
                 'is-selected': data.isSelected,
                 'is-today': formatDate(data.day) === formatDate(),
                 clickable: allDateList.includes(data.day),
-                expired: dayjs(formatDate()).isAfter(dayjs(data.day)),
-                'all-deleted': calcIfAllDeleted(data.day),
+                approved: calcIfApproved(data.day),
               }"
             >
               <div class="date-cell-text">
@@ -493,93 +471,96 @@ onUnmounted(() => {
           class="scroller-container"
         >
           <div class="list-body">
-            <OCollapse v-model="expanded" :accordion="isPhone">
-              <template v-for="(group, idx) in groupList" :key="group.date">
+            <OCollapse v-model="expanded" :accordion="isPhone" @change="change">
+              <template v-for="(act, idx) in activityList" :key="act.start_date">
                 <div class="list-month-change prev-month" v-if="idx === 0" @click="changeMonth('prev-month')">
                   <OIcon><IconArrowLeft /></OIcon>
                   <span>上个月</span>
                 </div>
-                <div class="group-item" :class="idx === groupList.length - 1 && 'last-item'">
+                <div class="act-item" :class="idx === activityList.length - 1 && 'last-item'">
                   <div
                     :class="{
-                      'group-bar': true,
-                      'is-active': dayjs(selectedDate).format('YYYY-MM-DD') === group.date,
-                      'is-end': group.list.every((row) => row.isExpired),
+                      'act-bar': true,
+                      'is-active': dayjs(selectedDate).format('YYYY-MM-DD') === act.start_date,
+                      'is-end': act.list.every((row) => row.isExpired),
+                      approved: act.list.every((row) => row.status === 3 || row.status === 4),
                     }"
                   >
-                    <div class="group-bar-line"></div>
-                    <div class="group-bar-dot"></div>
+                    <div class="act-bar-line"></div>
+                    <div class="act-bar-dot"></div>
                   </div>
                   <div
                     :class="{
                       'group-title': true,
-                      'is-end': group.list.every((row) => row.isExpired),
+                      'is-end': act.list.every((row) => row.isExpired),
                     }"
-                    :id="`group-title-${dayjs(new Date(group.date)).format('YYYY-MM-DD')}`"
+                    :id="`group-title-${dayjs(new Date(act.start_date)).format('YYYY-MM-DD')}`"
                   >
-                    {{ dayjs(group.date).format('MM/DD') }} {{ getWeekFromDate(group.date) }}
+                    {{ dayjs(act.start_date).format('MM/DD') }}
                   </div>
                   <OCollapseItem
-                    v-for="(row, rowIdx) in group.list"
+                    v-for="(row, rowIdx) in act.list"
                     :key="row.sub_id || row.id"
                     :value="row.sub_id || row.id"
                     :class="{
-                      'last-item': idx === groupList.length - 1 && rowIdx === group.list.length - 1,
+                      'last-item': idx === activityList.length - 1 && rowIdx === act.list.length - 1,
                     }"
                   >
                     <template #title>
                       <div class="item-header-left">
-                        <div class="meeting-icon">
-                          <OIcon><IconMeet /></OIcon>
+                        <div class="act-icon" :class="[`act-icon-${row.is_delete ? 'delete' : statusMap.get(row.status)?.id}`]">
+                          <OIcon><IconEvent /></OIcon>
                         </div>
                         <div class="header-info">
                           <div
                             :class="{
-                              'meeting-title': true,
+                              'act-title': true,
                               'is-delete': row.is_delete,
                               'is-end': row.isExpired,
                             }"
                           >
-                            <div v-if="row.is_delete">【已取消】</div>
-                            <div class="title-wrapper">
-                              <div class="title-text">{{ row.topic }}</div>
-                            </div>
-                            <div class="tag-wrapper" v-if="row.is_cycle">
-                              <OTag color="primary" variant="outline">周期</OTag>
-                            </div>
+                            <div class="title-text">{{ row.title }}</div>
+                            <OTag color="primary" variant="outline" :class="[`tag-${row.is_delete ? 'delete' : statusMap.get(row.status)?.id}`]">{{
+                              row.is_delete === 1 ? '已取消' : statusMap.get(row.status)?.text
+                            }}</OTag>
                           </div>
-                          <div class="meeting-info">
-                            <span>{{ row.dateRange }}</span>
+                          <div class="act-info">
+                            <span class="date-range">{{ row.dateRange }}</span>
                             <ODivider direction="v"></ODivider>
-                            <span>SIG组：{{ row.group_name }}</span>
+                            <span>{{ acticityTypeMap.get(row.activity_type)?.label }}</span>
                           </div>
                         </div>
                       </div>
                       <div class="item-header-right" v-if="!row.is_delete">
-                        <OButton v-if="!row.isExpired" color="primary" :href="row.join_url" target="_blank" rel="noopener noreferrer">加入会议</OButton>
-                        <template v-else>
-                          <OLink size="large" @click="toEtherpad(row)">会议纪要</OLink>
-                          <OLink size="large" v-if="row.hasObsData" @click="toReplay(row)">查看回放</OLink>
-                        </template>
+                        <OButton
+                          v-if="
+                            row.status === 3 ||
+                            row.status === 4 ||
+                            (row.status === 2 && row.update_activity_id && new Date(row.register_end_date).getTime() > new Date().getTime())
+                          "
+                          color="primary"
+                          :href="row.register_url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >我要报名</OButton
+                        >
                       </div>
                     </template>
-                    <div class="meeting-detail">
-                      <MeetingDetail
-                        :show="expanded.includes(row.sub_id || row.id)"
-                        :data="row"
-                        :ref="(insRef) => getDetailRefs(insRef, row.id)"
-                        from="my"
-                      ></MeetingDetail>
-                      <div class="meeting-btn" v-if="!row.isExpired && !row.is_delete">
-                        <OLink @click="handleNotify(row)">发送通知</OLink>
-                        <OLink @click="handleItem(row, 'edit')">修改会议</OLink>
-                        <OLink @click="handleItem(row, 'cancel')">取消会议</OLink>
+                    <div class="activity-detail">
+                      <MeetingDetail :show="expanded.includes(row.id)" :data="row" :ref="(insRef) => getDetailRefs(insRef, row.id)"></MeetingDetail>
+                      <div class="activity-btn" v-if="!row.isExpired && !row.is_delete">
+                        <OButton v-if="row.status === 2" variant="text" @click="handleRevokeItem(row)">撤销审核</OButton>
+                        <OButton v-if="row.status === 1 || row.status === 3 || row.status === 4 || row.status === 7" variant="text" @click="handleEditItem(row)"
+                          >修改活动</OButton
+                        >
+                        <OButton v-if="row.status === 1 || row.status === 7" variant="text" @click="handleDeleteItem(row)">删除活动</OButton>
+                        <OButton v-if="row.status === 1 || row.status === 7" variant="text" @click="handleSubmitReviewItem(row)">提交审核</OButton>
                       </div>
                     </div>
                   </OCollapseItem>
                   <div class="height-placeholder"></div>
                 </div>
-                <template v-if="idx === groupList.length - 1">
+                <template v-if="idx === activityList.length - 1">
                   <div class="load-text" v-if="bottomReached">加载中···</div>
                   <div class="list-month-change next-month" @click="changeMonth('next-month')">
                     <OIcon><IconArrowRight /></OIcon>
@@ -593,36 +574,36 @@ onUnmounted(() => {
         <AppEmpty v-else-if="!tableLoading" height="500px">
           <template #description>
             <div>
-              <span>暂无会议，去 </span>
-              <OLink @click="addMeeting" color="primary" hover-underline>预定会议</OLink>
+              <span>暂无活动，去 </span>
+              <OLink @click="addActivity" color="primary" hover-underline>创建活动</OLink>
             </div>
           </template>
         </AppEmpty>
       </div>
     </div>
-    <ODialog v-model:visible="handleDialogVisible" main-class="handle-dialog" @close="cancelHandleItem">
-      <template #header>请选择您要{{ handleDialogType === 'edit' ? '修改' : '取消' }}的会议</template>
-      <ORadioGroup v-model="handleType">
-        <ORadio v-for="t in handleOptions" :value="t.value" :key="t.value">{{ t.label }}</ORadio>
-      </ORadioGroup>
-      <template #footer>
-        <div class="dialog-footer">
-          <OButton color="primary" variant="solid" size="large" @click="confirmHandleItem" :loading="dialogLoading">确定</OButton>
-          <OButton color="primary" variant="outline" size="large" @click="cancelHandleItem">取消</OButton>
-        </div>
-      </template>
-    </ODialog>
-    <ODialog v-model:visible="cancelVisible" main-class="cancel-dialog">
-      <template #header>确定取消</template>
-      <div class="dialog-content">是否确认要取消“{{ currentRow.topic }}”会议？</div>
-      <template #footer>
-        <div class="dialog-footer blue-theme">
-          <OButton color="primary" variant="solid" size="large" @click="confirmCancel" :loading="dialogLoading">确认</OButton>
-          <OButton color="primary" variant="outline" size="large" @click="cancelVisible = false">取消</OButton>
-        </div>
-      </template>
-    </ODialog>
   </ContentCard>
+  <!-- 撤销审核弹窗 -->
+  <ODialog v-model:visible="revokeVisible" main-class="handle-dialog-active">
+    <template #header>撤销审核</template>
+    <div class="dialog-content">是否确认要撤销“{{ currentRow.title }}”活动？撤销审核后活动将变成草稿状态。</div>
+    <template #footer>
+      <div class="dialog-footer">
+        <OButton color="primary" variant="outline" size="large" @click="confirm" :loading="dialogLoading">确定</OButton>
+        <OButton color="primary" variant="solid" size="large" @click="cancel">取消</OButton>
+      </div>
+    </template>
+  </ODialog>
+  <!-- 删除活动弹窗 -->
+  <ODialog v-model:visible="deleteVisible" main-class="handle-dialog-active">
+    <template #header>删除活动</template>
+    <div class="dialog-content">是否确认删除“{{ currentRow.title }}”活动？删除后记录将不再我的个人中心呈现。</div>
+    <template #footer>
+      <div class="dialog-footer">
+        <OButton color="primary" variant="outline" size="large" @click="confirmDelete" :loading="dialogLoading">确定</OButton>
+        <OButton color="primary" variant="solid" size="large" @click="cancelDelete">取消</OButton>
+      </div>
+    </template>
+  </ODialog>
 </template>
 
 <style lang="scss" scoped>
@@ -655,7 +636,7 @@ onUnmounted(() => {
     }
   }
 }
-.my-meeting {
+.my-activity {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -677,7 +658,7 @@ onUnmounted(() => {
   @include tip1;
 }
 
-.meeting-list {
+.activity-list {
   display: flex;
   flex-wrap: nowrap;
   height: calc(100% - var(--o-gap-section-6) * 5);
@@ -828,13 +809,10 @@ onUnmounted(() => {
           }
           &.clickable {
             &::after {
-              background-color: var(--o-color-primary1);
-            }
-            &.expired::after {
               background-color: rgb(var(--o-mixedgray-6));
             }
-            &.all-deleted::after {
-              background-color: rgb(var(--o-mixedgray-6));
+            &.approved::after {
+              background-color: rgba(255, 165, 0, 1);
             }
           }
         }
@@ -888,7 +866,7 @@ onUnmounted(() => {
     @include respond-to('phone') {
       max-height: fit-content;
     }
-    .group-item {
+    .act-item {
       padding-left: var(--o-gap-5);
       position: relative;
       &.last-item {
@@ -897,7 +875,7 @@ onUnmounted(() => {
       @include respond-to('phone') {
         padding-left: var(--o-gap-2);
       }
-      .group-bar {
+      .act-bar {
         position: absolute;
         left: 0;
         width: 16px;
@@ -905,7 +883,7 @@ onUnmounted(() => {
         bottom: 0;
         overflow: hidden;
 
-        --active-color: var(--o-color-primary1);
+        --active-color: rgb(222, 222, 227);
         &::before {
           content: '';
           width: 2px;
@@ -916,7 +894,7 @@ onUnmounted(() => {
           transform: translateX(-50%);
           background-color: var(--o-color-control4);
         }
-        .group-bar-dot {
+        .act-bar-dot {
           width: 16px;
           height: 26px;
           position: relative;
@@ -950,7 +928,7 @@ onUnmounted(() => {
           }
         }
         &.is-active {
-          .group-bar-dot {
+          .act-bar-dot {
             &::before {
               background-color: var(--active-color);
             }
@@ -963,13 +941,16 @@ onUnmounted(() => {
           --active-color: rgb(222, 222, 227);
         }
       }
+      .approved {
+        --active-color: rgba(255, 165, 0, 1);
+      }
       .group-title {
         font-weight: 500;
         margin-bottom: var(--o-gap-2);
         color: var(--o-color-info1);
         @include text2;
         @include respond-to('phone') {
-          padding-left: var(--o-gap-5);
+          padding-left: var(--o-gap-4);
         }
 
         &.is-end {
@@ -1021,13 +1002,6 @@ onUnmounted(() => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    .o-collapse-item {
-      &.last-item {
-        .o-collapse-item-header {
-          border-bottom: none;
-        }
-      }
-    }
     .o-collapse-item-expanded + .o-collapse-item-expanded {
       margin-top: var(--o-gap-section-4);
     }
@@ -1076,11 +1050,11 @@ onUnmounted(() => {
           gap: var(--o-gap-section-3);
           flex: 1;
           width: 0;
-          .meeting-icon {
+          .act-icon {
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            background-color: var(--o-color-primary1);
+            background-color: rgba(222, 222, 227, 1);
             color: #fff;
             display: flex;
             align-items: center;
@@ -1091,9 +1065,16 @@ onUnmounted(() => {
               height: 20px;
             }
           }
+          .act-icon-registration,
+          .act-icon-in-progress {
+            background-color: rgba(255, 165, 0, 1);
+          }
+          .act-icon-delete {
+            background-color: rgba(222, 222, 227, 1);
+          }
           .header-info {
             width: calc(100% - var(--o-gap-section-3) - 24px);
-            .meeting-title {
+            .act-title {
               font-weight: 500;
               display: flex;
               align-items: center;
@@ -1102,30 +1083,40 @@ onUnmounted(() => {
               &.is-end {
                 color: var(--o-color-info3);
               }
-              .tag-wrapper {
-                flex: 10;
-                margin-left: var(--o-gap-2);
-                .o-tag {
-                  background-color: var(--cell-bg);
-                  border: none;
-                }
-              }
-              .title-wrapper {
+              .title-text {
                 flex: 0 1 auto;
                 min-width: 0;
                 max-width: 100%;
-              }
-
-              .title-text {
                 @include text-truncate(1);
               }
+              .o-tag {
+                margin-left: 8px;
+                --tag-radius: 100px;
+                --tag-bg-color: rgba(0, 113, 243, 0.1);
+                --tag-bd-color: transparent;
+              }
+              .tag-draft,
+              .tag-ended,
+              .tag-delete {
+                --tag-color: var(--o-color-info3);
+                --tag-bg-color: rgba(222, 222, 227, 1);
+              }
+              .tag-registration,
+              .tag-in-progress {
+                --tag-color: rgba(36, 171, 54, 1);
+                --tag-bg-color: rgba(36, 171, 54, 0.1);
+              }
+              .tag-reject {
+                --tag-color: rgba(294, 118, 17, 1);
+                --tag-bg-color: rgba(294, 118, 17, 0.1);
+              }
             }
-            .meeting-info {
+            .act-info {
               color: var(--o-color-info3);
               display: flex;
               align-items: center;
               @include tip1;
-              span:last-child {
+              .date-range {
                 width: 0;
                 flex: 1;
                 @include text-truncate(1);
@@ -1138,12 +1129,6 @@ onUnmounted(() => {
           display: flex;
           align-items: center;
           padding-left: var(--o-gap-section-4);
-          .o-btn {
-            padding: 0 !important;
-          }
-          .o-link + .o-link {
-            margin-left: var(--o-gap-section-5);
-          }
         }
       }
       @include respond-to('phone') {
@@ -1172,22 +1157,28 @@ onUnmounted(() => {
     .o-collapse-item-body {
       margin-bottom: 0;
       padding: var(--o-gap-section-4) 0 0;
-      .meeting-detail {
+      .activity-detail {
         padding-left: calc(var(--o-gap-section-5) + var(--o-gap-section-3));
         @include respond-to('phone') {
           padding-left: 0;
         }
-        .meeting-btn {
+        .activity-btn {
           border-top: 1px solid var(--o-color-control4);
           margin-top: var(--o-gap-section-5);
           padding-top: var(--o-gap-section-4);
           display: flex;
           align-items: center;
           justify-content: flex-end;
-          .o-link + .o-link {
-            margin-left: var(--o-gap-section-5);
+          .o-btn + .o-btn {
+            margin-left: 16px;
           }
         }
+      }
+    }
+    .o-btn-text {
+      @include hover {
+        background-color: transparent;
+        color: var(--o-color-primary1);
       }
     }
     .o-btn.o-btn-text {
@@ -1196,7 +1187,6 @@ onUnmounted(() => {
       min-width: auto;
     }
   }
-
   .load-text {
     text-align: center;
     color: var(--o-color-info3);
@@ -1206,8 +1196,9 @@ onUnmounted(() => {
 </style>
 
 <style lang="scss">
-.handle-dialog {
+.handle-dialog-active {
   width: 450px;
+  --dlg-radius: 16px;
   .o-dlg-header {
     margin-bottom: var(--o-gap-section-5);
   }
@@ -1215,19 +1206,6 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
   }
-  .dialog-footer {
-    display: flex;
-    justify-content: center;
-    margin-top: var(--o-gap-section-4);
-    column-gap: var(--o-gap-section-4);
-  }
-}
-.cancel-dialog {
-  .dialog-content {
-    width: 384px;
-    text-align: center;
-  }
-
   .dialog-footer {
     display: flex;
     justify-content: center;

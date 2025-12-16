@@ -15,7 +15,7 @@ export const getRoles = (community: string) => {
   const token = getUserAuth();
   const url = `/api-oneid/oneid-workbench/profile/getRoles?community=${community}`;
 
-  return request.get(url, { headers: { token } }).then((res) => {
+  return request.get(url, { headers: { token }, skipAuth: true, showError: false, ignoreDuplicates: true }).then((res) => {
     return res.data;
   });
 };

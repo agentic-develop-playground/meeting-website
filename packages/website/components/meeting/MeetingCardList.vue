@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { OCollapse, OCollapseItem, ODivider, OIcon, OLink, OTag, useMessage } from '@opensig/opendesign';
+import { OCollapse, OCollapseItem, ODivider, OIcon, OLink, OTag, useMessage, OButton } from '@opensig/opendesign';
 import MeetingDetail from './MeetingDetail.vue';
 import { ref, watch } from 'vue';
 
@@ -35,6 +35,7 @@ const i18n = {
   NEW_DATE: '最新日程：',
   EMPTY_TEXT: '当日没有活动，敬请期待',
   LEARN_MORE: '查看更多',
+  LEARN_ACTIVE: '查看详情',
 };
 
 const getCurrentIcon = (item) => {
@@ -76,7 +77,7 @@ const computedList = computed(() => {
     const { is_cycle, date, start, end, cycle_start_date, cycle_end_date, cycle_start, cycle_end, cycle_type, cycle_interval, cycle_point, type } = v;
     let dateRange = `${formatDate(date)} ${start} - ${end}`;
     if (['activity', 'summit'].includes(type)) {
-      dateRange = `${formatDate(v.start_date, 'YYYY/MM/DD HH:mm')} ${formatDate(v.end_date, 'YYYY/MM/DD HH:mm')}`;
+      dateRange = `${formatDate(v.start_date, 'YYYY/MM/DD HH:mm')} - ${formatDate(v.end_date, 'YYYY/MM/DD HH:mm')}`;
     }
     if (is_cycle) {
       dateRange = `${formatDate(cycle_start_date)} - ${formatDate(cycle_end_date)}`;
@@ -105,6 +106,10 @@ const computedList = computed(() => {
     };
   });
 });
+
+const jumpDetail = (url: string) => {
+  window.open(url, '_blank');
+};
 </script>
 
 <template>
@@ -136,8 +141,14 @@ const computedList = computed(() => {
               <template v-if="item.activity_type">{{ item.activity_type }}</template>
             </div>
           </div>
-          <OLink v-if="item.type !== 'meetings' && item.url" :href="item.url" target="_blank" class="jump-detail-link">
-            <span>{{ i18n.LEARN_MORE }}</span>
+          <OLink
+            v-if="item.type !== 'meetings' && (item.url || item.content_url)"
+            color="normal"
+            class="jump-detail-link"
+            @click.stop="jumpDetail(item.url || item.content_url)"
+          >
+            <span v-if="item.type === 'activity'">{{ i18n.LEARN_ACTIVE }}</span>
+            <span v-else>{{ i18n.LEARN_MORE }}</span>
             <template #suffix>
               <OIcon><IconChevronRight /> </OIcon>
             </template>
@@ -147,7 +158,22 @@ const computedList = computed(() => {
           </OIcon>
         </template>
         <div class="calendar-info">
-          <MeetingDetail :show="collapseNames.includes(item.id)" :data="item" :ref="(insRef) => (detailListRef[index] = insRef)" from="home"></MeetingDetail>
+          <MeetingDetail
+            :show="collapseNames.includes(item.id)"
+            :data="item"
+            :ref="(insRef) => (detailListRef[index] = insRef)"
+            page="home"
+            from="home"
+          ></MeetingDetail>
+          <div class="register">
+            <OButton
+              v-if="item.register_url && new Date(item.register_end_date).getTime() > new Date().getTime()"
+              color="primary"
+              :href="item.register_url"
+              target="_blank"
+              >我要报名</OButton
+            >
+          </div>
         </div>
       </OCollapseItem>
     </OCollapse>
@@ -174,7 +200,11 @@ const computedList = computed(() => {
 
   .jump-detail-link {
     padding-left: 36px;
-    @include text1;
+    color: var(--o-color-info1);
+    @include tip1;
+    @include hover {
+      color: var(--o-color-primary1);
+    }
   }
 
   .empty-placeholder {
@@ -348,6 +378,7 @@ const computedList = computed(() => {
     flex-direction: column;
     padding: 16px;
     padding-left: 60px;
+    position: relative;
     @include tip1;
     @include respond-to('phone') {
       padding: 12px 16px;
@@ -364,6 +395,18 @@ const computedList = computed(() => {
 
     .info-item:first-child {
       margin-top: 0;
+    }
+
+    .register {
+      position: absolute;
+      top: 16px;
+      right: 24px;
+      @include respond-to('<=pad') {
+        position: relative;
+        margin-top: 16px;
+        top: 0;
+        right: 0;
+      }
     }
   }
 }

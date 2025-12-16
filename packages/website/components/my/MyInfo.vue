@@ -8,17 +8,18 @@ import IconTips from '~icons/app/icon-tips.svg';
 
 import { maskEmail, maskPhone, openWindow } from '@/utils/common';
 
-import { getRoles } from '@/api/api-setting';
-
 import { rolesMap } from '@/config/roles';
 import { useLocale } from '@/composables/useLocale';
 import { useUserInfoStore } from '@/stores/user';
+import { useRolesStore } from '@/stores/roles';
 
 const HWCLOUD_URL = import.meta.env.VITE_HWCLOUD_URL;
 
 const { t } = useLocale();
 const userInfoStore = useUserInfoStore();
+const rolesStore = useRolesStore();
 const { lePadV } = useScreen();
+const route = useRoute();
 
 interface RoleT {
   id: string;
@@ -37,24 +38,10 @@ rolesMap.forEach((item) => {
 const isMaskPhone = ref(true);
 const isMaskEmail = ref(true);
 
-// -------------------- 获取角色 --------------------
-const roles = ref<string[]>([]);
-const getUserRoles = () => {
-  getRoles('ascend').then((res) => {
-    res.data.forEach((item) => {
-      roles.value.push(...item.roles);
-    });
-  });
-};
-
 const toManage = () => {
   const url = `${HWCLOUD_URL}/AMW/portal/userCenter/index.html#/`;
   openWindow(url);
 };
-
-onMounted(() => {
-  getUserRoles();
-});
 </script>
 
 <template>
@@ -83,7 +70,17 @@ onMounted(() => {
             <OPopover :position="lePadV ? 'tl' : 'right'">
               <div class="popover-content-tips">
                 <div v-for="item in rolesList" :key="item.id" class="item-tips">
-                  <OLink color="primary" variant="text" :href="item?.['ascend']" target="_blank" class="blob" hover-underline>{{ item.name + '：' }}</OLink>
+                  <OLink
+                    v-if="item?.ascend"
+                    color="primary"
+                    variant="text"
+                    :href="item?.ascend"
+                    target="_blank"
+                    class="blob"
+                    hover-underline
+                    >{{ item.name + '：' }}</OLink
+                  >
+                  <span v-else class="blob">{{ item.name + '：' }}</span>
                   {{ item.desc }}
                 </div>
               </div>
@@ -93,8 +90,10 @@ onMounted(() => {
             </OPopover>
           </div>
         </template>
-        <p v-if="roles.length">
-          <span v-for="(item, i) in roles" :key="item">{{ rolesMap.get(item)?.name }}{{ i !== roles.length - 1 ? '、' : '' }}</span>
+        <p v-if="rolesStore.rolesList.length">
+          <span v-for="(item, i) in rolesStore.rolesList" :key="item"
+            >{{ rolesMap.get(item)?.name }}{{ i !== rolesStore.rolesList.length - 1 ? '、' : '' }}</span
+          >
         </p>
         <p v-else>--</p>
       </OFormItem>

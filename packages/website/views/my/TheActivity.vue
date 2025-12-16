@@ -2,7 +2,7 @@
 
 <template>
   <AsideLayout>
-    <template #right> <MyInfo /> </template>
+    <template #right> <MyActivity /> </template>
   </AsideLayout>
 </template>
 
