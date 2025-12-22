@@ -24,11 +24,11 @@ const { lePadV } = useScreen();
         </div>
         <div class="footer-right">
           <OLink href="/legal" target="_blank" color="normal" variant="text">法律声明</OLink>
-          <ODivider v-if="!lePadV" direction="v" />
+          <ODivider direction="v" />
           <OLink href="/privacy" target="_blank" color="normal" variant="text">隐私政策</OLink>
-          <ODivider v-if="!lePadV" direction="v" />
+          <ODivider direction="v" />
           <OLink href="/cookies" target="_blank" color="normal" variant="text">Cookie协议</OLink>
-          <ODivider v-if="!lePadV" direction="v" />
+          <ODivider direction="v" />
           <OLink href="https://www.huawei.com/cn/contact-us" target="_blank" color="normal" variant="text">联系我们</OLink>
         </div>
         <div v-if="lePadV" class="footer-bottom">
@@ -54,9 +54,6 @@ const { lePadV } = useScreen();
   @include tip2;
   @include respond-to('<=pad_v') {
     @include tip1;
-  }
-  @include respond-to('phone') {
-    @include tip2;
   }
 }
 
@@ -129,6 +126,7 @@ const { lePadV } = useScreen();
   }
   .footer-top {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;

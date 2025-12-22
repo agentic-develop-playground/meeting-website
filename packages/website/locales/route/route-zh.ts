@@ -10,5 +10,9 @@ export default {
   'my-edit-meeting': '编辑会议',
   'personal-data-collection-overview': '个人信息收集清单',
   privacy: '隐私政策',
-  video: '智能回放',
+  'video-slug': '智能回放',
+  'my-activity': '我的活动',
+  'my-create-activity': '创建活动',
+  'my-edit-activity': '修改活动',
+  'my-approval': '我的审批',
 };

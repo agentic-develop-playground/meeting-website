@@ -11,13 +11,14 @@ import AppFooter from '@/components/AppFooter.vue';
 import LayoutSimple from './simple.vue';
 
 import { getGroupInfosApi } from '~/api/api-meeting';
+import { getRoles } from '@/api/api-setting';
 
 import { tryLogin } from '@/utils/login';
 
-import { useMeetingStore } from '@/stores/meeting';
+import { useRolesStore } from '@/stores/roles';
 
 const { locale, isZh } = useLocale();
-const meetingStore = useMeetingStore();
+const rolesStore = useRolesStore();
 
 const route = useRoute();
 watch(
@@ -32,25 +33,47 @@ watch(
   }
 );
 
-// -------------------- 获取权限 --------------------
-const getPermission = () => {
+// -------------------- 获取会议权限 --------------------
+const getPermissionMeeting = () => {
   getGroupInfosApi()
     .then((res) => {
-      meetingStore.$patch({
-        hasPerm: res.length > 0,
-        loaded: true,
+      rolesStore.$patch({
+        sigList: res,
+        hasPermMeeting: res.some((item) => item.etherpad),
       });
     })
     .catch(() => {
-      meetingStore.$patch({
-        hasPerm: false,
-        loaded: true,
+      rolesStore.$patch({
+        hasPermMeeting: false,
+      });
+    });
+};
+// -------------------- 获取活动权限 --------------------
+const getPermissionActivity = () => {
+  getRoles('ascend')
+    .then((res) => {
+      let data = [] as string[];
+      res.data.forEach((item) => {
+        data.push(...item.roles);
+      });
+
+      rolesStore.$patch({
+        rolesList: data,
+        hasPermActivity: data.includes('activity_sponsor'),
+        hasAdminActivity: data.includes('activity_admin'),
+      });
+    })
+    .catch(() => {
+      rolesStore.$patch({
+        hasPermActivity: false,
+        hasAdminActivity: false,
       });
     });
 };
 
 onMounted(() => {
-  getPermission();
+  getPermissionMeeting();
+  getPermissionActivity();
 });
 
 // -------------------- 登录 --------------------

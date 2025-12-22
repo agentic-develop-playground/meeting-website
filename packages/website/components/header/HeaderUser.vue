@@ -20,7 +20,11 @@ const { lePadV, isPhone } = useScreen();
 const router = useRouter();
 
 const jumpToPage = () => {
-  router.push('/my/profile');
+  if (isPhone.value) {
+    router.push(`/my/personal`);
+  } else {
+    router.push(`/my/profile`);
+  }
 };
 
 // -------------------- 注销账号 --------------------

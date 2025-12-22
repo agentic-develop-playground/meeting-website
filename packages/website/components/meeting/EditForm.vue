@@ -21,14 +21,17 @@ import CalendarSelector from '~/components/meeting/CalendarSelector.vue';
 import IconHelp from '~icons/meeting/icon-help.svg';
 import IconTip from '~icons/meeting/icon-tip.svg';
 import type { MeetingItemT, MeetingPostT, OptionItemT, PlatformT } from '~/@types/type-meeting';
-import { creatMeetingApi, editMeetingApi, getGroupInfosApi, getPlatformsApi, editSubMeetingApi } from '~/api/api-meeting';
+import { creatMeetingApi, editMeetingApi, getPlatformsApi, editSubMeetingApi } from '~/api/api-meeting';
 import dayjs from 'dayjs';
 import showMsg from '~/utils/showMsg';
 import { findLabelFromOptions, formatDateNumber, getDateNumber } from '~/utils/common';
 import { EMAIL_REGEX, INTERVAL_DAY, INTERVAL_MONTH, CYCLE_TYPE_OPTIONS, INTERVAL_WEEK, INTERVAL_WEEK_OPTIONS } from '~/config/meeting';
 
+import { useRolesStore } from '@/stores/roles';
+
 const message = useMessage();
 const { isPhone, lePadV } = useScreen();
+const rolesStore = useRolesStore();
 
 const props = withDefaults(defineProps<{ data?: MeetingItemT; isSub?: boolean; isEdit?: boolean; subId?: string }>(), {
   isSub: false,
@@ -202,10 +205,11 @@ const rules = ref({
   ],
 });
 
-const sigOptions = ref<OptionItemT[]>([]); // sig组选项列表
-const getSigOptions = async () => {
-  const res = await getGroupInfosApi();
-  sigOptions.value = res.map((v) => ({ label: v.group_name, value: v.group_name, ...v }));
+const sigOptions = computed(() => {
+  const data = rolesStore.sigList?.filter((v) => v.etherpad);
+  return data?.map((v) => ({ label: v.group_name, value: v.group_name, ...v }));
+});
+const getSigOptions = () => {
   if (props.data) {
     changeSig(form.value.group_name);
   }
@@ -954,16 +958,16 @@ defineExpose({
     width: 100%;
   }
   .el-picker-panel {
-    width: 400px!important;
+    width: 400px !important;
   }
   .el-picker-panel__content {
     width: 100%;
   }
-  .el-picker-panel__body{
-    margin-left: 0!important;
+  .el-picker-panel__body {
+    margin-left: 0 !important;
     display: flex;
     flex-direction: column;
-    min-width: auto!important;
+    min-width: auto !important;
   }
   .el-picker-panel__sidebar {
     position: relative;
