@@ -540,14 +540,14 @@ watch(
   border: 5px solid transparent;
 }
 .sort-asc {
-  border-bottom-color: #ccc;
+  border-bottom-color: var(--o-color-info2);
   margin-bottom: 2px;
   &.active {
     border-bottom-color: var(--o-color-primary1);
   }
 }
 .sort-desc {
-  border-top-color: #ccc;
+  border-top-color: var(--o-color-info2);
   margin-top: 2px;
   &.active {
     border-top-color: var(--o-color-primary1);
