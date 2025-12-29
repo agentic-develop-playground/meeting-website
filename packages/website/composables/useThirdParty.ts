@@ -10,11 +10,13 @@ export const useThirdParty = () => {
 
   const windowOpener = ref();
   const login = (data: any) => {
+    const redirectUri = `${import.meta.env.VITE_LOGIN_ORIGIN}/third-party/${data.connection_id}`;
     const url = '/api-oneid/oneid-workbench/third-party/authorize';
     const params = {
       client_id: import.meta.env.VITE_CLIENT_ID,
       conn_id: data.connection_id,
       t: new Date().getTime(),
+      redirect_uri: redirectUri,
     };
 
     const width = 500;
@@ -35,7 +37,7 @@ export const useThirdParty = () => {
     if (type !== 'authorization_response') {
       return;
     }
-    if (response === 'success') {
+    if (response === 'bind_success') {
       requestUserInfo();
       windowOpener.value?.close();
 
