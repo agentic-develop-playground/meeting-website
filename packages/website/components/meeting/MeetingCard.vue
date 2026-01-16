@@ -141,7 +141,6 @@ const paramGetDaysData = async (params: { date: string; type: string }) => {
         start_date_time: `${v.start_date} ${v.start}`,
         end_date_time: `${v.end_date} ${v.end}`,
         type: 'activity',
-        dateRange: `${v.start_date} ${v.start}-${v.end_date} ${v.end}`,
       };
     });
     const dataMap = {
@@ -987,7 +986,6 @@ const overlayClick = () => {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 13px 24px;
         position: relative;
         height: 60px;
         &::after {
@@ -1007,7 +1005,6 @@ const overlayClick = () => {
           padding: 0 16px;
           gap: 24px;
           height: auto;
-          align-items: flex-start;
           .filter-select-box {
             display: inline-flex;
             max-width: 100%;
@@ -1022,6 +1019,18 @@ const overlayClick = () => {
           }
           &::after {
             display: none;
+          }
+        }
+        .o-tab {
+          display: flex;
+          justify-content: center;
+          align-items: flex-end;
+          height: 60px;
+          @include respond-to('pad_v-laptop') {
+            --tab-nav-padding: 0 0 14px;
+          }
+          @include respond-to('<=pad_v') {
+            height: auto;
           }
         }
       }

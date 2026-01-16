@@ -77,7 +77,7 @@ const computedList = computed(() => {
     const { is_cycle, date, start, end, cycle_start_date, cycle_end_date, cycle_start, cycle_end, cycle_type, cycle_interval, cycle_point, type } = v;
     let dateRange = `${formatDate(date)} ${start} - ${end}`;
     if (['activity', 'summit'].includes(type)) {
-      dateRange = `${formatDate(v.start_date, 'YYYY/MM/DD HH:mm')} - ${formatDate(v.end_date, 'YYYY/MM/DD HH:mm')}`;
+      dateRange = `${v.start_date} ${v.start}-${v.end_date} ${v.end}`;
     }
     if (is_cycle) {
       dateRange = `${formatDate(cycle_start_date)} - ${formatDate(cycle_end_date)}`;

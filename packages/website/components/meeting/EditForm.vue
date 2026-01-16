@@ -413,7 +413,7 @@ const changeSig = (sig) => {
   const find = sigOptions.value.find((v) => v.value === sig);
   if (!props.data) {
     form.value.etherpad = find?.etherpad || '';
-    form.value.email_list = find?.email_list || '';
+    form.value.email_list = find?.email_list || `${form.value.group_name}@openeuler.org`;
   }
 };
 const disabledDate = (date) => {
@@ -565,7 +565,7 @@ defineExpose({
       </OFormItem>
       <OFormItem label="会议平台" field="platform" :rules="rules.platform" class="center-label">
         <ORadioGroup v-model="form.platform" v-if="!isEdit" :disabled="form.is_cycle">
-          <ORadio v-for="item in typeOptions" :key="item.value" :value="item.value">{{ item.label }}</ORadio>
+          <ORadio v-for="item in typeOptions" :key="item.value" :value="item.value" :disabled="item.value.toLowerCase() === 'tencent'">{{ item.label }}</ORadio>
         </ORadioGroup>
         <span v-else>{{ form.platform }}</span>
       </OFormItem>
@@ -922,16 +922,6 @@ defineExpose({
 </style>
 
 <style lang="scss">
-.o-message-list-top {
-  --app-header-height: 80px;
-  top: calc(var(--app-header-height) + 32px);
-
-  @include respond-to('<=pad_v') {
-    --app-header-height: 48px;
-    top: calc(var(--app-header-height) + 12px);
-  }
-}
-
 .popover-content {
   @include tip1;
   max-width: 256px;
