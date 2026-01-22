@@ -54,7 +54,7 @@ const list = [
           <OLink
             color="primary"
             hover-underline
-            :href="'https://gitcode.com/Ascend/infrastructure/blob/master/meeting/Ascend社区会议指南.md'"
+            href="https://gitcode.com/Ascend/infrastructure/blob/master/docs/meeting/Ascend社区会议指南.md"
             target="_blank"
             rel="noopener noreferrer"
           >
