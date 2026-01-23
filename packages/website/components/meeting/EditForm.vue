@@ -413,7 +413,7 @@ const changeSig = (sig) => {
   const find = sigOptions.value.find((v) => v.value === sig);
   if (!props.data) {
     form.value.etherpad = find?.etherpad || '';
-    form.value.email_list = find?.email_list || `${form.value.group_name}@openeuler.org`;
+    form.value.email_list = find?.email_list;
   }
 };
 const disabledDate = (date) => {
