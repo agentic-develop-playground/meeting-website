@@ -189,7 +189,7 @@ const rules = ref({
   email_list: [
     {
       validator: (value: string) => {
-        const str = value.replaceAll(' ', '') || '';
+        const str = value?.replaceAll(' ', '') || '';
         if (str.length) {
           const list = str.split(';') || [];
           if (list.some((v) => !EMAIL_REGEX.test(v))) {
@@ -386,7 +386,7 @@ const confirm = async () => {
     } else {
       await creatMeetingApi({
         ...params,
-        email_list: form.value.email_list.replaceAll(' ', ''),
+        email_list: form.value.email_list?.replaceAll(' ', ''),
       });
     }
     const msg = `“${form.value.topic}”会议${type}成功`;
