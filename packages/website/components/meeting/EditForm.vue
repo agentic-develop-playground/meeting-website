@@ -33,6 +33,8 @@ const message = useMessage();
 const { isPhone, lePadV } = useScreen();
 const rolesStore = useRolesStore();
 
+const ETHERPAD_URL = import.meta.env.VITE_ETHERPAD_URL;
+
 const props = withDefaults(defineProps<{ data?: MeetingItemT; isSub?: boolean; isEdit?: boolean; subId?: string }>(), {
   isSub: false,
   isEdit: false,
@@ -206,7 +208,7 @@ const rules = ref({
 });
 
 const sigOptions = computed(() => {
-  const data = rolesStore.sigList?.filter((v) => v.etherpad);
+  const data = rolesStore.sigList?.filter((v) => v.group_name !== 'activity');
   return data?.map((v) => ({ label: v.group_name, value: v.group_name, ...v }));
 });
 const getSigOptions = () => {
@@ -412,8 +414,8 @@ onMounted(() => {
 const changeSig = (sig) => {
   const find = sigOptions.value.find((v) => v.value === sig);
   if (!props.data) {
-    form.value.etherpad = find?.etherpad || '';
-    form.value.email_list = find?.email_list;
+    form.value.etherpad = find?.etherpad || `${ETHERPAD_URL}/p/${sig}`;
+    form.value.email_list = find?.email_list || '';
   }
 };
 const disabledDate = (date) => {

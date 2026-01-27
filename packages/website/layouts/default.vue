@@ -35,18 +35,11 @@ watch(
 
 // -------------------- 获取会议权限 --------------------
 const getPermissionMeeting = () => {
-  getGroupInfosApi()
-    .then((res) => {
-      rolesStore.$patch({
-        sigList: res,
-        hasPermMeeting: res.some((item) => item.etherpad),
-      });
-    })
-    .catch(() => {
-      rolesStore.$patch({
-        hasPermMeeting: false,
-      });
+  getGroupInfosApi().then((res) => {
+    rolesStore.$patch({
+      sigList: res,
     });
+  });
 };
 // -------------------- 获取活动权限 --------------------
 const getPermissionActivity = () => {
@@ -59,12 +52,14 @@ const getPermissionActivity = () => {
 
       rolesStore.$patch({
         rolesList: data,
+        hasPermMeeting: data.filter((val) => !val?.includes('activity')).length > 0,
         hasPermActivity: data.includes('activity_sponsor'),
         hasAdminActivity: data.includes('activity_admin'),
       });
     })
     .catch(() => {
       rolesStore.$patch({
+        hasPermMeeting: false,
         hasPermActivity: false,
         hasAdminActivity: false,
       });
