@@ -129,8 +129,5 @@ export async function doLogin() {
 
 // 退出登录
 export function doLogout() {
-  const community = window.location.href.replace(DOMAIN_URL, '').split('/')[0];
-  const redirect_uri = `${DOMAIN_URL}${community}`;
-
-  window.location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(redirect_uri)}`;
+  window.location.href = `${LOGIN_URL}/logout?redirect_uri=${encodeURIComponent(DOMAIN_URL)}`;
 }
