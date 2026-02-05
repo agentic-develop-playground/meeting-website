@@ -68,7 +68,7 @@ const selectDropdown = (val) => {
 };
 const clearInput = () => {
   sigValue.value = '';
-  onSigChange();
+  onSigChange('', true);
 };
 
 watch(
@@ -301,14 +301,15 @@ const watchChange = (element: HTMLElement) => {
   });
 };
 
-const onSigChange = (val?: string) => {
+const onSigChange = (val?: string, flag?: boolean) => {
   sig.value = val || '';
   if (!val) {
     const activeBoxs = document.querySelector('.is-today .out-box') as HTMLElement;
     if (activeBoxs) {
       activeBoxs.click();
     }
-  } else {
+  }
+  if (val || flag) {
     getTableData();
   }
 
@@ -505,7 +506,7 @@ const overlayClick = () => {
 
         <div>
           <OScroller class="meeting-list" show-type="hover" size="small">
-            <MeetingCardList :list="meetingList"></MeetingCardList>
+            <MeetingCardList :list="meetingList" :current-day="currentDay"></MeetingCardList>
           </OScroller>
         </div>
       </div>

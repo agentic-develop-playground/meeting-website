@@ -11,13 +11,12 @@ const getUserAuth = () => {
  * @param {string} community 请求参数
  * @return { Promise<ResponseT> }
  */
-export const getRoles = (community: string) => {
+export const getRoles = async (community: string) => {
   const token = getUserAuth();
+  if (!token) return {};
   const url = `/api-oneid/oneid-workbench/profile/getRoles?community=${community}`;
-
-  return request.get(url, { headers: { token }, skipAuth: true, showError: false, ignoreDuplicates: true }).then((res) => {
-    return res.data;
-  });
+  const res = await request.get(url, { headers: { token }, skipAuth: true, showError: false, ignoreDuplicates: true });
+  return res.data;
 };
 
 /**

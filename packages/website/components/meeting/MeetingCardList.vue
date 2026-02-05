@@ -15,7 +15,7 @@ import { CYCLE_TYPE_OPTIONS } from '@/config/meeting';
 import { findLabelFromOptions, formatDate } from '@/utils/common';
 import { getPointStr } from '@/utils/meeting';
 
-const props = withDefaults(defineProps<{ list: MeetingItemT[] }>(), {
+const props = withDefaults(defineProps<{ list: MeetingItemT[]; currentDay?: string }>(), {
   list: () => [],
 });
 const detailListRef = ref([]);
@@ -80,7 +80,8 @@ const computedList = computed(() => {
       dateRange = `${v.start_date} ${v.start}-${v.end_date} ${v.end}`;
     }
     if (is_cycle) {
-      dateRange = `${formatDate(cycle_start_date)} - ${formatDate(cycle_end_date)}`;
+      const currentSub = v.cycle_sub.find((v) => v.date === props.currentDay);
+      dateRange = `${formatDate(cycle_start_date)} - ${formatDate(cycle_end_date)} ${currentSub.start} - ${currentSub.end}`;
     }
 
     let timeRange = `${start}-${end}`;

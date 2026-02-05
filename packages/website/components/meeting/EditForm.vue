@@ -87,10 +87,10 @@ const rules = ref({
   agenda: [
     {
       validator: (value: string) => {
-        if (value.length > 4096) {
+        if (value.length > 1000) {
           return {
             type: 'danger',
-            message: '会议名称不能超过4096个字符',
+            message: '会议内容不能超过1000字符',
           };
         }
       },
@@ -578,7 +578,7 @@ defineExpose({
           style="width: 100%"
           :rows="4"
           resize="none"
-          :max-length="100"
+          :max-length="1000"
           :input-on-outlimit="false"
           :disabled="isSub"
           v-model="form.agenda"
@@ -946,11 +946,14 @@ defineExpose({
 }
 
 @include respond-to('phone') {
+  .el-picker__popper {
+    width: calc(100% - 32px) !important;
+  }
   .el-picker-panel__sidebar {
     width: 100%;
   }
   .el-picker-panel {
-    width: 400px !important;
+    width: 100% !important;
   }
   .el-picker-panel__content {
     width: 100%;
