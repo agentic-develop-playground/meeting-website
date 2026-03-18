@@ -20,7 +20,7 @@ const infoList = computed(() =>
     { label: '会议平台', key: 'platform' },
     { label: '会议ID', key: 'mid' },
     { label: '会议链接', key: 'join_url', isLink: true },
-    { label: 'Etherpad链接', key: 'etherpad', isLink: true },
+    { label: '会议纪要&签到链接', key: 'etherpad', isLink: true },
     { label: '智能回放', key: 'replay_url', isLink: true },
   ].slice(0, props.from === 'my' ? 7 : 8)
 );
@@ -126,7 +126,7 @@ defineExpose({ copyInfo });
   }
 
   .label {
-    width: 104px;
+    width: 140px;
     flex-shrink: 0;
     @include respond-to('phone') {
       width: 88px;
