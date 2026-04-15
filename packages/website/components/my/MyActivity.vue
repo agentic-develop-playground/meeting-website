@@ -17,7 +17,7 @@ import IconArrowLeft from '~icons/app/icon-arrow-left.svg';
 import IconArrowRight from '~icons/app/icon-arrow-right.svg';
 import IconEvent from '~icons/home/icon-event.svg';
 
-import { formatDate } from '@/utils/common';
+import { formatDate, getDateNumber } from '@/utils/common';
 import { useActivityStore } from '@/stores/activity';
 
 const message = useMessage();
@@ -310,7 +310,7 @@ const handleEditItem = (val: ActivityItemT) => {
   activityStore.$patch({
     status: val.status,
   });
-  router.push(`/my/edit-acrivity/${val.id}`);
+  router.push(`/my/edit-activity/${val.id}`);
 };
 // 提交审核
 const handleSubmitReviewItem = (val: ActivityItemT) => {
@@ -1101,14 +1101,19 @@ onUnmounted(() => {
                 --tag-color: var(--o-color-info3);
                 --tag-bg-color: rgba(222, 222, 227, 1);
               }
+              .tag-under-review,
+              .tag-modified {
+                --tag-color: var(--o-color-info1-inverse);
+                --tag-bg-color: rgba(0, 119, 255, 1);
+              }
               .tag-registration,
               .tag-in-progress {
-                --tag-color: rgba(36, 171, 54, 1);
-                --tag-bg-color: rgba(36, 171, 54, 0.1);
+                --tag-color: var(--o-color-info1-inverse);
+                --tag-bg-color: rgba(36, 171, 54, 1);
               }
               .tag-reject {
-                --tag-color: rgba(294, 118, 17, 1);
-                --tag-bg-color: rgba(294, 118, 17, 0.1);
+                --tag-color: var(--o-color-info1-inverse);
+                --tag-bg-color: rgba(255, 140, 0, 1);
               }
             }
             .act-info {

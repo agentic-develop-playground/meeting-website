@@ -93,9 +93,10 @@ defineExpose({ copyInfo });
         {{ data[info.key] }}
       </OLink>
       <span v-else-if="info.userId" class="value">
-        <OLink v-if="data[info.user]" target="_blank" class="value" color="primary" hover-underline :href="`${GITCODE_URL}${data[info.user]}`">
-          {{ data[info.user] }}
-        </OLink>
+        <span v-if="data[info.user]" class="user-link">
+          {{ data[info.key] }}
+          （<OLink target="_blank" class="value" color="primary" hover-underline :href="`${GITCODE_URL}${data[info.user]}`"> {{ data[info.user] }} </OLink>）
+        </span>
         <span v-else>{{ data[info.key] || '-' }}</span>
       </span>
       <span v-else-if="info.isType" class="value">
@@ -155,6 +156,12 @@ defineExpose({ copyInfo });
       opacity: 0;
       overflow: hidden;
     }
+  }
+
+  .user-link {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 }
 

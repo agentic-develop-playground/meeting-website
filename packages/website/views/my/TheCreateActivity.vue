@@ -3,6 +3,12 @@ import EditActivityForm from '@/components/activity/EditActivityForm.vue';
 
 import { getMySingleDraftActivity } from '@/api/api-activity';
 
+import { useRolesStore } from '@/stores/roles';
+import { storeToRefs } from 'pinia';
+
+const rolesStore = useRolesStore();
+const { hasPermActivity } = storeToRefs(rolesStore);
+
 const route = useRoute();
 const router = useRouter();
 
@@ -43,7 +49,7 @@ const title = computed(() => (currentId.value ? '修改活动' : '创建活动')
   <div class="create-activity-page">
     <AsideLayout>
       <template #right>
-        <CardContentWrapper :title="title">
+        <CardContentWrapper v-if="hasPermActivity" :title="title">
           <EditActivityForm :data="detail" @close="backToList" @confirm="backToList" :isEdit="!!currentId"></EditActivityForm>
         </CardContentWrapper>
       </template>

@@ -375,21 +375,28 @@ const confirm = async () => {
       if (props.isSub) {
         const { mid, sub_id } = form.value;
         const { date, start, end } = params;
-        await editSubMeetingApi(sub_id, {
-          mid,
-          date,
-          start,
-          end,
-        });
+        await editSubMeetingApi(
+          sub_id,
+          {
+            mid,
+            date,
+            start,
+            end,
+          },
+          'zh'
+        );
       } else {
         const { platform, group_name, etherpad, ...data } = params;
-        await editMeetingApi(props.data.id, data);
+        await editMeetingApi(props.data.id, data, 'zh');
       }
     } else {
-      await creatMeetingApi({
-        ...params,
-        email_list: form.value.email_list?.replaceAll(' ', ''),
-      });
+      await creatMeetingApi(
+        {
+          ...params,
+          email_list: form.value.email_list.replaceAll(' ', ''),
+        },
+        'zh'
+      );
     }
     const msg = `“${form.value.topic}”会议${type}成功`;
     if (isPhone.value) {

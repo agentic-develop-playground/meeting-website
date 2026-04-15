@@ -3,6 +3,12 @@ import EditForm from '@/components/meeting/EditForm.vue';
 
 import { getMyMeetingDetailApi } from '@/api/api-meeting';
 
+import { useRolesStore } from '@/stores/roles';
+import { storeToRefs } from 'pinia';
+
+const rolesStore = useRolesStore();
+const { hasPermMeeting } = storeToRefs(rolesStore);
+
 const route = useRoute();
 const router = useRouter();
 
@@ -61,7 +67,7 @@ const title = computed(() => (currentId.value ? '编辑会议' : '预定会议')
   <div class="create-meeting-page">
     <AsideLayout>
       <template #right>
-        <CardContentWrapper :title="title">
+        <CardContentWrapper v-if="hasPermMeeting" :title="title">
           <EditForm :data="detail" @close="backToList" @confirm="backToList" :isSub="isSub" :isEdit="!!currentId" :subId="currentSubId"></EditForm>
         </CardContentWrapper>
       </template>

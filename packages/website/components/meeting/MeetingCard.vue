@@ -120,11 +120,12 @@ const activityParams = ref({
   start_date: '',
 });
 
+const loadingVisible = ref(false);
 const paramGetDaysData = async (params: { date: string; type: string }) => {
   if (!params.date) return;
   activityParams.value.start_date = params.date;
   try {
-    const resMeeting = await getMeetingListApi(params.date, sig.value);
+    const resMeeting = await getMeetingListApi(params.date, sig.value, 'asc');
     const resActivity = await getActivityListAll(activityParams.value);
     const meetingData = resMeeting.map((v) => {
       return {
@@ -162,8 +163,10 @@ const paramGetDaysData = async (params: { date: string; type: string }) => {
         item2.activity_type = activityType[Number(item2.activity_type) - 1];
       }
     });
+    loadingVisible.value = false;
   } catch {
     renderData.value = [];
+    loadingVisible.value = false;
   }
 };
 
@@ -195,6 +198,7 @@ const setMeetingDay = async (day: string, event?: Event) => {
 
   const clickedDate = new Date(day);
 
+  loadingVisible.value = true;
   // 判断点击的是否是其他月份的日期
   if (isOtherMonthDay(day, currentMonth.value)) {
     // 添加月份切换动画
@@ -220,6 +224,7 @@ const setMeetingDay = async (day: string, event?: Event) => {
         });
       } else {
         renderData.value = [];
+        loadingVisible.value = false;
       }
       currentDay.value = day;
 
@@ -239,6 +244,7 @@ const setMeetingDay = async (day: string, event?: Event) => {
       });
     } else {
       renderData.value = [];
+      loadingVisible.value = false;
     }
     currentDay.value = day;
   }
@@ -506,7 +512,7 @@ const overlayClick = () => {
 
         <div>
           <OScroller class="meeting-list" show-type="hover" size="small">
-            <MeetingCardList :list="meetingList" :current-day="currentDay"></MeetingCardList>
+            <MeetingCardList v-loading="loadingVisible" :list="meetingList" :current-day="currentDay"></MeetingCardList>
           </OScroller>
         </div>
       </div>

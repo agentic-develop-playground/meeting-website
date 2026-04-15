@@ -10,7 +10,7 @@ import IconSummit from '~icons/home/icon-summit.svg';
 import IconMeet from '~icons/home/icon-meet.svg';
 import IconChevronRight from '~icons/app/icon-chevron-right.svg';
 import IconCopy from '~icons/meeting/icon-copy.svg';
-import { CYCLE_TYPE_OPTIONS } from '@/config/meeting';
+import { CYCLE_TYPE_OPTIONS, statusMap } from '@/config/meeting';
 
 import { findLabelFromOptions, formatDate } from '@/utils/common';
 import { getPointStr } from '@/utils/meeting';
@@ -75,13 +75,15 @@ watch(
 const computedList = computed(() => {
   return props.list.map((v) => {
     const { is_cycle, date, start, end, cycle_start_date, cycle_end_date, cycle_start, cycle_end, cycle_type, cycle_interval, cycle_point, type } = v;
+    let subStatus = 0;
     let dateRange = `${formatDate(date)} ${start} - ${end}`;
     if (['activity', 'summit'].includes(type)) {
       dateRange = `${v.start_date} ${v.start}-${v.end_date} ${v.end}`;
     }
     if (is_cycle) {
       const currentSub = v.cycle_sub.find((v) => v.date === props.currentDay);
-      dateRange = `${formatDate(cycle_start_date)} - ${formatDate(cycle_end_date)} ${currentSub.start} - ${currentSub.end}`;
+      dateRange = `${formatDate(cycle_start_date)} - ${formatDate(cycle_end_date)} ${currentSub?.start} - ${currentSub?.end}`;
+      subStatus = currentSub?.status;
     }
 
     let timeRange = `${start}-${end}`;
@@ -104,6 +106,7 @@ const computedList = computed(() => {
       dateRange,
       timeRange,
       replay_url,
+      subStatus,
     };
   });
 });
@@ -128,9 +131,13 @@ const jumpDetail = (url: string) => {
             <div class="text">
               {{ item.topic || item.name || item.title }}
             </div>
-            <div class="tag-wrapper" v-if="item.is_cycle">
-              <OTag color="primary" variant="outline">周期</OTag>
-            </div>
+            <OTag v-if="item.is_cycle" color="primary" variant="outline">周期</OTag>
+            <OTag v-if="item.is_cycle && item.type === 'meetings'" color="primary" variant="outline" :class="[`tag-${statusMap.get(item.subStatus)?.id}`]">{{
+              statusMap.get(item.subStatus)?.label
+            }}</OTag>
+            <OTag v-if="!item.is_cycle && item.type === 'meetings'" color="primary" variant="outline" :class="[`tag-${statusMap.get(item.status)?.id}`]">{{
+              statusMap.get(item.status)?.label
+            }}</OTag>
           </div>
           <div class="meet-info" ref="meetInfoRef">
             <span class="start-time">
@@ -297,13 +304,33 @@ const jumpDetail = (url: string) => {
     color: var(--o-color-info1);
     --cell-bg: rgba(235, 241, 250);
     @include text2;
-    .tag-wrapper {
+
+    .o-tag {
+      --tag-bg-color: var(--cell-bg);
+      border: none;
       margin-left: var(--o-gap-2);
-      .o-tag {
-        background-color: var(--cell-bg);
-        border: none;
-      }
     }
+    .tag-not-started {
+      --tag-color: var(--o-color-info1-inverse);
+      --tag-bg-color: rgba(var(--o-mixedgray-14), 0.25);
+    }
+    .tag-in-progress {
+      --tag-color: var(--o-color-info1-inverse);
+      --tag-bg-color: rgba(var(--o-ubmc-color), 1);
+    }
+    .tag-ended {
+      --tag-color: var(--o-color-info1-inverse);
+      --tag-bg-color: rgba(var(--o-mixedgray-14), 0.4);
+    }
+    .tag-timeout {
+      --tag-color: var(--o-color-info1-inverse);
+      --tag-bg-color: rgba(255, 140, 0, 1);
+    }
+    .tag-canceled {
+      --tag-color: var(--o-color-info4);
+      --tag-bg-color: rgba(var(--o-mixedgray-3), 1);
+    }
+
     .o-icon {
       flex-shrink: 0;
       padding: 2px;

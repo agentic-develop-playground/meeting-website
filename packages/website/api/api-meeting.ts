@@ -13,8 +13,6 @@ const getUserAuth = () => {
   return token;
 };
 
-const route = useRoute();
-
 /**
  * 获取会议平台信息
  * @returns {Promise<string[]>} 平台信息列表
@@ -41,9 +39,9 @@ export const getGroupInfosApi = async (): Promise<SigItemT[]> => {
  * @param {MeetingPostT} data 会议信息
  * @returns {Promise<AxiosResponse>} 新建操作的响应
  */
-export const creatMeetingApi = async (data: MeetingPostT) => {
+export const creatMeetingApi = async (data: MeetingPostT, lang: string) => {
   const token = getUserAuth();
-  return request.post(`/ascend-meeting/`, data, { headers: { token } });
+  return request.post(`/ascend-meeting/`, data, { headers: { token, 'Accept-Language': lang } });
 };
 
 /**
@@ -62,9 +60,9 @@ export const getMyMeetingListApi = async (params: PageParamsT) => {
  * @param {MeetingPostT} data 会议信息
  * @returns {Promise<AxiosResponse>} 编辑操作的响应
  */
-export const editMeetingApi = async (id: number, data: MeetingPostT) => {
+export const editMeetingApi = async (id: number, data: MeetingPostT, lang: string) => {
   const token = getUserAuth();
-  return request.put(`/ascend-meeting/${id}/`, data, { headers: { token } });
+  return request.put(`/ascend-meeting/${id}/`, data, { headers: { token, 'Accept-Language': lang } });
 };
 
 /**
@@ -96,9 +94,9 @@ export const getMeetingDateListApi = async (date: string, group_name?: string, i
  * @param {string} date 该天的日期
  * @returns {Promise<MeetingItemT[]>} 会议列表
  */
-export const getMeetingListApi = async (date: string, group_name: string): Promise<MeetingItemT[]> => {
+export const getMeetingListApi = async (date: string, group_name: string, order_type?: string): Promise<MeetingItemT[]> => {
   const token = getUserAuth();
-  const res = await request.get(`/ascend-meeting/meeting/?date=${date}&group_name=${group_name}`, { headers: { token } });
+  const res = await request.get(`/ascend-meeting/meeting/?date=${date}&group_name=${group_name}&order_type=${order_type}`, { headers: { token } });
   return res.data.data;
 };
 
@@ -124,9 +122,9 @@ export const getMyMeetingDetailApi = (id: string | number) => {
 /**
  * 取消子会议
  */
-export const editSubMeetingApi = (sub_id: string, data: { mid: string; date: string; start: string; end: string }) => {
+export const editSubMeetingApi = (sub_id: string, data: { mid: string; date: string; start: string; end: string }, lang: string) => {
   const token = getUserAuth();
-  return request.put(`/ascend-meeting/sub/${sub_id}/`, data, { headers: { token } });
+  return request.put(`/ascend-meeting/sub/${sub_id}/`, data, { headers: { token, 'Accept-Language': lang } });
 };
 
 /**
@@ -143,5 +141,16 @@ export const sendNotify = (id: string) => {
  */
 export const getSigAll = async () => {
   const res = await request.get(`/ascend-meeting/group_name/`);
+  return res.data?.data || [];
+};
+
+/**
+ * 获取会议角色
+ * @returns {Promise<string[]>} 平台信息列表
+ */
+export const getMeetingRoles = async () => {
+  const token = getUserAuth();
+  if (!token) return [];
+  const res = await request.get(`/ascend-meeting/roles/`, { headers: { token } });
   return res.data?.data || [];
 };

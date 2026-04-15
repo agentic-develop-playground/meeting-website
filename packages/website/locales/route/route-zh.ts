@@ -15,4 +15,5 @@ export default {
   'my-create-activity': '创建活动',
   'my-edit-activity': '修改活动',
   'my-approval': '我的审批',
+  'my-management': '社区会议管理',
 };

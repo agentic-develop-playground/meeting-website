@@ -30,7 +30,7 @@ import { getMyMeetingListApi, cancelSubMeetingApi, deleteMeetingApi, sendNotify 
 import type { MeetingItemT, PageParamsT } from '~/@types/type-meeting';
 
 import { getDateNumber, findLabelFromOptions, openWindow, formatDate } from '@/utils/common';
-import { CYCLE_TYPE_OPTIONS, WEEKDAY } from '@/config/meeting';
+import { CYCLE_TYPE_OPTIONS, WEEKDAY, statusMap } from '@/config/meeting';
 import { getPointStr } from '@/utils/meeting';
 
 const { lePadV, isPhone } = useScreen();
@@ -45,6 +45,8 @@ const currentPage = ref(1); // 分页-当前页
 const pageSize = ref(50); // 分页-每页数量
 const total = ref(null); // 分页-总数
 const reloadAll = ref(false); // 是否需要清空数据
+
+const selectedDate = ref();
 
 const expanded = ref([]); // 展开的数据， sub_id 或 id
 
@@ -91,7 +93,7 @@ const getList = async () => {
                 ...item,
                 ...sub,
                 timeRange: `每${cycle_interval > 1 ? cycle_interval : ''}${findLabelFromOptions(cycle_type, CYCLE_TYPE_OPTIONS)}${getPointStr(cycle_type, cycle_point)} ${cycle_start} 到 ${cycle_end} (UTC+08:00)Beijing 有效期从${formatDate(cycle_start_date)} 至 ${formatDate(cycle_end_date)}`,
-                dateRange: `${sub.start}-${sub.end}`,
+                dateRange: `${formatDate(sub?.date)} ${sub?.start} - ${sub?.end}`,
                 hasObsData: obsData.find((v) => v.sub_id === sub.sub_id),
                 time: `${sub.start}-${sub.end}`,
                 isExpired: dayjs(`${sub.date} ${sub.start}`).isBefore(dayjs()),
@@ -101,7 +103,7 @@ const getList = async () => {
         return [
           {
             ...item,
-            dateRange: `${start}-${end}`,
+            dateRange: `${formatDate(date)} ${start}-${end}`,
             timeRange: `${start}-${end}`,
             hasObsData: item.obs_data?.filter((v) => v.text_video_url)?.length > 0,
             time: `${start}-${end}`,
@@ -230,6 +232,7 @@ const toReplay = (row) => {
   router.push(`/video/${row.group_name}/${row.mid}/${row.date}`);
 };
 const handleType = ref('single');
+const tipVisible = ref(false);
 const handleItem = (row: MeetingItemT, type: 'edit' | 'cancel') => {
   if (row.is_cycle) {
     handleDialogRow.value = row;
@@ -253,6 +256,11 @@ const cancelHandleItem = () => {
 const confirmHandleItem = async () => {
   const row = handleDialogRow.value;
   if (handleDialogType.value === 'cancel') {
+    if (row.is_cycle && row.status === 1 && handleType.value === 'whole') {
+      tipVisible.value = true;
+      handleDialogVisible.value = false;
+      return;
+    }
     try {
       dialogLoading.value = true;
       if (handleType.value === 'single' && row.is_cycle) {
@@ -280,7 +288,6 @@ const allDateList = computed<string[]>(() => [...new Set(list.value.map((v) => v
 const dateList = computed<string[]>(() =>
   [...new Set(list.value.filter((v) => !v.isExpired && !v.is_delete).map((v) => v.date))].sort((a, b) => (dayjs(a).isBefore(dayjs(b)) ? -1 : 1))
 );
-const selectedDate = ref();
 
 const getSelectedDate = () => {
   const latest = dateList.value.find((v) => dayjs(v).isSameOrAfter(dayjs(new Date()).format('YYYY-MM-DD')));
@@ -298,10 +305,17 @@ const getSelectedDate = () => {
   }
 };
 
-const cellClick = (e: PointerEvent & any, clickable: boolean) => {
+const cellClick = (e: PointerEvent & any, clickable: boolean, data) => {
   if (!clickable || !e.target?.className.includes('date-cell-text')) {
     e.stopPropagation();
     e.preventDefault();
+  } else {
+    const selectedDay = list.value.find((item) => {
+      return item.date === data.day && !item.isExpired && !item.is_delete;
+    });
+    if (selectedDay) {
+      expanded.value = [selectedDay.sub_id || selectedDay.id];
+    }
   }
 };
 
@@ -456,7 +470,7 @@ onUnmounted(() => {
         </span>
       </div>
       <div class="left-calendar">
-        <el-calendar ref="calendarRef">
+        <el-calendar ref="calendarRef" v-model="selectedDate">
           <template #header>
             <span>{{ (selectedDate ? dayjs(new Date(selectedDate)) : dayjs()).format('YYYY MM月') }}</span>
             <div>
@@ -466,7 +480,7 @@ onUnmounted(() => {
           </template>
           <template #date-cell="{ data }">
             <div
-              @click="(e) => cellClick(e, allDateList.includes(data.day))"
+              @click="(e) => cellClick(e, allDateList.includes(data.day), data)"
               :class="{
                 'date-cell': true,
                 'is-selected': data.isSelected,
@@ -540,13 +554,13 @@ onUnmounted(() => {
                               'is-end': row.isExpired,
                             }"
                           >
-                            <div v-if="row.is_delete">【已取消】</div>
                             <div class="title-wrapper">
                               <div class="title-text">{{ row.topic }}</div>
                             </div>
-                            <div class="tag-wrapper" v-if="row.is_cycle">
-                              <OTag color="primary" variant="outline">周期</OTag>
-                            </div>
+                            <OTag v-if="row.is_cycle" color="primary" variant="outline">周期</OTag>
+                            <OTag color="primary" variant="outline" :class="[`tag-${statusMap.get(row.status)?.id}`]">{{
+                              statusMap.get(row.status)?.label
+                            }}</OTag>
                           </div>
                           <div class="meeting-info">
                             <span>{{ row.dateRange }}</span>
@@ -619,6 +633,15 @@ onUnmounted(() => {
         <div class="dialog-footer blue-theme">
           <OButton color="primary" variant="solid" size="large" @click="confirmCancel" :loading="dialogLoading">确认</OButton>
           <OButton color="primary" variant="outline" size="large" @click="cancelVisible = false">取消</OButton>
+        </div>
+      </template>
+    </ODialog>
+    <ODialog v-model:visible="tipVisible" main-class="cancel-dialog">
+      <template #header>提示</template>
+      <div class="dialog-content">当前时间为“{{ handleDialogRow.dateRange }}”的会议正在召开中，请结束该会议后再执行取消整个周期会议的操作。</div>
+      <template #footer>
+        <div class="dialog-footer blue-theme">
+          <OButton color="primary" variant="outline" size="large" @click="tipVisible = false">关闭</OButton>
         </div>
       </template>
     </ODialog>
@@ -1021,13 +1044,6 @@ onUnmounted(() => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    .o-collapse-item {
-      &.last-item {
-        .o-collapse-item-header {
-          border-bottom: none;
-        }
-      }
-    }
     .o-collapse-item-expanded + .o-collapse-item-expanded {
       margin-top: var(--o-gap-section-4);
     }
@@ -1102,13 +1118,30 @@ onUnmounted(() => {
               &.is-end {
                 color: var(--o-color-info3);
               }
-              .tag-wrapper {
-                flex: 10;
+              .o-tag {
+                --tag-bg-color: var(--cell-bg);
+                border: none;
                 margin-left: var(--o-gap-2);
-                .o-tag {
-                  background-color: var(--cell-bg);
-                  border: none;
-                }
+              }
+              .tag-not-started {
+                --tag-color: var(--o-color-info1-inverse);
+                --tag-bg-color: rgba(var(--o-mixedgray-14), 0.25);
+              }
+              .tag-in-progress {
+                --tag-color: var(--o-color-info1-inverse);
+                --tag-bg-color: rgba(var(--o-ubmc-color), 1);
+              }
+              .tag-ended {
+                --tag-color: var(--o-color-info1-inverse);
+                --tag-bg-color: rgba(var(--o-mixedgray-14), 0.4);
+              }
+              .tag-timeout {
+                --tag-color: var(--o-color-info1-inverse);
+                --tag-bg-color: rgba(255, 140, 0, 1);
+              }
+              .tag-canceled {
+                --tag-color: var(--o-color-info4);
+                --tag-bg-color: rgba(var(--o-mixedgray-3), 1);
               }
               .title-wrapper {
                 flex: 0 1 auto;

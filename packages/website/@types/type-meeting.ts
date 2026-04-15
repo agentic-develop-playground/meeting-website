@@ -42,6 +42,7 @@ export interface MeetingPostT {
   cycle_point: []; // 重复节点，当intervalType为week|month时存在值
   obs_data: MeetingReplayT[];
   is_notify: boolean; // 是否立即发送通知
+  status?: number; // 状态 0-未开始 1-进行中 2-已结束 3-已超时 4-已取消
 }
 
 // sig组列表

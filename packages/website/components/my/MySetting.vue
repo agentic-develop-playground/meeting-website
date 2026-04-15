@@ -7,6 +7,8 @@ import IconGitcode from '~icons/app/icon-gitcode.svg';
 import { deleteUser } from '@/api/api-user';
 import { getThirdPartyInfo, unbindThirdParty } from '@/api/api-setting';
 
+import { requestUserInfo, doLogin } from '@/utils/login';
+
 import { useThirdParty } from '@/composables/useThirdParty';
 import { useLocale } from '@/composables/useLocale';
 import { useUserInfoStore } from '@/stores/user';

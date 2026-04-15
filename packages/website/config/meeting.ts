@@ -36,3 +36,46 @@ const getWeekOptions = () => {
 };
 
 export const INTERVAL_WEEK_OPTIONS = getWeekOptions();
+
+export const statusMap = new Map([
+  [
+    0,
+    {
+      id: 'not-started',
+      label: '未开始',
+      value: 0,
+    },
+  ],
+  [
+    1,
+    {
+      id: 'in-progress',
+      label: '进行中',
+      value: 1,
+    },
+  ],
+  [
+    2,
+    {
+      id: 'ended',
+      label: '已结束',
+      value: 2,
+    },
+  ],
+  [
+    3,
+    {
+      id: 'timeout',
+      label: '已超时',
+      value: 3,
+    },
+  ],
+  [
+    4,
+    {
+      id: 'canceled',
+      label: '已取消',
+      value: 4,
+    },
+  ],
+]);

@@ -46,7 +46,7 @@ export const statusMap = new Map([
     {
       id: 'registration',
       label: '报名中',
-      text: '审核通过',
+      text: '已通过',
       value: 3,
     },
   ],
@@ -55,7 +55,7 @@ export const statusMap = new Map([
     {
       id: 'in-progress',
       label: '进行中',
-      text: '审核通过',
+      text: '已通过',
       value: 4,
     },
   ],
@@ -82,7 +82,7 @@ export const statusMap = new Map([
     {
       id: 'reject',
       label: '审核驳回',
-      text: '审核驳回',
+      text: '已驳回',
       value: 7,
     },
   ],
@@ -99,14 +99,14 @@ export const approvalStatusMap = new Map([
   [
     'rejected',
     {
-      label: '审核驳回',
+      label: '已驳回',
       value: 'rejected',
     },
   ],
   [
     'approved',
     {
-      label: '审核通过',
+      label: '已通过',
       value: 'approved',
     },
   ],

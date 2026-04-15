@@ -33,7 +33,7 @@ const obsDetail = ref({});
 const dateList = ref([]);
 const getDetail = async () => {
   try {
-    const res = await getMeetingListApi(date, group_name);
+    const res = await getMeetingListApi(date, group_name, 'asc');
     // 获取当前会议
     const current = res.find((v) => v.mid === mid);
     if (current) {

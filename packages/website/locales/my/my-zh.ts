@@ -32,4 +32,7 @@ export default {
   activity: '我的活动',
   create: '我的创建',
   approval: '我的审批',
+  management: '社区管理',
+  meetingManagement: '社区会议管理',
+  activityManagement: '社区活动审批',
 };

@@ -316,7 +316,14 @@ watch(
         </el-table-column>
         <el-table-column prop="status" width="90px">
           <template #header>
-            <FilterableTableHeader v-model="statusValue" @change="filterStatusList" :options="statusOptions" :check-all="false" :searchable="false">
+            <FilterableTableHeader
+              v-model="statusValue"
+              @change="filterStatusList"
+              :options="statusOptions"
+              :check-all="false"
+              :searchable="false"
+              :operation="false"
+            >
               状态
             </FilterableTableHeader>
           </template>
@@ -511,19 +518,24 @@ watch(
   --tag-bd-color: transparent;
 }
 .tag-draft,
-.tag-calcel {
+.tag-calcel,
+.tag-ended {
   --tag-color: var(--o-color-info3);
   --tag-bg-color: rgba(222, 222, 227, 1);
 }
+.tag-under-review,
+.tag-modified {
+  --tag-color: var(--o-color-info1-inverse);
+  --tag-bg-color: rgba(0, 119, 255, 1);
+}
 .tag-registration,
-.tag-in-progress,
-.tag-ended {
-  --tag-color: rgba(36, 171, 54, 1);
-  --tag-bg-color: rgba(36, 171, 54, 0.1);
+.tag-in-progress {
+  --tag-color: var(--o-color-info1-inverse);
+  --tag-bg-color: rgba(36, 171, 54, 1);
 }
 .tag-reject {
-  --tag-color: rgba(294, 118, 17, 1);
-  --tag-bg-color: rgba(294, 118, 17, 0.1);
+  --tag-color: var(--o-color-info1-inverse);
+  --tag-bg-color: var(--o-color-danger1);
 }
 
 .sort-time {
@@ -540,14 +552,14 @@ watch(
   border: 5px solid transparent;
 }
 .sort-asc {
-  border-bottom-color: var(--o-color-info2);
+  border-bottom-color: var(--o-color-info1);
   margin-bottom: 2px;
   &.active {
     border-bottom-color: var(--o-color-primary1);
   }
 }
 .sort-desc {
-  border-top-color: var(--o-color-info2);
+  border-top-color: var(--o-color-info1);
   margin-top: 2px;
   &.active {
     border-top-color: var(--o-color-primary1);

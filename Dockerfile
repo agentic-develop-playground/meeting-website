@@ -12,8 +12,7 @@ RUN pnpm generate
 FROM swr.cn-north-4.myhuaweicloud.com/opensourceway/openeuler/nginx:latest as NginxBuilder
 
 
-RUN sed -i "s|repo.openeuler.org|mirrors.pku.edu.cn/openeuler|g" /etc/yum.repos.d/openEuler.repo \
-    && yum update -y \
+RUN yum update -y \
     && yum install -y git \
     && git config --global http.postBuffer 524288000 \
     && git config --global https.postBuffer 524288000 \
@@ -42,8 +41,7 @@ COPY ./deploy/monitor.sh ./deploy/entrypoint.sh /etc/nginx/
 COPY ./deploy/nginx/nginx.conf /etc/nginx/nginx.conf.template
 
 
-RUN sed -i "s|repo.openeuler.org|mirrors.nju.edu.cn/openeuler|g" /etc/yum.repos.d/openEuler.repo \
-    && sed -i '/metalink/d' /etc/yum.repos.d/openEuler.repo \
+RUN sed -i '/metalink/d' /etc/yum.repos.d/openEuler.repo \
     && sed -i '/metadata_expire/d' /etc/yum.repos.d/openEuler.repo \
     && yum update -y \
     && yum install -y findutils passwd shadow pcre-devel net-tools libmaxminddb libmaxminddb-devel \

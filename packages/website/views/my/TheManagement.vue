@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import MyApproval from '@/components/activity/MyActivityApproval.vue';
+import MyManagement from '@/components/meeting/MyMeetingManagement.vue';
 
 import { useRolesStore } from '@/stores/roles';
 import { storeToRefs } from 'pinia';
 
 const rolesStore = useRolesStore();
-const { hasAdminActivity } = storeToRefs(rolesStore);
+const { hasAdminMeeting } = storeToRefs(rolesStore);
 </script>
 
 <template>
   <AsideLayout>
-    <template #right> <MyApproval v-if="hasAdminActivity" /> </template>
+    <template #right> <MyManagement v-if="hasAdminMeeting" /> </template>
   </AsideLayout>
 </template>
 

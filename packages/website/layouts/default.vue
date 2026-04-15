@@ -10,8 +10,7 @@ import CookieNotice from '@/components/CookieNotice.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import LayoutSimple from './simple.vue';
 
-import { getGroupInfosApi } from '~/api/api-meeting';
-import { getRoles } from '@/api/api-setting';
+import { getGroupInfosApi, getMeetingRoles } from '~/api/api-meeting';
 
 import { tryLogin } from '@/utils/login';
 
@@ -43,23 +42,21 @@ const getPermissionMeeting = () => {
 };
 // -------------------- 获取活动权限 --------------------
 const getPermissionActivity = () => {
-  getRoles('ascend')
+  getMeetingRoles()
     .then((res) => {
-      let data = [] as string[];
-      res.data.forEach((item) => {
-        data.push(...item.roles);
-      });
-
+      const roles = res.filter((item) => !item.includes('creator'));
       rolesStore.$patch({
-        rolesList: data,
-        hasPermMeeting: data.filter((val) => !val?.includes('activity')).length > 0,
-        hasPermActivity: data.includes('activity_sponsor'),
-        hasAdminActivity: data.includes('activity_admin'),
+        rolesList: roles,
+        hasPermMeeting: res.includes('maintainer') || res.includes('committer') || res.includes('creator'),
+        hasAdminMeeting: res.includes('meeting_admin'),
+        hasPermActivity: res.includes('activity_sponsor'),
+        hasAdminActivity: res.includes('activity_admin'),
       });
     })
     .catch(() => {
       rolesStore.$patch({
         hasPermMeeting: false,
+        hasAdminMeeting: false,
         hasPermActivity: false,
         hasAdminActivity: false,
       });

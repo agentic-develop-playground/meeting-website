@@ -1,4 +1,4 @@
-<script setup lang="tsx">
+<script setup lang="ts">
 import { getYearByOffset } from '@/utils/common';
 import { OLink, ODivider } from '@opensig/opendesign';
 

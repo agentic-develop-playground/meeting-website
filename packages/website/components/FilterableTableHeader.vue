@@ -155,7 +155,7 @@ const isFiltering = computed(() => {
   if (props.multi) {
     return checkboxes.value.length > 0;
   }
-  return !!modelVal.value;
+  return !!modelVal.value && modelVal.value !== -1;
 });
 
 watch(modelVal, (val) => {
@@ -213,6 +213,7 @@ watch(
     if (!props.operation) {
       modelVal.value = val;
       emit('change', val);
+      popupVisible.value = false;
     }
   }
 );
@@ -240,7 +241,7 @@ watch(
       position="bl"
       :target="headerCellRef"
     >
-      <div ref="popupRef" class="filterable-checkboxes-wrap" :style="searchable ? {} : { paddingTop: '0' }">
+      <div ref="popupRef" class="filterable-checkboxes-wrap" :class="{ 'radio-operation': !operation }" :style="searchable ? {} : { paddingTop: '0' }">
         <div v-if="searchable" class="input-wrap">
           <OInput
             v-model="searchInput"
@@ -281,7 +282,7 @@ watch(
             </ORadioGroup>
           </template>
         </OScroller>
-        <ODivider direction="h"></ODivider>
+        <ODivider v-if="operation" direction="h"></ODivider>
         <div v-if="operation" class="btn-wrap">
           <OLink color="primary" @click="reset">重置</OLink>
           <OLink class="confirm-link" color="primary" @click="filterConfirm">确定</OLink>
@@ -424,19 +425,40 @@ watch(
   border-radius: 4px;
 
   .filter-input {
-    --input-radius: 4px;
+    --_box-radius: 100px;
     width: 100%;
   }
 
   .content {
     padding: 12px;
     padding-bottom: 0;
-    max-height: 200px;
+    max-height: 220px;
   }
 
   .check-all-wrap {
     padding: 16px 0;
     padding-top: 0;
+  }
+}
+
+.radio-operation {
+  padding-bottom: 4px;
+  .content {
+    padding: 4px;
+  }
+  :deep(.o-radio) {
+    --radio-group-gap: 0;
+    padding: 5px 12px;
+    .o-radio-input-wrap {
+      display: none;
+    }
+    .o-radio-label {
+      margin-left: 0;
+    }
+    &.o-radio-checked {
+      background-color: var(--o-color-control2-light);
+      border-radius: var(--o-radius-xs);
+    }
   }
 }
 </style>

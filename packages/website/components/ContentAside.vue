@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
+import { watch, onMounted, ref, type Ref } from 'vue';
 import { ODivider, OMenu, OMenuItem, OIcon, OSubMenu } from '@opensig/opendesign';
 import IconRight from '~icons/app/icon-chevron-right.svg';
 
@@ -18,7 +18,7 @@ const userInfoStore = useUserInfoStore();
 
 // -------------------- 会议权限判断 --------------------
 const rolesStore = useRolesStore();
-const { hasPermMeeting, hasPermActivity, hasAdminActivity } = storeToRefs(rolesStore);
+const { hasPermMeeting, hasPermActivity, hasAdminActivity, hasAdminMeeting } = storeToRefs(rolesStore);
 // -------------------- 菜单 --------------------
 const userItems = computed(() => {
   let items = [];
@@ -26,12 +26,15 @@ const userItems = computed(() => {
   if (hasPermMeeting.value) {
     items.push(PERM_MENUS[0]);
   }
-  if (hasPermActivity.value && hasAdminActivity.value) {
-    items.push(PERM_MENUS[3]);
-  } else if (hasPermActivity.value) {
+  if (hasPermActivity.value) {
     items.push(PERM_MENUS[1]);
-  } else if (hasAdminActivity.value) {
+  }
+  if (hasAdminMeeting.value && hasAdminActivity.value) {
+    items.push(PERM_MENUS[4]);
+  } else if (hasAdminMeeting.value) {
     items.push(PERM_MENUS[2]);
+  } else if (hasAdminActivity.value) {
+    items.push(PERM_MENUS[3]);
   }
   return items;
 });
@@ -49,8 +52,8 @@ const jumpToPage = (href: string, redirect = false) => {
 };
 
 onMounted(() => {
-  if (route.path === '/my/activity' || route.path === '/my/approval') {
-    expandedArr.value = ['activity'];
+  if (route.path === '/my/management' || route.path === '/my/approval') {
+    expandedArr.value = ['management'];
   } else {
     expandedArr.value = [];
   }
