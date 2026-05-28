@@ -1,0 +1,43 @@
+name: sast
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sast:
+    name: sast
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory '*'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Node.js SAST
+        run: |
+          set -euo pipefail
+          npm audit --audit-level=high 2>&1 | tee /tmp/npm-audit.txt || true
+          critical_count=$(grep -c "Critical" /tmp/npm-audit.txt || echo "0")
+          if [ "$critical_count" -gt 0 ]; then
+            echo "npm audit found critical vulnerabilities"
+            exit 1
+          fi
