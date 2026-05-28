@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { MeetingItemT } from '~/@types/type-meeting';
-import { OLink } from '@opensig/opendesign';
+import { OLink, OPopover, OIcon } from '@opensig/opendesign';
 
 import { GITCODE_URL } from '@/config/url-config';
 import { acticityTypeMap } from '@/config/activity';
+
+import IconHelp from '~icons/meeting/icon-help.svg';
 
 const props = defineProps<{
   data: MeetingItemT;
@@ -21,8 +23,9 @@ const infoList = computed(() =>
     { label: '会议ID', key: 'mid' },
     { label: '会议链接', key: 'join_url', isLink: true },
     { label: '会议纪要&签到链接', key: 'etherpad', isLink: true },
+    { label: '订阅会议链接', key: 'sig_email_list', isSubscribe: true },
     { label: '智能回放', key: 'replay_url', isLink: true },
-  ].slice(0, props.from === 'my' ? 7 : 8)
+  ].slice(0, props.from === 'my' ? 7 : 9)
 );
 
 const activityInfoList = computed(() =>
@@ -74,7 +77,35 @@ defineExpose({ copyInfo });
 
 <template>
   <div ref="domRef" class="label-item" :class="`label-item_${data.id} type_${data.type}`" v-for="(info, infoIdx) in columns" :key="infoIdx">
-    <template v-if="data[info.key] && !info.isRecord">
+    <template v-if="info.isSubscribe && data.type === 'meetings'">
+      <span class="label">{{ info.label }}：</span>
+      <template v-if="data[info.key]">
+        <OLink
+          target="_blank"
+          class="value"
+          color="primary"
+          hover-underline
+          :href="data[info.key]"
+          v-analytics.bubble="{
+            target: info.label,
+            detail: data[info.key],
+            level3: data.topic || data.name || data.title,
+          }"
+        >
+          {{ data[info.key] }}
+        </OLink>
+        <OPopover>
+          <div class="popover-content subscribe-tip">订阅此组织会议后，后续可例行收到对应会议通知</div>
+          <template #target>
+            <OIcon class="help-icon"><IconHelp /></OIcon>
+          </template>
+        </OPopover>
+      </template>
+      <span v-else class="value no-subscribe-tip">
+        该SIG组暂无会议订阅地址，请联系infra sig创建订阅链接
+      </span>
+    </template>
+    <template v-else-if="data[info.key] && !info.isRecord">
       <span class="label">{{ info.label }}：</span>
       <MoreText :show="show" v-if="info.ellipsis" :text="data[info.key] || '-'"></MoreText>
       <OLink
@@ -156,6 +187,10 @@ defineExpose({ copyInfo });
       opacity: 0;
       overflow: hidden;
     }
+
+    &.no-subscribe-tip {
+      color: var(--o-color-info4);
+    }
   }
 
   .user-link {
@@ -163,9 +198,28 @@ defineExpose({ copyInfo });
     align-items: center;
     flex-wrap: wrap;
   }
+
+  .help-icon {
+    margin-left: var(--o-gap-1);
+    font-size: 16px;
+    color: var(--o-color-info4);
+    cursor: pointer;
+  }
 }
 
 .label-item + .label-item {
   margin-top: var(--o-gap-2);
+}
+</style>
+
+<style lang="scss">
+.popover-content {
+  @include tip1;
+  max-width: 256px;
+  text-align: left;
+
+  &.subscribe-tip {
+    width: 200px;
+  }
 }
 </style>
