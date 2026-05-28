@@ -18,7 +18,7 @@ import dayjs from 'dayjs';
 
 import MeetingCardList from '~/components/meeting/MeetingCardList.vue';
 
-import { getMeetingDateListApi, getMeetingListApi, getSigAll } from '~/api/api-meeting';
+import { getMeetingDateListApi, getMeetingListApi, getSigAll, getGroupInfosAllApi } from '~/api/api-meeting';
 import { getActivityDate, getActivityListAll } from '~/api/api-activity';
 
 import IconMeet from '~icons/home/icon-meet.svg';
@@ -54,12 +54,18 @@ const sig = ref('');
 const sigValue = ref('');
 const sigOptions = ref<string[]>([]);
 const sigFilterList = ref<string[]>([]);
+const sigEmailMap = ref<Map<string, string>>(new Map());
 
 const getSigGroup = () => {
   getSigAll().then((res) => {
     sigOptions.value = res;
     sigFilterList.value = res;
   });
+};
+
+const getSigEmailList = async () => {
+  const res = await getGroupInfosAllApi();
+  sigEmailMap.value = new Map(res.map((v) => [v.group_name, v.email_list || '']));
 };
 
 const selectDropdown = (val) => {
@@ -133,6 +139,7 @@ const paramGetDaysData = async (params: { date: string; type: string }) => {
         time: `${v.start}-${v.end}`,
         type: 'meetings',
         date: v.date || params.date,
+        sig_email_list: sigEmailMap.value.get(v.group_name) || '',
       };
     });
     const activityData = resActivity.data?.map((v) => {
@@ -337,6 +344,7 @@ watch(
 
 onMounted(() => {
   getSigGroup();
+  getSigEmailList();
   // 设置右侧 日程列表高度
   const tbody = document.querySelector('.calendar-body .el-calendar__body') as HTMLElement;
   if (tbody) {

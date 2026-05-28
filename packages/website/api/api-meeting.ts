@@ -154,3 +154,12 @@ export const getMeetingRoles = async () => {
   const res = await request.get(`/ascend-meeting/roles/`, { headers: { token } });
   return res.data?.data || [];
 };
+
+/**
+ * 获取所有SIG组邮件订阅信息（无需认证）
+ * @returns {Promise<SigItemT[]>} SIG组订阅信息列表
+ */
+export const getGroupInfosAllApi = async (): Promise<SigItemT[]> => {
+  const res = await request.get(`/ascend-meeting/group_info_all/`, { skipAuth: true, showError: false });
+  return res.data?.data || [];
+};
