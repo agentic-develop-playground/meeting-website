@@ -11,5 +11,11 @@ module.exports = {
   ],
   parserOptions: {
     ecmaVersion: 'latest'
+  },
+  rules: {
+    'vue/multi-word-component-names': 'warn',
+    'vue/no-unused-vars': 'warn',
+    'vue/no-useless-template-attributes': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn'
   }
 }
