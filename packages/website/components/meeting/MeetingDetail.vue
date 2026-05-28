@@ -23,7 +23,7 @@ const infoList = computed(() =>
     { label: '会议ID', key: 'mid' },
     { label: '会议链接', key: 'join_url', isLink: true },
     { label: '会议纪要&签到链接', key: 'etherpad', isLink: true },
-    { label: '订阅会议', key: 'sig_email_list', isSubscribe: true },
+    { label: '订阅会议链接', key: 'sig_email_list', isSubscribe: true },
     { label: '智能回放', key: 'replay_url', isLink: true },
   ].slice(0, props.from === 'my' ? 7 : 9)
 );
