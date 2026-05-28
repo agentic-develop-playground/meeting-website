@@ -1,0 +1,8 @@
+# gitleaks configuration for meeting-website
+[allowlist]
+  description = "False positives from Vue template attributes"
+
+  paths = [
+    '''packages/website/components/meeting/MyMeetingManagement\.vue''',
+    '''packages/website/components/activity/MyActivityApproval\.vue''',
+  ]
