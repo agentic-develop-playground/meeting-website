@@ -65,6 +65,7 @@ export interface MeetingItemT extends MeetingPostT {
   update_time: string;
   time: string; // 处理一下时间范围
   cycle_sub: any[];
+  sig_email_list?: string; // SIG组邮件订阅链接
 }
 
 export interface PageParamsT {
